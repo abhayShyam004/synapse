@@ -18,6 +18,8 @@ export interface CanvasSlice {
   addNode: (node: Node) => void;
   addGhostNode: (node: Node) => void;
   updateNode: (id: string, data: any) => void;
+  acceptGhostNode: (id: string) => void;
+  dismissGhostNode: (id: string) => void;
 }
 
 export const createCanvasSlice = (
@@ -60,6 +62,17 @@ export const createCanvasSlice = (
       nodes: state.nodes.map(node => 
         node.id === id ? { ...node, data: { ...node.data, ...newData } } : node
       )
+    }));
+  },
+  acceptGhostNode: (id: string) => {
+    set((state) => ({
+      nodes: state.nodes.map(n => n.id === id ? { ...n, data: { ...n.data, variant: 'default' } } : n)
+    }));
+  },
+  dismissGhostNode: (id: string) => {
+    set((state) => ({
+      nodes: state.nodes.filter(n => n.id !== id),
+      edges: state.edges.filter(e => e.target !== id && e.source !== id)
     }));
   },
 });
