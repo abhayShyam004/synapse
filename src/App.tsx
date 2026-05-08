@@ -1,33 +1,34 @@
 import { Toaster } from 'react-hot-toast';
 import { WorkflowCanvas } from './components/canvas/WorkflowCanvas';
 import { LeftSidebar } from './components/sidebar/LeftSidebar';
-import { RightSidebar } from './components/sidebar/RightSidebar';
 import { TopToolbar } from './components/toolbar/TopToolbar';
-import { useSynapseStore } from './store/useSynapseStore';
-import { clsx } from 'clsx';
 
 function App() {
-  const theme = useSynapseStore(state => state.theme);
-
   return (
-    <div className={clsx(
-      "flex flex-col h-screen w-screen overflow-hidden font-sans",
-      theme === 'dark' && "dark bg-slate-900 text-white",
-      theme === 'light' && "bg-white text-black",
-      theme === 'cyberpunk' && "bg-black text-cyan-400"
-    )}>
-      <Toaster position="top-right" />
+    <div className="flex flex-col h-screen w-screen overflow-hidden font-sans bg-white text-gray-900">
+      <Toaster 
+        position="bottom-right" 
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: '#111827',
+            border: '1px solid #E5E7EB',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+            borderRadius: '8px',
+            fontSize: '14px',
+            padding: '12px 16px'
+          },
+        }}
+      />
       <TopToolbar />
       <main className="flex flex-1 overflow-hidden">
-        <aside className="w-80 border-r-4 border-black bg-white shrink-0 overflow-y-auto z-10">
+        <aside className="w-16 border-r border-gray-200 bg-white shrink-0 overflow-y-auto z-10 flex flex-col">
           <LeftSidebar />
         </aside>
-        <section className="flex-1 relative bg-[#0a0a0f]">
+        <section className="flex-1 relative bg-[#F3F4F6]">
           <WorkflowCanvas />
         </section>
-        <aside className="w-80 border-l-4 border-black bg-white shrink-0 overflow-y-auto z-10">
-          <RightSidebar />
-        </aside>
       </main>
     </div>
   );
