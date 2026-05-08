@@ -10,9 +10,9 @@ import type { VariableSlice } from './slices/variableSlice';
 
 type StoreState = CanvasSlice & SettingsSlice & VariableSlice;
 
-const storeCreator: StateCreator<StoreState, [["zustand/persist", unknown]]> = (set) => ({
+const storeCreator: StateCreator<StoreState, [["zustand/persist", unknown]]> = (set, get) => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ...createCanvasSlice(set as unknown as any),
+  ...createCanvasSlice(set as unknown as any, get as unknown as any),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ...createSettingsSlice(set as unknown as any),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

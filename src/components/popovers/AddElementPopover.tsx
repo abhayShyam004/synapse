@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSynapseStore } from '../../store/useSynapseStore';
-import { Search, Folder, Globe, MessageSquare, MousePointerClick, ArrowRight, PieChart, LayoutTemplate, Send, X, Plus, Trash2, Sparkles, Loader2 } from 'lucide-react';
+import { Search, Zap, Diamond, Settings2, Repeat, CheckSquare, Clock, Sparkles, Variable, StickyNote, X, Plus, Trash2, Loader2 } from 'lucide-react';
 import { fetchAISuggestion } from '../../lib/ai/nvidiaNim';
 import toast from 'react-hot-toast';
 
@@ -11,19 +11,20 @@ export const AddElementPopover = () => {
   const [varValue, setVarValue] = useState('');
   const [aiPrompt, setAiPrompt] = useState('');
   const [isSuggesting, setIsSuggesting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   if (!addElementPopover.isOpen) return null;
 
   const handleClose = () => {
-    setAddElementPopover({ isOpen: false, x: 0, y: 0 });
+    setAddElementPopover({ isOpen: false, x: 0, y: 0, edgeId: undefined });
   };
 
-  const handleAdd = (label: string, type: string) => {
+  const handleAdd = (label: string, type: string, color: string) => {
     addNode({
       id: crypto.randomUUID(),
       type: 'custom',
-      position: { x: 250, y: 250 },
-      data: { label, type, description: 'New element added', color: 'gray', shape: 'rounded' },
+      position: { x: 250, y: 250 }, // Ideally centered on canvas, but let's just use defaults unless edgeId is set
+      data: { label, type, description: 'New ' + type, color, shape: 'rounded', expanded: true },
     });
     handleClose();
   };
@@ -41,7 +42,7 @@ export const AddElementPopover = () => {
     if (!aiPrompt) return;
     setIsSuggesting(true);
     try {
-      const prompt = `Suggest a short name and 1-sentence description for an element about "${aiPrompt}". Return JSON: {"name": "...", "description": "..."}`;
+      const prompt = `Suggest a short name and 1-sentence description for a workflow node about "${aiPrompt}". Return JSON: {"name": "...", "description": "..."}`;
       const result = await fetchAISuggestion(prompt);
       const cleaned = result.replace(/```json\n?|\n?```/g, '').trim();
       const parsed = JSON.parse(cleaned);
@@ -49,7 +50,7 @@ export const AddElementPopover = () => {
         id: crypto.randomUUID(),
         type: 'custom',
         position: { x: 250, y: 250 },
-        data: { label: parsed.name, type: 'AI Generated', description: parsed.description, color: 'purple', shape: 'rounded' },
+        data: { label: parsed.name, type: 'AI Prompt', description: parsed.description, color: 'purple', shape: 'rounded', expanded: true },
       });
       setAiPrompt('');
       toast.success('AI Node generated!');
@@ -60,6 +61,24 @@ export const AddElementPopover = () => {
       setIsSuggesting(false);
     }
   };
+
+  const elements = [
+    { category: 'Triggers', items: [{ label: 'Trigger Node', type: 'Trigger', color: 'green', icon: Zap }] },
+    { category: 'Logic', items: [
+      { label: 'Decision', type: 'Decision', color: 'gray', icon: Diamond },
+      { label: 'Condition', type: 'Condition', color: 'orange', icon: Settings2 },
+      { label: 'Loop', type: 'Loop', color: 'pink', icon: Repeat }
+    ]},
+    { category: 'Actions', items: [
+      { label: 'Task', type: 'Task', color: 'blue', icon: CheckSquare },
+      { label: 'Timer', type: 'Timer', color: 'amber', icon: Clock }
+    ]},
+    { category: 'AI', items: [{ label: 'AI Prompt', type: 'AI Prompt', color: 'purple', icon: Sparkles }] },
+    { category: 'Data', items: [
+      { label: 'Variable', type: 'Variable', color: 'teal', icon: Variable },
+      { label: 'Note', type: 'Note', color: 'gray', icon: StickyNote }
+    ]}
+  ];
 
   return (
     <div 
@@ -74,13 +93,13 @@ export const AddElementPopover = () => {
       <div className="flex border-b border-gray-100">
         <button 
           onClick={() => setActiveTab('elements')} 
-          className={`flex-1 py-2 text-xs font-medium ${activeTab === 'elements' ? 'text-[#0078D4] border-b-2 border-[#0078D4]' : 'text-gray-500'}`}
+          className={`flex-1 py-2 text-xs font-medium ${activeTab === 'elements' ? 'text-[#06B6D4] border-b-2 border-[#06B6D4]' : 'text-gray-500'}`}
         >
           Elements
         </button>
         <button 
           onClick={() => setActiveTab('variables')} 
-          className={`flex-1 py-2 text-xs font-medium ${activeTab === 'variables' ? 'text-[#0078D4] border-b-2 border-[#0078D4]' : 'text-gray-500'}`}
+          className={`flex-1 py-2 text-xs font-medium ${activeTab === 'variables' ? 'text-[#06B6D4] border-b-2 border-[#06B6D4]' : 'text-gray-500'}`}
         >
           Variables
         </button>
@@ -94,7 +113,9 @@ export const AddElementPopover = () => {
               <input 
                 type="text" 
                 placeholder="Search Elements" 
-                className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4]"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:border-[#06B6D4] focus:ring-1 focus:ring-[#06B6D4]"
               />
             </div>
           </div>
@@ -117,48 +138,33 @@ export const AddElementPopover = () => {
              </div>
           </div>
 
-          <div className="px-2 mb-1">
-            <p className="text-[11px] font-semibold text-gray-900 mb-1">Copy From</p>
-            <button onClick={() => handleAdd('Asset Library', 'Copy')} className="w-full flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-50 px-2 py-1.5 rounded-md">
-              <Folder size={14} className="text-emerald-500" /> Asset Library
-            </button>
-          </div>
-
-          <div className="px-2 mb-1 mt-2">
-            <p className="text-[11px] font-semibold text-gray-900 mb-1">Ad Group</p>
-            <button onClick={() => handleAdd('Standard Ad Group', 'Ad Group')} className="w-full flex items-center gap-2 text-sm text-gray-700 bg-blue-50 px-2 py-1.5 rounded-md">
-              <Globe size={14} className="text-blue-500" /> Standard Ad Group
-            </button>
-            <button onClick={() => handleAdd('LinkedIn Ad Group', 'Ad Group')} className="w-full flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-50 px-2 py-1.5 rounded-md">
-              <Globe size={14} className="text-blue-600" /> LinkedIn Ad Group
-            </button>
-          </div>
-
-          <div className="px-2 mb-1 mt-2">
-            <p className="text-[11px] font-semibold text-gray-900 mb-1">Web Personalization</p>
-            <button onClick={() => handleAdd('Message', 'Web')} className="w-full flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-50 px-2 py-1.5 rounded-md">
-              <MessageSquare size={14} className="text-orange-400" /> Message
-            </button>
-            <button onClick={() => handleAdd('Overlay CTA', 'Web')} className="w-full flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-50 px-2 py-1.5 rounded-md">
-              <MousePointerClick size={14} className="text-orange-400" /> Overlay CTA
-            </button>
-            <button onClick={() => handleAdd('Redirect', 'Web')} className="w-full flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-50 px-2 py-1.5 rounded-md">
-              <ArrowRight size={14} className="text-orange-400" /> Redirect
-            </button>
-            <button onClick={() => handleAdd('Google Segment', 'Web')} className="w-full flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-50 px-2 py-1.5 rounded-md">
-              <PieChart size={14} className="text-orange-400" /> Google Segment
-            </button>
-          </div>
-
-          <div className="px-2 mb-1 mt-2">
-            <p className="text-[11px] font-semibold text-gray-900 mb-1">Add To</p>
-            <button onClick={() => handleAdd('Smart Page', 'Add')} className="w-full flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-50 px-2 py-1.5 rounded-md">
-              <LayoutTemplate size={14} className="text-purple-400" /> Smart Page
-            </button>
-            <button onClick={() => handleAdd('Marketo Campaign', 'Add')} className="w-full flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-50 px-2 py-1.5 rounded-md">
-              <Send size={14} className="text-purple-400" /> Marketo Campaign
-            </button>
-          </div>
+          {elements.map((group) => {
+            const filteredItems = group.items.filter(item => item.label.toLowerCase().includes(searchQuery.toLowerCase()));
+            if (filteredItems.length === 0) return null;
+            return (
+              <div key={group.category} className="px-2 mb-1 mt-2">
+                <p className="text-[11px] font-semibold text-gray-900 mb-1">{group.category}</p>
+                {filteredItems.map(item => (
+                  <button 
+                    key={item.type}
+                    onClick={() => handleAdd(item.label, item.type, item.color)} 
+                    className="w-full flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-50 px-2 py-1.5 rounded-md"
+                  >
+                    <item.icon size={14} className={
+                      item.color === 'green' ? 'text-[#10B981]' :
+                      item.color === 'blue' ? 'text-[#3B82F6]' :
+                      item.color === 'orange' ? 'text-[#F59E0B]' :
+                      item.color === 'amber' ? 'text-[#F59E0B]' :
+                      item.color === 'purple' ? 'text-[#8B5CF6]' :
+                      item.color === 'teal' ? 'text-[#0D9488]' :
+                      item.color === 'pink' ? 'text-[#EC4899]' :
+                      'text-gray-500'
+                    } /> {item.label}
+                  </button>
+                ))}
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -167,19 +173,19 @@ export const AddElementPopover = () => {
           <div className="flex flex-col gap-2 mb-4">
             <input 
               placeholder="Variable Key" 
-              className="px-2 py-1.5 text-sm border border-gray-200 rounded-md outline-none focus:border-[#0078D4]" 
+              className="px-2 py-1.5 text-sm border border-gray-200 rounded-md outline-none focus:border-[#06B6D4]" 
               value={varKey}
               onChange={e => setVarKey(e.target.value)}
             />
             <input 
               placeholder="Variable Value" 
-              className="px-2 py-1.5 text-sm border border-gray-200 rounded-md outline-none focus:border-[#0078D4]" 
+              className="px-2 py-1.5 text-sm border border-gray-200 rounded-md outline-none focus:border-[#06B6D4]" 
               value={varValue}
               onChange={e => setVarValue(e.target.value)}
             />
             <button 
               onClick={handleAddVariable}
-              className="flex items-center justify-center gap-2 bg-[#0078D4] text-white py-1.5 rounded-md text-sm font-medium hover:bg-blue-700"
+              className="flex items-center justify-center gap-2 bg-[#06B6D4] text-white py-1.5 rounded-md text-sm font-medium hover:bg-cyan-600"
             >
               <Plus size={14} /> Add Variable
             </button>

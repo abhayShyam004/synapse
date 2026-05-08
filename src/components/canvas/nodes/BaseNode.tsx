@@ -2,7 +2,7 @@ import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
 import { clsx } from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSynapseStore } from '../../../store/useSynapseStore';
-import { ChevronDown, Copy, List, Plus, Pencil, Sparkles, Check, X } from 'lucide-react';
+import { ChevronDown, Plus, Pencil, Sparkles, Check, X } from 'lucide-react';
 
 export interface BaseNodeData {
   label: string;
@@ -18,10 +18,12 @@ export interface BaseNodeData {
 export type BaseNodeProps = Node<BaseNodeData, 'custom'>;
 
 export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
-  const { acceptGhostNode, dismissGhostNode, updateNode, setAddElementPopover, setNodeSettingsPopover } = useSynapseStore();
+  const { acceptGhostNode, dismissGhostNode, updateNode, setAddElementPopover, setNodeSettingsPopover, edges } = useSynapseStore();
   
   const isGhost = data.variant === 'ghost';
   const isExpanded = data.expanded !== false;
+
+  const connectedEdgesCount = edges.filter(e => e.source === id || e.target === id).length;
 
   const toggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -50,7 +52,7 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
       initial={isGhost ? { opacity: 0.2 } : { scale: 0.9, opacity: 0 }}
       animate={isGhost ? { opacity: [0.4, 0.7, 0.4], transition: { repeat: Infinity, duration: 2 } } : { scale: 1, opacity: 1 }}
       className={clsx(
-        "relative w-52 flex flex-col rounded-md bg-white border text-sm transition-all",
+        "group relative w-52 flex flex-col rounded-md bg-white border text-sm transition-all",
         selected ? "border-[#06B6D4] shadow-md ring-2 ring-[#06B6D4]/50" : "border-gray-200 shadow-sm",
         isGhost && "border-dashed border-[#0078D4] !opacity-60"
       )}
@@ -85,38 +87,38 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
             className="overflow-hidden"
           >
             {/* Body Row 1: Label */}
-            <div className="px-3 py-2 flex items-center justify-between border-b border-gray-100 bg-white">
+            <div 
+              className="px-3 py-2 flex items-center justify-between border-b border-gray-100 bg-white group/label"
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                const newLabel = prompt('Enter new name:', data.label as string);
+                if (newLabel) updateNode(id, { label: newLabel });
+              }}
+            >
               <span className="text-xs text-gray-800 truncate font-medium">{data.label || 'Action'}</span>
-              <ChevronDown size={14} className="text-gray-400" />
-            </div>
-
-            {/* Body Row 2: Icons & Actions */}
-            <div className="px-3 py-1.5 flex items-center justify-between border-b border-gray-100 bg-white">
-              <div className="flex items-center gap-3 text-gray-400">
-                <div className="flex items-center gap-1 text-[10px] font-medium">
-                  <Copy size={12} /> 2
-                </div>
-                <div className="flex items-center gap-1 text-[10px] font-medium">
-                  <List size={12} /> 2
-                </div>
-              </div>
-              <button 
-                onClick={handleAddElement}
-                className="text-[#06B6D4] hover:bg-cyan-50 p-0.5 rounded-sm transition-colors"
-              >
-                <Plus size={14} />
-              </button>
             </div>
 
             {/* Footer Row: Description/Triggers */}
             <div className="bg-gray-50 px-3 py-2 rounded-b-md flex items-center justify-between">
-              <span className="text-[10px] font-medium text-gray-500 truncate mr-2">{data.description || '1 Trigger'}</span>
-              <button 
-                onClick={handleSettings}
-                className="text-gray-400 hover:text-[#F59E0B] transition-colors"
-              >
-                <Pencil size={12} />
-              </button>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-medium text-gray-500 truncate">
+                  {data.description || `${connectedEdgesCount} connection${connectedEdgesCount !== 1 ? 's' : ''}`}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={handleAddElement}
+                  className="text-[#06B6D4] hover:bg-cyan-50 p-1 rounded-sm transition-colors"
+                >
+                  <Plus size={12} />
+                </button>
+                <button 
+                  onClick={handleSettings}
+                  className="text-gray-400 hover:text-[#F59E0B] transition-colors p-1"
+                >
+                  <Pencil size={12} />
+                </button>
+              </div>
             </div>
           </motion.div>
         )}
@@ -126,12 +128,12 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
       <Handle 
         type="target" 
         position={Position.Top} 
-        className="w-0 h-0 border-0 opacity-0 bg-transparent pointer-events-none"
+        className="w-3 h-3 bg-[#06B6D4] border-2 border-white rounded-full z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-crosshair !-top-1.5"
       />
       <Handle 
         type="source" 
         position={Position.Bottom} 
-        className="w-0 h-0 border-0 opacity-0 bg-transparent pointer-events-none"
+        className="w-3 h-3 bg-[#06B6D4] border-2 border-white rounded-full z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-crosshair !-bottom-1.5"
       />
 
       {isGhost && (
@@ -153,3 +155,4 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
     </motion.div>
   );
 };
+

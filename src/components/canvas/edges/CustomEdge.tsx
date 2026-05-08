@@ -27,7 +27,6 @@ export const CustomEdge = ({
 
   const onEdgeClick = (evt: React.MouseEvent) => {
     evt.stopPropagation();
-    // Assuming we just open it at mouse coordinates for simplicity right now
     setAddElementPopover({
       isOpen: true,
       x: evt.clientX,

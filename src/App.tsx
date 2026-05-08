@@ -2,6 +2,8 @@ import { Toaster } from 'react-hot-toast';
 import { WorkflowCanvas } from './components/canvas/WorkflowCanvas';
 import { LeftSidebar } from './components/sidebar/LeftSidebar';
 import { TopToolbar } from './components/toolbar/TopToolbar';
+import { SettingsModal } from './components/modals/SettingsModal';
+import { SearchOverlay } from './components/canvas/SearchOverlay';
 
 function App() {
   return (
@@ -21,12 +23,14 @@ function App() {
           },
         }}
       />
+      <SettingsModal />
       <TopToolbar />
-      <main className="flex flex-1 overflow-hidden">
+      <main className="flex flex-1 overflow-hidden relative">
         <aside className="w-16 border-r border-gray-200 bg-white shrink-0 overflow-y-auto z-10 flex flex-col">
           <LeftSidebar />
         </aside>
         <section className="flex-1 relative bg-[#F3F4F6]">
+          <SearchOverlay />
           <WorkflowCanvas />
         </section>
       </main>

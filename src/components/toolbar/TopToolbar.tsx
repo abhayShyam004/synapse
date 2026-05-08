@@ -5,7 +5,7 @@ import { clsx } from 'clsx';
 import { useState } from 'react';
 
 export const TopToolbar = () => {
-  const { ghostCardsEnabled, toggleGhostCards, expandAllNodes, setMetricsPopover } = useSynapseStore();
+  const { ghostCardsEnabled, toggleGhostCards, expandAllNodes, setMetricsPopover, toggleSettingsModal } = useSynapseStore();
   const [workflowName, setWorkflowName] = useState('Synapse Workflow');
 
   const handleTestRun = () => {
@@ -70,7 +70,7 @@ export const TopToolbar = () => {
           <Sparkles size={18} />
         </button>
 
-        <button onClick={() => toast.success('Settings opened')} className="p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 rounded-md transition-colors" title="Settings">
+        <button onClick={() => toggleSettingsModal(true)} className="p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 rounded-md transition-colors" title="Settings">
           <SettingsIcon size={18} />
         </button>
       </div>

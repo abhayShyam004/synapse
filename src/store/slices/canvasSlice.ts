@@ -31,10 +31,17 @@ export interface CanvasSlice {
   setMetricsPopover: (isOpen: boolean) => void;
   setNodeSettingsPopover: (data: { isOpen: boolean; nodeId?: string }) => void;
   toggleCanvasLock: () => void;
+  isSearchOpen: boolean;
+  searchQuery: string;
+  setSearchOpen: (isOpen: boolean) => void;
+  setSearchQuery: (query: string) => void;
+  importWorkflow: (json: string) => void;
+  exportWorkflow: () => string;
 }
 
 export const createCanvasSlice = (
-  set: (fn: (state: CanvasSlice) => Partial<CanvasSlice>) => void
+  set: (fn: (state: CanvasSlice) => Partial<CanvasSlice>) => void,
+  get: () => CanvasSlice
 ): CanvasSlice => ({
   nodes: [
     {
@@ -56,6 +63,8 @@ export const createCanvasSlice = (
   metricsPopover: { isOpen: false },
   nodeSettingsPopover: { isOpen: false },
   isCanvasLocked: false,
+  isSearchOpen: false,
+  searchQuery: '',
   onNodesChange: (changes: NodeChange[]) => {
     set((state) => ({ nodes: applyNodeChanges(changes, state.nodes) }));
   },
@@ -66,7 +75,26 @@ export const createCanvasSlice = (
     set((state) => ({ edges: addEdge(connection, state.edges) }));
   },
   addNode: (node: Node) => {
-    set((state) => ({ nodes: [...state.nodes, { ...node, data: { ...node.data, expanded: false } }] }));
+    set((state) => {
+      const newNode = { ...node, data: { ...node.data, expanded: false } };
+      let newEdges = [...state.edges];
+      
+      // If we are adding via an edge (edge splitting)
+      if (state.addElementPopover.edgeId) {
+        const edgeToSplit = state.edges.find(e => e.id === state.addElementPopover.edgeId);
+        if (edgeToSplit) {
+          // Remove old edge
+          newEdges = newEdges.filter(e => e.id !== state.addElementPopover.edgeId);
+          // Add two new edges
+          newEdges.push(
+            { id: `e-${edgeToSplit.source}-${newNode.id}`, source: edgeToSplit.source, target: newNode.id, type: 'custom' },
+            { id: `e-${newNode.id}-${edgeToSplit.target}`, source: newNode.id, target: edgeToSplit.target, type: 'custom' }
+          );
+        }
+      }
+
+      return { nodes: [...state.nodes, newNode], edges: newEdges };
+    });
   },
   addGhostNode: (node: Node) => {
     set((state) => ({ 
@@ -121,4 +149,20 @@ export const createCanvasSlice = (
   setMetricsPopover: (isOpen) => set(() => ({ metricsPopover: { isOpen } })),
   setNodeSettingsPopover: (data) => set(() => ({ nodeSettingsPopover: data })),
   toggleCanvasLock: () => set((state) => ({ isCanvasLocked: !state.isCanvasLocked })),
+  setSearchOpen: (isOpen) => set(() => ({ isSearchOpen: isOpen, searchQuery: isOpen ? get().searchQuery : '' })),
+  setSearchQuery: (query) => set(() => ({ searchQuery: query })),
+  importWorkflow: (json) => {
+    try {
+      const data = JSON.parse(json);
+      if (data.nodes && data.edges) {
+        set(() => ({ nodes: data.nodes, edges: data.edges }));
+      }
+    } catch (e) {
+      console.error("Failed to parse workflow JSON", e);
+    }
+  },
+  exportWorkflow: () => {
+    const { nodes, edges } = get();
+    return JSON.stringify({ nodes, edges }, null, 2);
+  }
 });
