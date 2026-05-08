@@ -2,11 +2,36 @@
 import { useState } from 'react';
 import { useSynapseStore } from '../../store/useSynapseStore';
 import { NODE_TYPES } from '../canvas/nodes/NodeStyles';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Loader2 } from 'lucide-react';
+import { fetchAISuggestion } from '../../lib/ai/nvidiaNim';
+import { toast } from 'react-hot-toast';
 
 export const LeftSidebar = () => {
   const addNode = useSynapseStore(state => state.addNode);
   const [formData, setFormData] = useState({ label: '', type: 'Task', color: 'yellow', shape: 'rounded' });
+  const [isSuggesting, setIsSuggesting] = useState(false);
+
+  const handleAISuggest = async () => {
+    if (isSuggesting) return;
+    setIsSuggesting(true);
+    
+    try {
+      const prompt = `Suggest a short, punchy name and a 1-sentence description for a workflow node of type "${formData.type}". Return JSON format: {"name": "...", "description": "..."}`;
+      const result = await fetchAISuggestion(prompt);
+      
+      // Clean potential markdown blocks
+      const cleaned = result.replace(/```json\n?|\n?```/g, '').trim();
+      const parsed = JSON.parse(cleaned);
+      
+      setFormData(prev => ({ ...prev, label: parsed.name }));
+      toast.success('AI Suggestion applied!');
+    } catch (error) {
+      console.error('AI Suggestion failed:', error);
+      toast.error('AI Suggestion failed');
+    } finally {
+      setIsSuggesting(false);
+    }
+  };
 
   const handleAdd = () => {
     addNode({
@@ -57,8 +82,12 @@ export const LeftSidebar = () => {
               value={formData.label}
               onChange={e => setFormData({...formData, label: e.target.value})}
             />
-            <button className="p-3 border-2 border-black bg-synapse-yellow hover:bg-yellow-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-              <Sparkles size={20} />
+            <button 
+              onClick={handleAISuggest}
+              disabled={isSuggesting}
+              className="p-3 border-2 border-black bg-synapse-yellow hover:bg-yellow-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSuggesting ? <Loader2 size={20} className="animate-spin" /> : <Sparkles size={20} />}
             </button>
           </div>
           <select 
