@@ -1,6 +1,7 @@
 import { Toaster } from 'react-hot-toast';
 import { WorkflowCanvas } from './components/canvas/WorkflowCanvas';
 import { LeftSidebar } from './components/sidebar/LeftSidebar';
+import { RightSidebar } from './components/sidebar/RightSidebar';
 import { TopToolbar } from './components/toolbar/TopToolbar';
 import { useSynapseStore } from './store/useSynapseStore';
 import { clsx } from 'clsx';
@@ -24,8 +25,8 @@ function App() {
         <section className="flex-1 relative bg-[#0a0a0f]">
           <WorkflowCanvas />
         </section>
-        <aside className="w-80 border-l-4 border-black bg-white shrink-0 overflow-y-auto z-10 p-4">
-          <p className="text-sm text-black font-bold">Properties</p>
+        <aside className="w-80 border-l-4 border-black bg-white shrink-0 overflow-y-auto z-10">
+          <RightSidebar />
         </aside>
       </main>
     </div>

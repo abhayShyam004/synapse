@@ -17,6 +17,7 @@ export interface CanvasSlice {
   onConnect: (connection: Connection) => void;
   addNode: (node: Node) => void;
   addGhostNode: (node: Node) => void;
+  updateNode: (id: string, data: any) => void;
 }
 
 export const createCanvasSlice = (
@@ -52,6 +53,13 @@ export const createCanvasSlice = (
   addGhostNode: (node: Node) => {
     set((state) => ({ 
       nodes: [...state.nodes, { ...node, data: { ...node.data, variant: 'ghost' } }] 
+    }));
+  },
+  updateNode: (id: string, newData: any) => {
+    set((state) => ({
+      nodes: state.nodes.map(node => 
+        node.id === id ? { ...node, data: { ...node.data, ...newData } } : node
+      )
     }));
   },
 });
