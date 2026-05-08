@@ -12,6 +12,8 @@ import type {
 export interface CanvasSlice {
   nodes: Node[];
   edges: Edge[];
+  past: { nodes: Node[], edges: Edge[] }[];
+  future: { nodes: Node[], edges: Edge[] }[];
   addElementPopover: { isOpen: boolean; x: number; y: number; edgeId?: string };
   metricsPopover: { isOpen: boolean };
   nodeSettingsPopover: { isOpen: boolean; nodeId?: string };
@@ -37,6 +39,9 @@ export interface CanvasSlice {
   setSearchQuery: (query: string) => void;
   importWorkflow: (json: string) => void;
   exportWorkflow: () => string;
+  saveHistory: () => void;
+  undo: () => void;
+  redo: () => void;
 }
 
 export const createCanvasSlice = (
@@ -59,23 +64,85 @@ export const createCanvasSlice = (
     }
   ],
   edges: [],
+  past: [],
+  future: [],
   addElementPopover: { isOpen: false, x: 0, y: 0 },
   metricsPopover: { isOpen: false },
   nodeSettingsPopover: { isOpen: false },
   isCanvasLocked: false,
   isSearchOpen: false,
   searchQuery: '',
+  saveHistory: () => {
+    set((state) => ({
+      past: [...state.past, { nodes: state.nodes, edges: state.edges }].slice(-50),
+      future: []
+    }));
+  },
+  undo: () => {
+    set((state) => {
+      if (state.past.length === 0) return state;
+      const previous = state.past[state.past.length - 1];
+      const newPast = state.past.slice(0, -1);
+      return {
+        past: newPast,
+        future: [{ nodes: state.nodes, edges: state.edges }, ...state.future],
+        nodes: previous.nodes,
+        edges: previous.edges
+      };
+    });
+  },
+  redo: () => {
+    set((state) => {
+      if (state.future.length === 0) return state;
+      const next = state.future[0];
+      const newFuture = state.future.slice(1);
+      return {
+        past: [...state.past, { nodes: state.nodes, edges: state.edges }],
+        future: newFuture,
+        nodes: next.nodes,
+        edges: next.edges
+      };
+    });
+  },
   onNodesChange: (changes: NodeChange[]) => {
-    set((state) => ({ nodes: applyNodeChanges(changes, state.nodes) }));
+    set((state) => {
+      const isSignificantChange = changes.some(c => c.type === 'remove' || c.type === 'add');
+      const newState = { nodes: applyNodeChanges(changes, state.nodes) };
+      if (isSignificantChange) {
+        return {
+          ...newState,
+          past: [...state.past, { nodes: state.nodes, edges: state.edges }].slice(-50),
+          future: []
+        };
+      }
+      // For position changes (dragging), wait until drag ends to save history, 
+      // or rely on a specific hook. For now, we only save history on add/remove automatically.
+      return newState;
+    });
   },
   onEdgesChange: (changes: EdgeChange[]) => {
-    set((state) => ({ edges: applyEdgeChanges(changes, state.edges) }));
+    set((state) => {
+      const isSignificantChange = changes.some(c => c.type === 'remove' || c.type === 'add');
+      const newState = { edges: applyEdgeChanges(changes, state.edges) };
+      if (isSignificantChange) {
+        return {
+          ...newState,
+          past: [...state.past, { nodes: state.nodes, edges: state.edges }].slice(-50),
+          future: []
+        };
+      }
+      return newState;
+    });
   },
   onConnect: (connection: Connection) => {
-    set((state) => ({ edges: addEdge(connection, state.edges) }));
+    set((state) => {
+      state.saveHistory();
+      return { edges: addEdge(connection, state.edges) };
+    });
   },
   addNode: (node: Node) => {
     set((state) => {
+      state.saveHistory();
       const newNode = { ...node, data: { ...node.data, expanded: false } };
       let newEdges = [...state.edges];
       
@@ -97,25 +164,35 @@ export const createCanvasSlice = (
     });
   },
   addGhostNode: (node: Node) => {
-    set((state) => ({ 
-      nodes: [...state.nodes, { ...node, data: { ...node.data, variant: 'ghost', expanded: false } }] 
-    }));
+    set((state) => {
+      state.saveHistory();
+      return { 
+        nodes: [...state.nodes, { ...node, data: { ...node.data, variant: 'ghost', expanded: false } }] 
+      };
+    });
   },
   updateNode: (id: string, newData: Record<string, unknown>) => {
-    set((state) => ({
-      nodes: state.nodes.map(node => 
-        node.id === id ? { ...node, data: { ...node.data, ...newData } } : node
-      )
-    }));
+    set((state) => {
+      state.saveHistory();
+      return {
+        nodes: state.nodes.map(node => 
+          node.id === id ? { ...node, data: { ...node.data, ...newData } } : node
+        )
+      };
+    });
   },
   deleteNode: (id: string) => {
-    set((state) => ({
-      nodes: state.nodes.filter(n => n.id !== id),
-      edges: state.edges.filter(e => e.source !== id && e.target !== id)
-    }));
+    set((state) => {
+      state.saveHistory();
+      return {
+        nodes: state.nodes.filter(n => n.id !== id),
+        edges: state.edges.filter(e => e.source !== id && e.target !== id)
+      };
+    });
   },
   cloneNode: (id: string) => {
     set((state) => {
+      state.saveHistory();
       const nodeToClone = state.nodes.find(n => n.id === id);
       if (!nodeToClone) return state;
       const newNode = {

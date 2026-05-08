@@ -6,6 +6,7 @@ import { CustomEdge } from './edges/CustomEdge';
 import { AddElementPopover } from '../popovers/AddElementPopover';
 import { MetricsPopover } from '../popovers/MetricsPopover';
 import { NodeSettingsPopover } from '../popovers/NodeSettingsPopover';
+import { useEffect } from 'react';
 
 const nodeTypes = { custom: BaseNode };
 const edgeTypes = { custom: CustomEdge };
@@ -16,7 +17,38 @@ const defaultEdgeOptions = {
 };
 
 export const WorkflowCanvas = () => {
-  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, ghostCardsEnabled, addGhostNode, isCanvasLocked } = useSynapseStore();
+  const { 
+    nodes, edges, onNodesChange, onEdgesChange, onConnect, 
+    ghostCardsEnabled, addGhostNode, isCanvasLocked, 
+    undo, redo, deleteNode 
+  } = useSynapseStore();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      if ((e.key === 'Backspace' || e.key === 'Delete') && !isCanvasLocked) {
+        const selectedNodes = nodes.filter(n => n.selected);
+        if (selectedNodes.length > 0) {
+          selectedNodes.forEach(n => deleteNode(n.id));
+        }
+      }
+      
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === 'z') {
+          e.preventDefault();
+          undo();
+        } else if (e.key === 'y') {
+          e.preventDefault();
+          redo();
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [nodes, isCanvasLocked, deleteNode, undo, redo]);
 
   const handleConnect = (connection: Connection) => {
     onConnect(connection);
@@ -47,6 +79,7 @@ export const WorkflowCanvas = () => {
         nodesDraggable={!isCanvasLocked}
         nodesConnectable={!isCanvasLocked}
         elementsSelectable={!isCanvasLocked}
+        deleteKeyCode={['Backspace', 'Delete']}
         fitView
       >
         <Background color="#CBD5E1" gap={20} size={1.5} variant={BackgroundVariant.Dots} />
