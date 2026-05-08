@@ -2,6 +2,7 @@
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
 import { clsx } from 'clsx';
 import { SHAPES, COLORS } from './NodeStyles';
+import { motion } from 'framer-motion';
 
 export interface BaseNodeData {
   label: string;
@@ -18,55 +19,55 @@ export type BaseNodeProps = Node<BaseNodeData, 'custom'>;
 export const BaseNode = ({ data, selected }: NodeProps<BaseNodeProps>) => {
   const colorClass = COLORS[data.color || 'white'];
   const shapeClass = SHAPES[data.shape || 'rounded'];
+  const isGhost = data.variant === 'ghost';
 
   return (
-    <div className={clsx(
-      "min-w-[150px] p-4 border-2 shadow-lg transition-all relative",
-      colorClass,
-      shapeClass,
-      selected ? "ring-4 ring-[#0070F3] ring-offset-2 ring-offset-slate-900" : "ring-0",
-      data.variant === 'ghost' && "opacity-40 border-dashed"
-    )}>
-      {/* Content wrapper for counter-rotation if diamond */}
-      <div className={clsx(data.shape === 'diamond' && "-rotate-45")}>
-        <Handle 
-          type="target" 
-          position={Position.Top} 
-          className="w-3 h-3 bg-[#0070F3] !border-white" 
-        />
-        
-        <div className="flex flex-col gap-1">
-          {data.type && (
-            <div className="text-[10px] font-bold uppercase opacity-60 tracking-wider">
-              {data.type}
-            </div>
-          )}
-          <div className="font-bold text-sm">{data.label}</div>
-          {data.description && (
-            <div className="text-xs opacity-80 leading-tight mt-1">
-              {data.description}
-            </div>
-          )}
+    <motion.div 
+      initial={isGhost ? { opacity: 0.2 } : { scale: 0.9, opacity: 0 }}
+      animate={isGhost ? { opacity: [0.3, 0.6, 0.3], transition: { repeat: Infinity, duration: 2 } } : { scale: 1, opacity: 1 }}
+      className={clsx(
+        "group relative min-w-[180px] border-4 border-black transition-all",
+        colorClass,
+        shapeClass,
+        selected ? "shadow-[8px_8px_0px_0px_rgba(0,229,255,1)] translate-y-[-4px]" : "shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]",
+        isGhost && "!border-dashed !shadow-none"
+      )}
+    >
+      <div className={clsx("p-5", data.shape === 'diamond' && "-rotate-45 p-8")}>
+        <div className="text-[11px] font-black uppercase tracking-widest mb-2 opacity-80">
+          {data.type || 'Node'}
         </div>
-
-        <Handle 
-          type="source" 
-          position={Position.Bottom} 
-          className="w-3 h-3 bg-[#0070F3] !border-white" 
-        />
+        <div className="font-bold text-lg leading-tight">{data.label}</div>
+        {data.description && (
+          <div className="text-sm font-medium opacity-90 mt-2">
+            {data.description}
+          </div>
+        )}
       </div>
 
-      {data.variant === 'ghost' && (
-        <div className="absolute -bottom-10 left-0 right-0 flex justify-center gap-2">
-          <button className="bg-green-500 text-white text-[10px] px-2 py-1 rounded shadow-sm font-bold">Accept</button>
-          <button className="bg-red-500 text-white text-[10px] px-2 py-1 rounded shadow-sm font-bold">Dismiss</button>
+      {/* Handles - visible on node hover */}
+      <Handle 
+        type="target" 
+        position={Position.Top} 
+        className="w-4 h-4 bg-white border-2 border-black opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center -top-2"
+      >
+        <span className="text-[10px] text-black font-bold leading-none">+</span>
+      </Handle>
+      
+      <Handle 
+        type="source" 
+        position={Position.Bottom} 
+        className="w-4 h-4 bg-white border-2 border-black opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center -bottom-2"
+      >
+        <span className="text-[10px] text-black font-bold leading-none">+</span>
+      </Handle>
+
+      {isGhost && (
+        <div className="absolute -bottom-14 left-1/2 -translate-x-1/2 flex gap-3 w-[200px] justify-center">
+          <button className="bg-green-400 border-2 border-black text-black text-xs px-4 py-2 font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-px hover:shadow-none transition-all">Accept</button>
+          <button className="bg-red-400 border-2 border-black text-black text-xs px-4 py-2 font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-px hover:shadow-none transition-all">Dismiss</button>
         </div>
       )}
-
-      {/* Plus Symbol on Hover placeholder */}
-      <div className="absolute -right-3 top-1/2 -translate-y-1/2 opacity-0 hover:opacity-100 cursor-pointer bg-white rounded-full border shadow-sm p-1 flex items-center justify-center w-6 h-6 text-[#0070F3] font-bold z-10">
-        +
-      </div>
-    </div>
+    </motion.div>
   );
 };
