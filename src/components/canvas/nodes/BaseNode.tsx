@@ -3,6 +3,7 @@ import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
 import { clsx } from 'clsx';
 import { SHAPES, COLORS } from './NodeStyles';
 import { motion } from 'framer-motion';
+import { useSynapseStore } from '../../../store/useSynapseStore';
 
 export interface BaseNodeData {
   label: string;
@@ -16,7 +17,9 @@ export interface BaseNodeData {
 
 export type BaseNodeProps = Node<BaseNodeData, 'custom'>;
 
-export const BaseNode = ({ data, selected }: NodeProps<BaseNodeProps>) => {
+export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
+  const acceptGhostNode = useSynapseStore(state => state.acceptGhostNode);
+  const dismissGhostNode = useSynapseStore(state => state.dismissGhostNode);
   const colorClass = COLORS[data.color || 'white'];
   const shapeClass = SHAPES[data.shape || 'rounded'];
   const isGhost = data.variant === 'ghost';
@@ -64,8 +67,18 @@ export const BaseNode = ({ data, selected }: NodeProps<BaseNodeProps>) => {
 
       {isGhost && (
         <div className="absolute -bottom-14 left-1/2 -translate-x-1/2 flex gap-3 w-[200px] justify-center">
-          <button className="bg-green-400 border-2 border-black text-black text-xs px-4 py-2 font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-px hover:shadow-none transition-all">Accept</button>
-          <button className="bg-red-400 border-2 border-black text-black text-xs px-4 py-2 font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-px hover:shadow-none transition-all">Dismiss</button>
+          <button 
+            onClick={() => acceptGhostNode(id)}
+            className="bg-green-400 border-2 border-black text-black text-xs px-4 py-2 font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-px hover:shadow-none transition-all"
+          >
+            Accept
+          </button>
+          <button 
+            onClick={() => dismissGhostNode(id)}
+            className="bg-red-400 border-2 border-black text-black text-xs px-4 py-2 font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-px hover:shadow-none transition-all"
+          >
+            Dismiss
+          </button>
         </div>
       )}
     </motion.div>
