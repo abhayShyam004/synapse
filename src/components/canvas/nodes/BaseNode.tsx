@@ -52,29 +52,34 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
   };
 
   const typeBgColor = 
-    data.type === 'Trigger' ? 'bg-[#10B981]' :
-    data.type === 'Task' ? 'bg-[#3B82F6]' :
-    data.type === 'Decision' ? 'bg-[#374151]' :
-    data.type === 'Condition' ? 'bg-[#F59E0B]' :
-    data.type === 'AI Prompt' ? 'bg-[#8B5CF6]' :
-    data.type === 'Timer' ? 'bg-[#D97706]' :
-    data.type === 'Variable' ? 'bg-[#0D9488]' :
-    data.type === 'Loop' ? 'bg-[#EC4899]' :
-    data.type === 'Note' ? 'bg-[#6B7280]' :
-    'bg-gray-600';
+    data.type === 'Trigger' ? '#10B981' :
+    data.type === 'Task' ? '#3B82F6' :
+    data.type === 'Decision' ? '#374151' :
+    data.type === 'Condition' ? '#F59E0B' :
+    data.type === 'AI Prompt' ? '#8B5CF6' :
+    data.type === 'Timer' ? '#D97706' :
+    data.type === 'Variable' ? '#0D9488' :
+    data.type === 'Loop' ? '#EC4899' :
+    data.type === 'Note' ? '#6B7280' :
+    '#4B5563';
+
+  const colorMap: Record<string, string> = {
+    blue: '#3B82F6',
+    green: '#10B981',
+    orange: '#F59E0B',
+    purple: '#8B5CF6',
+    gray: '#4B5563',
+    cyan: '#06B6D4',
+    amber: '#F59E0B',
+    violet: '#7C3AED',
+    rose: '#F43F5E',
+    emerald: '#10B981',
+    pink: '#EC4899',
+  };
 
   const headerBgColor = 
-    data.color === 'blue' ? 'bg-[#3B82F6]' :
-    data.color === 'green' ? 'bg-[#10B981]' :
-    data.color === 'orange' ? 'bg-[#F59E0B]' :
-    data.color === 'purple' ? 'bg-[#8B5CF6]' :
-    data.color === 'gray' ? 'bg-[#4B5563]' :
-    data.color === 'cyan' ? 'bg-[#06B6D4]' :
-    data.color === 'amber' ? 'bg-[#F59E0B]' :
-    data.color === 'violet' ? 'bg-[#7C3AED]' :
-    data.color === 'rose' ? 'bg-[#F43F5E]' :
-    data.color === 'emerald' ? 'bg-[#10B981]' :
-    data.color === 'pink' ? 'bg-[#EC4899]' :
+    (data.color && data.color.startsWith('#')) ? data.color :
+    (data.color && colorMap[data.color]) ? colorMap[data.color] :
     typeBgColor;
 
   const shape = (data.shape as string) || 'rounded';
@@ -101,10 +106,10 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
     >
       {/* Header Bar */}
       <div 
-        className={clsx(`${headerBgColor} text-white px-4 py-2.5 h-[60px] flex flex-col justify-center relative cursor-pointer group/header`)}
+        className={clsx(`text-white px-4 py-2.5 h-[60px] flex flex-col justify-center relative cursor-pointer group/header`)}
+        style={{ backgroundColor: headerBgColor }}
         onClick={toggleExpand}
-      >
-        <div className="flex items-center justify-between">
+      >        <div className="flex items-center justify-between">
           <span className="text-[10px] font-bold uppercase tracking-widest opacity-80 leading-none mb-1">
             {data.type || 'Stage'}
           </span>

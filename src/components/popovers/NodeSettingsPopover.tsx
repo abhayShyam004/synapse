@@ -1,5 +1,5 @@
 import { useSynapseStore } from '../../store/useSynapseStore';
-import { X, Trash2, Copy, Square, Circle } from 'lucide-react';
+import { X, Trash2, Copy, Square, Circle, Pipette } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useEffect, useState, useRef } from 'react';
 import { clsx } from 'clsx';
@@ -152,7 +152,7 @@ export const NodeSettingsPopover = () => {
 
         <div className="flex flex-col gap-2.5">
           <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Color</label>
-          <div className="grid grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-5 gap-2.5">
             {ACCENT_COLORS.map(c => (
               <button
                 key={c.id}
@@ -168,6 +168,26 @@ export const NodeSettingsPopover = () => {
                 )}
               </button>
             ))}
+            {/* Custom Color Picker */}
+            <div className="relative">
+              <button
+                className={clsx(
+                  "w-7 h-7 rounded-full transition-all flex items-center justify-center relative bg-gray-100 text-gray-500 hover:bg-gray-200",
+                  node.data.color?.toString().startsWith('#') ? "ring-2 ring-offset-2 ring-gray-200" : ""
+                )}
+                onClick={() => document.getElementById('customNodeColor')?.click()}
+                style={{ backgroundColor: node.data.color?.toString().startsWith('#') ? (node.data.color as string) : undefined }}
+              >
+                <Pipette size={14} className={node.data.color?.toString().startsWith('#') ? "text-white shadow-sm" : ""} />
+              </button>
+              <input 
+                id="customNodeColor"
+                type="color"
+                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                value={node.data.color?.toString().startsWith('#') ? (node.data.color as string) : '#000000'}
+                onChange={e => updateNode(node.id, { color: e.target.value })}
+              />
+            </div>
           </div>
         </div>
 
