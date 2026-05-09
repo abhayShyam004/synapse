@@ -14,50 +14,76 @@ interface Message {
 }
 
 /**
- * Robust JSON extraction that handles markdown blocks, conversational text, and truncated JSON.
+ * Advanced JSON repair utility that streams through characters to aggressively close arrays, objects, and strings.
  */
-const extractJSON = (str: string) => {
-  // First, clean out markdown wrappers
+const repairJSON = (str: string) => {
   let cleaned = str.replace(/```json\n?|\n?```/g, '').trim();
+  const startIdx = cleaned.indexOf('{');
+  if (startIdx !== -1) cleaned = cleaned.substring(startIdx);
+
+  const stack: ('{' | '[' | '"')[] = [];
+  let isEscaped = false;
   
+  for (let i = 0; i < cleaned.length; i++) {
+    const char = cleaned[i];
+    
+    if (stack[stack.length - 1] === '"') {
+      if (isEscaped) {
+        isEscaped = false;
+      } else if (char === '\\') {
+        isEscaped = true;
+      } else if (char === '"') {
+        stack.pop();
+      }
+      continue;
+    }
+
+    if (char === '"') {
+      stack.push('"');
+    } else if (char === '{') {
+      stack.push('{');
+    } else if (char === '[') {
+      stack.push('[');
+    } else if (char === '}') {
+      if (stack[stack.length - 1] === '{') stack.pop();
+    } else if (char === ']') {
+      if (stack[stack.length - 1] === '[') stack.pop();
+    }
+  }
+
+  // Auto-close any open structures
+  while (stack.length > 0) {
+    const last = stack.pop();
+    if (last === '"') {
+      cleaned += '"';
+    } else if (last === '{') {
+      // If we are closing an object, ensure it doesn't end with a trailing comma
+      if (cleaned.trim().endsWith(',')) {
+        cleaned = cleaned.trim().slice(0, -1);
+      }
+      cleaned += '}';
+    } else if (last === '[') {
+      if (cleaned.trim().endsWith(',')) {
+        cleaned = cleaned.trim().slice(0, -1);
+      }
+      cleaned += ']';
+    }
+  }
+
+  return cleaned;
+};
+
+const extractJSON = (str: string) => {
   try {
-    return JSON.parse(cleaned);
+    return JSON.parse(str.replace(/```json\n?|\n?```/g, '').trim());
   } catch (e) {
     try {
-      // Try to find the first {
-      const start = cleaned.indexOf('{');
-      if (start !== -1) {
-        cleaned = cleaned.substring(start);
-        
-        // Find the last }
-        const end = cleaned.lastIndexOf('}');
-        if (end !== -1 && end > 0) {
-           return JSON.parse(cleaned.substring(0, end + 1));
-        }
-        
-        // If no closing bracket is found, it's heavily truncated.
-        // Attempt a very basic, dirty fix to close the JSON arrays and objects.
-        // This is a last resort to salvage the workflow generation.
-        let fixed = cleaned;
-        if (fixed.lastIndexOf('"') > fixed.lastIndexOf('}')) {
-          fixed += '"'; // Close unclosed string
-        }
-        if (fixed.lastIndexOf('}') < fixed.lastIndexOf('{')) {
-          fixed += '}'; // Close unclosed object
-        }
-        if (fixed.lastIndexOf(']') < fixed.lastIndexOf('[')) {
-          fixed += ']'; // Close unclosed array
-        }
-        if (!fixed.trim().endsWith('}')) {
-          fixed += '}'; // Close root object
-        }
-        return JSON.parse(fixed);
-      }
+      const repaired = repairJSON(str);
+      return JSON.parse(repaired);
     } catch (e2) {
       console.error('Failed to parse and repair AI response:', str);
       throw new Error('Invalid JSON format from AI');
     }
-    throw new Error('Invalid JSON format from AI');
   }
 };
 
