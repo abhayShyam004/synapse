@@ -110,8 +110,7 @@ const Dashboard = () => {
   );
 
   return (
-    <div className="min-h-screen font-sans relative" style={{ 
-      backgroundColor: 'var(--accent-bg)',
+    <div className="min-h-screen bg-[#F3F4F6] font-sans relative" style={{ 
       backgroundImage: 'radial-gradient(var(--accent-dot) 1.5px, transparent 1.5px)',
       backgroundSize: '20px 20px'
     }}>
