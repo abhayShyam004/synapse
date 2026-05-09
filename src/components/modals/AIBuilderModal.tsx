@@ -14,70 +14,78 @@ interface Message {
 }
 
 /**
- * Advanced JSON repair utility that streams through characters to aggressively close arrays, objects, and strings.
+ * Robust JSON extraction that handles markdown blocks, conversational text, and gracefully heals syntax errors.
  */
-const repairJSON = (str: string) => {
+const extractJSON = (str: string) => {
   let cleaned = str.replace(/```json\n?|\n?```/g, '').trim();
   const startIdx = cleaned.indexOf('{');
   if (startIdx !== -1) cleaned = cleaned.substring(startIdx);
 
-  const stack: ('{' | '[' | '"')[] = [];
-  let isEscaped = false;
-  
-  for (let i = 0; i < cleaned.length; i++) {
-    const char = cleaned[i];
-    
-    if (stack[stack.length - 1] === '"') {
-      if (isEscaped) {
-        isEscaped = false;
-      } else if (char === '\\') {
-        isEscaped = true;
-      } else if (char === '"') {
-        stack.pop();
-      }
-      continue;
-    }
-
-    if (char === '"') {
-      stack.push('"');
-    } else if (char === '{') {
-      stack.push('{');
-    } else if (char === '[') {
-      stack.push('[');
-    } else if (char === '}') {
-      if (stack[stack.length - 1] === '{') stack.pop();
-    } else if (char === ']') {
-      if (stack[stack.length - 1] === '[') stack.pop();
-    }
-  }
-
-  // Auto-close any open structures
-  while (stack.length > 0) {
-    const last = stack.pop();
-    if (last === '"') {
-      cleaned += '"';
-    } else if (last === '{') {
-      cleaned += '}';
-    } else if (last === '[') {
-      cleaned += ']';
-    }
-  }
-
-  // Remove trailing commas before closing brackets/braces
-  cleaned = cleaned.replace(/,\s*([}\]])/g, '$1');
-
-  return cleaned;
-};
-
-const extractJSON = (str: string) => {
   try {
-    return JSON.parse(str.replace(/```json\n?|\n?```/g, '').trim());
+    return JSON.parse(cleaned);
   } catch (e) {
+    const stack: ('{' | '[' | '"')[] = [];
+    let isEscaped = false;
+    let validOutput = "";
+
+    for (let i = 0; i < cleaned.length; i++) {
+      const char = cleaned[i];
+      
+      if (stack[stack.length - 1] === '"') {
+        validOutput += char;
+        if (isEscaped) {
+          isEscaped = false;
+        } else if (char === '\\') {
+          isEscaped = true;
+        } else if (char === '"') {
+          stack.pop();
+        }
+        continue;
+      }
+
+      if (char === '"') {
+        stack.push('"');
+      } else if (char === '{') {
+        stack.push('{');
+      } else if (char === '[') {
+        stack.push('[');
+      } else if (char === '}') {
+        if (stack[stack.length - 1] === '{') {
+          stack.pop();
+        } else {
+          // Extra closing brace, skip it
+          continue; 
+        }
+      } else if (char === ']') {
+        if (stack[stack.length - 1] === '[') {
+          stack.pop();
+        } else {
+          // Extra closing bracket, skip it
+          continue;
+        }
+      }
+      validOutput += char;
+    }
+
+    // Auto-close any open structures
+    while (stack.length > 0) {
+      const last = stack.pop();
+      if (last === '"') {
+        validOutput += '"';
+      } else if (last === '{') {
+        validOutput += '}';
+      } else if (last === '[') {
+        validOutput += ']';
+      }
+    }
+
+    // Remove trailing commas before closing brackets/braces
+    validOutput = validOutput.replace(/,\s*([}\]])/g, '$1');
+
     try {
-      const repaired = repairJSON(str);
-      return JSON.parse(repaired);
+      return JSON.parse(validOutput);
     } catch (e2) {
-      console.error('Failed to parse and repair AI response:', str);
+      console.error('Failed to parse and repair AI response:', validOutput);
       throw new Error('Invalid JSON format from AI');
     }
   }
