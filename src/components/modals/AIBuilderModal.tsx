@@ -57,18 +57,14 @@ const repairJSON = (str: string) => {
     if (last === '"') {
       cleaned += '"';
     } else if (last === '{') {
-      // If we are closing an object, ensure it doesn't end with a trailing comma
-      if (cleaned.trim().endsWith(',')) {
-        cleaned = cleaned.trim().slice(0, -1);
-      }
       cleaned += '}';
     } else if (last === '[') {
-      if (cleaned.trim().endsWith(',')) {
-        cleaned = cleaned.trim().slice(0, -1);
-      }
       cleaned += ']';
     }
   }
+
+  // Remove trailing commas before closing brackets/braces
+  cleaned = cleaned.replace(/,\s*([}\]])/g, '$1');
 
   return cleaned;
 };
