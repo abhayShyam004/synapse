@@ -9,14 +9,22 @@ import { useReactFlow } from '@xyflow/react';
 interface Message {
   role: 'ai' | 'user';
   content: string;
+  options?: string[];
+  isFinal?: boolean;
 }
 
 export const AIBuilderModal = () => {
   const { isAIBuilderOpen, setAIBuilderOpen, addNode, onConnect, nodes } = useSynapseStore();
   const { fitView } = useReactFlow();
+  
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'ai', content: "Hi! Let's build your workflow together. What are you trying to automate or plan? Describe your goal in a sentence or two." }
+    { 
+      role: 'ai', 
+      content: "Hi! Let's build your workflow together. What are you trying to automate or plan? Describe your goal in a sentence or two.",
+      options: ["Get a software dev job", "Build a side project", "Learn for interviews", "Career switch to tech"]
+    }
   ]);
+  
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -28,52 +36,83 @@ export const AIBuilderModal = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isThinking]);
+  }, [messages, isThinking, isGenerating]);
 
   if (!isAIBuilderOpen) return null;
 
-  const handleSend = async () => {
-    if (!input.trim() || isThinking) return;
+  const handleSend = async (text?: string) => {
+    const messageText = text || input.trim();
+    if (!messageText || isThinking || isGenerating) return;
 
-    const userMessage = input.trim();
-    const newMessages = [...messages, { role: 'user', content: userMessage }];
-    setMessages(newMessages as Message[]);
+    const userMessage: Message = { role: 'user', content: messageText };
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     setInput('');
     setIsThinking(true);
 
     try {
-      const prompt = `You are a workflow planning assistant. We are having a conversation to build a workflow.
+      const userMessageCount = newMessages.filter(m => m.role === 'user').length;
+      
+      let systemPrompt = `You are a workflow planning assistant. We are having a short conversation (max 4 turns) to build a workflow.
+Current turn: ${userMessageCount}/4.
+
 Conversation so far:
 ${newMessages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n')}
 
-If you have enough information to generate a workflow (goal, steps, conditions), say exactly: "Great, I have everything I need. Ready to generate your workflow?".
-Otherwise, ask exactly one follow-up question to clarify the user's needs (goal, node types, flow, conditions, or variables).`;
+RULES:
+1. Return ONLY valid JSON in this format: { "message": "string", "options": ["string", "string"], "isFinal": boolean }
+2. If this is the 3rd or 4th user response, OR you have enough info, set "isFinal": true and say "Great, I have enough to build your workflow. Generating now...".
+3. Otherwise, ask a short, relevant question.
+4. Always provide 2-4 logical suggested answer options as chips.
+5. Do NOT ask about support systems or metrics. Focus on goal, level, timeline, or tech stack.`;
 
-      const aiResponse = await fetchAISuggestion(prompt);
-      setMessages([...newMessages, { role: 'ai', content: aiResponse }] as Message[]);
+      const aiResponse = await fetchAISuggestion(systemPrompt);
+      const cleaned = aiResponse.replace(/```json\n?|\n?```/g, '').trim();
+      const parsed = JSON.parse(cleaned);
+      
+      const aiMessage: Message = {
+        role: 'ai',
+        content: parsed.message,
+        options: parsed.options,
+        isFinal: parsed.isFinal
+      };
+
+      setMessages([...newMessages, aiMessage] as Message[]);
+
+      if (parsed.isFinal) {
+        // Auto-trigger generation after a brief delay
+        setTimeout(() => {
+          handleGenerate([...newMessages, aiMessage]);
+        }, 1500);
+      }
     } catch (error) {
+      console.error(error);
       toast.error('AI is having trouble responding. Please try again.');
     } finally {
       setIsThinking(false);
     }
   };
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (currentMessages: Message[]) => {
     setIsGenerating(true);
     try {
       const prompt = `Based on this conversation:
-${messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n')}
+${currentMessages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n')}
 
-Generate a complete workflow as JSON. Return ONLY valid JSON, no other text.
-The JSON must follow this structure:
+Generate a complete, high-quality workflow as JSON. Return ONLY valid JSON, no other text.
+The workflow should be a detailed step-by-step path based on the user's goal.
+
+Structure:
 {
-  "nodes": [{ "id": "unique-id", "type": "task|trigger|decision|condition|aiPrompt|timer|variable|loop|note", "name": "Human Readable Name", "description": "Brief description" }],
-  "edges": [{ "source": "node-id", "target": "node-id" }]
+  "nodes": [{ "id": "1", "type": "task|trigger|decision|condition|aiPrompt|timer|variable|loop|note", "name": "Step Name", "description": "Details" }],
+  "edges": [{ "source": "1", "target": "2" }]
 }
 
 Guidelines:
-- Space nodes vertically 150px apart.
-- Horizontally centered around x:400.
+- Space nodes vertically 160px apart.
+- Horizontally centered around x:500.
+- Connect them linearly top to bottom.
+- Use meaningful names (e.g., "Python Fundamentals", "DSA Basics").
 - Use ONLY these types: task, trigger, decision, condition, aiPrompt, timer, variable, note.
 - Do not explain anything. Just JSON.`;
 
@@ -83,19 +122,20 @@ Guidelines:
 
       // Find rightmost node to offset
       const rightmostX = nodes.length > 0 ? Math.max(...nodes.map(n => n.position.x)) : 0;
-      const xOffset = nodes.length > 0 ? rightmostX + 400 : 0;
+      const xOffset = nodes.length > 0 ? rightmostX + 300 : 0;
 
       // Add nodes
       parsed.nodes.forEach((n: any, index: number) => {
         addNode({
-          id: n.id,
+          id: `${currentWorkflowId || 'ai'}-${n.id}`,
           type: 'custom',
-          position: { x: xOffset + 400, y: (index * 150) + 100 },
+          position: { x: xOffset + 500, y: (index * 160) + 100 },
           data: { 
             label: n.name, 
             type: n.type.charAt(0).toUpperCase() + n.type.slice(1), 
             description: n.description,
-            expanded: true 
+            expanded: true,
+            shape: 'rounded'
           }
         });
       });
@@ -104,8 +144,8 @@ Guidelines:
       setTimeout(() => {
         parsed.edges.forEach((e: any) => {
           onConnect({ 
-            source: e.source, 
-            target: e.target,
+            source: `${currentWorkflowId || 'ai'}-${e.source}`, 
+            target: `${currentWorkflowId || 'ai'}-${e.target}`,
             sourceHandle: null,
             targetHandle: null
           });
@@ -115,123 +155,145 @@ Guidelines:
 
       toast.success(`Workflow generated! ${parsed.nodes.length} nodes added.`);
       setAIBuilderOpen(false);
+      // Reset messages for next time
+      setMessages([{ 
+        role: 'ai', 
+        content: "Hi! Let's build your workflow together. What are you trying to automate or plan? Describe your goal in a sentence or two.",
+        options: ["Get a software dev job", "Build a side project", "Learn for interviews", "Career switch to tech"]
+      }]);
     } catch (error) {
       console.error(error);
-      toast.error('Something went wrong during generation. Check console or try again.');
+      toast.error('Something went wrong during generation. Try again.');
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const isReadyToGenerate = messages.some(m => m.role === 'ai' && m.content.toLowerCase().includes('ready to generate'));
+  const currentWorkflowId = useSynapseStore(state => state.currentWorkflowId);
+  const lastAIMessage = [...messages].reverse().find(m => m.role === 'ai');
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4">
-      <div 
-        className="bg-white rounded-2xl shadow-2xl w-[600px] max-h-[80vh] flex flex-col overflow-hidden border border-gray-200"
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50 shrink-0">
-          <h2 className="font-bold text-gray-900 flex items-center gap-2">
-            <Sparkles size={18} className="text-[var(--accent)]" /> Build with AI
-          </h2>
-          <button 
-            onClick={() => setAIBuilderOpen(false)} 
-            className="text-gray-400 hover:text-gray-700 transition-colors p-1 hover:bg-gray-100 rounded-md"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* Chat Area */}
-        <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 bg-gray-50/30">
-          {messages.map((m, i) => (
-            <div 
-              key={i} 
-              className={clsx(
-                "flex gap-3 max-w-[85%]",
-                m.role === 'user' ? "self-end flex-row-reverse" : "self-start"
-              )}
-            >
-              <div className={clsx(
-                "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm",
-                m.role === 'ai' ? "bg-white text-[var(--accent)]" : "bg-[var(--accent)] text-white"
-              )}>
-                {m.role === 'ai' ? <Bot size={16} /> : <User size={16} />}
-              </div>
-              <div className={clsx(
-                "p-3.5 rounded-2xl text-[13px] leading-relaxed shadow-sm",
-                m.role === 'ai' ? "bg-white text-gray-700 rounded-tl-none border border-gray-100" : "bg-[var(--accent)] text-white rounded-tr-none"
-              )}>
-                {m.content}
-              </div>
+    <>
+      {/* Full-screen Loading State for Generation */}
+      {isGenerating && (
+        <div className="fixed inset-0 z-[200] bg-white flex flex-col items-center justify-center animate-in fade-in duration-500">
+          <div className="flex flex-col items-center gap-6">
+            <div className="relative">
+               <div className="w-16 h-16 border-4 border-gray-100 rounded-full border-t-[var(--accent)] animate-spin" />
+               <Sparkles className="absolute inset-0 m-auto text-[var(--accent)] animate-pulse" size={24} />
             </div>
-          ))}
-          
-          {isThinking && (
-            <div className="self-start flex gap-3">
-              <div className="w-8 h-8 rounded-full bg-white text-[var(--accent)] flex items-center justify-center shadow-sm border border-gray-100">
-                <Bot size={16} />
+            <div className="flex flex-col items-center">
+              <h2 className="text-xl font-bold text-gray-900 mb-1">Building your workflow...</h2>
+              <p className="text-gray-400 text-sm">Synthesizing study path and connections</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4">
+        <div 
+          className="bg-white rounded-2xl shadow-2xl w-[600px] max-h-[80vh] flex flex-col overflow-hidden border border-gray-200"
+          onClick={e => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50 shrink-0">
+            <h2 className="font-bold text-gray-900 flex items-center gap-2">
+              <Sparkles size={18} className="text-[var(--accent)]" /> Build with AI
+            </h2>
+            <button 
+              onClick={() => setAIBuilderOpen(false)} 
+              className="text-gray-400 hover:text-gray-700 transition-colors p-1 hover:bg-gray-100 rounded-md"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          {/* Chat Area */}
+          <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 bg-gray-50/30">
+            {messages.map((m, i) => (
+              <div key={i} className="flex flex-col gap-3">
+                <div 
+                  className={clsx(
+                    "flex gap-3 max-w-[85%]",
+                    m.role === 'user' ? "self-end flex-row-reverse" : "self-start"
+                  )}
+                >
+                  <div className={clsx(
+                    "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm",
+                    m.role === 'ai' ? "bg-white text-[var(--accent)] border border-gray-100" : "bg-[var(--accent)] text-white"
+                  )}>
+                    {m.role === 'ai' ? <Bot size={16} /> : <User size={16} />}
+                  </div>
+                  <div className={clsx(
+                    "p-3.5 rounded-2xl text-[13px] leading-relaxed shadow-sm",
+                    m.role === 'ai' ? "bg-white text-gray-700 rounded-tl-none border border-gray-100" : "bg-[var(--accent)] text-white rounded-tr-none"
+                  )}>
+                    {m.content}
+                  </div>
+                </div>
+
+                {/* Suggested Options Chips */}
+                {!isThinking && m === lastAIMessage && m.options && !m.isFinal && (
+                  <div className="flex flex-wrap gap-2 ml-11 max-w-[85%]">
+                    {m.options.map(opt => (
+                      <button
+                        key={opt}
+                        onClick={() => handleSend(opt)}
+                        className="bg-white border border-[var(--accent)] text-[var(--accent)] px-4 py-2 rounded-lg text-xs font-semibold hover:bg-[var(--accent)] hover:text-white transition-all shadow-sm active:scale-95"
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div className="bg-white border border-gray-100 p-3 rounded-2xl rounded-tl-none shadow-sm">
-                <div className="flex gap-1">
-                  <span className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce" />
-                  <span className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce [animation-delay:0.2s]" />
-                  <span className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce [animation-delay:0.4s]" />
+            ))}
+            
+            {isThinking && (
+              <div className="self-start flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-white text-[var(--accent)] flex items-center justify-center shadow-sm border border-gray-100">
+                  <Bot size={16} />
+                </div>
+                <div className="bg-white border border-gray-100 p-3 rounded-2xl rounded-tl-none shadow-sm flex items-center justify-center min-w-[50px]">
+                  <div className="flex gap-1">
+                    <span className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce" />
+                    <span className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce [animation-delay:0.2s]" />
+                    <span className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce [animation-delay:0.4s]" />
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+            
+            <div ref={messagesEndRef} />
+          </div>
 
-          {isReadyToGenerate && !isGenerating && (
-            <div className="self-center mt-4">
+          {/* Input Area */}
+          <div className="p-4 bg-white border-t border-gray-100 shrink-0">
+            <div className="flex gap-2">
+              <input 
+                autoFocus
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSend()}
+                placeholder="Type your answer..."
+                disabled={isThinking || isGenerating}
+                className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent)]/10 transition-all disabled:bg-gray-50"
+              />
               <button 
-                onClick={handleGenerate}
-                style={{ backgroundColor: 'var(--accent)' }}
-                className="px-6 py-2.5 rounded-full text-white font-bold text-sm shadow-lg hover:scale-105 transition-all flex items-center gap-2"
+                onClick={() => handleSend()}
+                disabled={!input.trim() || isThinking || isGenerating}
+                style={{ backgroundColor: input.trim() ? 'var(--accent)' : '#E5E7EB' }}
+                className={clsx(
+                  "w-10 h-10 rounded-xl flex items-center justify-center text-white transition-all",
+                  input.trim() ? "shadow-md hover:scale-105" : "cursor-not-allowed"
+                )}
               >
-                <Sparkles size={16} /> Generate Workflow
+                {isThinking ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
               </button>
             </div>
-          )}
-
-          {isGenerating && (
-            <div className="self-center mt-4 flex flex-col items-center gap-2">
-              <Loader2 size={24} className="animate-spin text-[var(--accent)]" />
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Generating your workflow...</span>
-            </div>
-          )}
-          
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input Area */}
-        <div className="p-4 bg-white border-t border-gray-100 shrink-0">
-          <div className="flex gap-2">
-            <input 
-              autoFocus
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSend()}
-              placeholder="Type your answer..."
-              disabled={isThinking || isGenerating}
-              className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent)]/10 transition-all disabled:bg-gray-50"
-            />
-            <button 
-              onClick={handleSend}
-              disabled={!input.trim() || isThinking || isGenerating}
-              style={{ backgroundColor: input.trim() ? 'var(--accent)' : '#E5E7EB' }}
-              className={clsx(
-                "w-10 h-10 rounded-xl flex items-center justify-center text-white transition-all",
-                input.trim() ? "shadow-md hover:scale-105" : "cursor-not-allowed"
-              )}
-            >
-              {isThinking ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-            </button>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
