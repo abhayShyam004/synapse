@@ -26,7 +26,7 @@ describe('fetchAISuggestion', () => {
     const result = await fetchAISuggestion('Hello');
     expect(result).toBe('Test suggestion');
     expect(fetch).toHaveBeenCalledWith(
-      'https://integrate.api.nvidia.com/v1/chat/completions',
+      '/api/nvidia/chat/completions',
       expect.objectContaining({
         method: 'POST',
         headers: expect.objectContaining({
@@ -37,7 +37,7 @@ describe('fetchAISuggestion', () => {
           model: 'meta/llama-3.1-8b-instruct',
           messages: [{ role: 'user', content: 'Hello' }],
           temperature: 0.7,
-          max_tokens: 150,
+          max_tokens: 4096,
         })
       })
     );
