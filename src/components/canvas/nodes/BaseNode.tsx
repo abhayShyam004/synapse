@@ -80,8 +80,7 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
   const shape = (data.shape as string) || 'rounded';
 
   const borderRadius = 
-    shape === 'pill' ? 'rounded-[999px]' :
-    shape === 'rounded' ? 'rounded-[20px]' :
+    shape === 'rounded' ? 'rounded-[16px]' :
     'rounded-[8px]';
 
   return (
@@ -100,30 +99,30 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
         borderRadius
       )}
     >
-      {isGhost && (
-        <div className="absolute top-1 left-1/2 -translate-x-1/2 bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-[9px] font-bold flex items-center gap-1 border border-purple-200 whitespace-nowrap z-10 opacity-80">
-          <Sparkles size={8} /> AI Suggestion
-        </div>
-      )}
-
       {/* Header Bar */}
       <div 
         className={clsx(`${headerBgColor} text-white px-4 py-2.5 h-[60px] flex flex-col justify-center relative cursor-pointer group/header`)}
         onClick={toggleExpand}
       >
-        <span className="text-[10px] font-bold uppercase tracking-widest opacity-80 leading-none mb-1">
-          {data.type || 'Stage'}
-        </span>
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-bold uppercase tracking-widest opacity-80 leading-none mb-1">
+            {data.type || 'Stage'}
+          </span>
+          {!isGhost && (
+            <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+              <ChevronDown size={18} className="opacity-80" />
+            </motion.div>
+          )}
+        </div>
         <span className="font-bold text-sm leading-none truncate pr-6">
           {data.label || 'New Node'}
         </span>
         
-        <motion.div 
-          animate={{ rotate: isExpanded ? 180 : 0 }} 
-          className="absolute right-3 top-1/2 -translate-y-1/2 opacity-60 hover:opacity-100 transition-opacity"
-        >
-          <ChevronDown size={18} />
-        </motion.div>
+        {isGhost && (
+          <div className="absolute top-1 left-1/2 -translate-x-1/2 bg-white/20 text-white px-2 py-0.5 rounded-full text-[8px] font-bold flex items-center gap-1 border border-white/20 whitespace-nowrap z-10">
+            <Sparkles size={8} /> AI Suggestion
+          </div>
+        )}
       </div>
 
       {/* Body Section */}
@@ -142,7 +141,7 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
               ) : null}
               
               <div className="flex items-center justify-between mt-2">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">
+                <span className="text-[10px] font-medium text-gray-400 uppercase tracking-tight">
                   {connectedEdgesCount} Connection{connectedEdgesCount !== 1 ? 's' : ''}
                 </span>
                 <div className="flex items-center gap-1">
@@ -171,12 +170,12 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
       <Handle 
         type="target" 
         position={Position.Top} 
-        className="w-2.5 h-2.5 bg-[#06B6D4] border-2 border-white rounded-full z-20 opacity-0 group-hover:opacity-100 transition-opacity cursor-crosshair !-top-1.25 !left-1/2 !-translate-x-1/2"
+        className="w-2.5 h-2.5 bg-[var(--accent)] border-2 border-white rounded-full z-20 opacity-0 group-hover:opacity-100 transition-opacity cursor-crosshair !-top-1.25 !left-1/2 !-translate-x-1/2"
       />
       <Handle 
         type="source" 
         position={Position.Bottom} 
-        className="w-2.5 h-2.5 bg-[#06B6D4] border-2 border-white rounded-full z-20 opacity-0 group-hover:opacity-100 transition-opacity cursor-crosshair !-bottom-1.25 !left-1/2 !-translate-x-1/2"
+        className="w-2.5 h-2.5 bg-[var(--accent)] border-2 border-white rounded-full z-20 opacity-0 group-hover:opacity-100 transition-opacity cursor-crosshair !-bottom-1.25 !left-1/2 !-translate-x-1/2"
       />
 
       {isGhost && (

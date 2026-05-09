@@ -1,5 +1,5 @@
 import { useSynapseStore } from '../../store/useSynapseStore';
-import { X, Trash2, Copy, Square, Circle, RectangleHorizontal } from 'lucide-react';
+import { X, Trash2, Copy, Square, Circle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useEffect, useState, useRef } from 'react';
 import { clsx } from 'clsx';
@@ -18,7 +18,6 @@ const ACCENT_COLORS = [
 const SHAPES = [
   { id: 'rectangle', label: 'Rectangle', icon: Square },
   { id: 'rounded', label: 'Rounded', icon: Circle },
-  { id: 'pill', label: 'Pill', icon: RectangleHorizontal },
 ];
 
 export const NodeSettingsPopover = () => {
@@ -38,7 +37,8 @@ export const NodeSettingsPopover = () => {
         const gap = 16;
         
         let left = rect.right + gap;
-        if (left + popoverWidth > window.innerWidth) {
+        // If it would overflow the right edge of the screen, flip to the left
+        if (left + popoverWidth > window.innerWidth - 20) {
           left = rect.left - popoverWidth - gap;
         }
 
@@ -56,7 +56,6 @@ export const NodeSettingsPopover = () => {
     };
     const handleClickOutside = (e: MouseEvent) => {
       if (popoverRef.current && !popoverRef.current.contains(e.target as HTMLElement)) {
-        // Only close if it's not a click on the node itself (which might be trying to re-open or interact)
         const target = e.target as HTMLElement;
         if (!target.closest(`[data-id="${nodeSettingsPopover.nodeId}"]`)) {
           handleClose();
@@ -99,7 +98,7 @@ export const NodeSettingsPopover = () => {
   return (
     <div 
       ref={popoverRef}
-      className="fixed z-50 bg-white rounded-xl shadow-2xl border border-gray-200 w-[260px] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+      className="fixed z-[100] bg-white rounded-xl shadow-2xl border border-gray-200 w-[260px] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
       style={{ top: coords.top, left: coords.left }}
     >
       <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
@@ -109,7 +108,7 @@ export const NodeSettingsPopover = () => {
         </button>
       </div>
 
-      <div className="p-4 flex flex-col gap-5 overflow-y-auto max-h-[70vh]">
+      <div className="p-4 flex flex-col gap-5 overflow-y-auto max-h-[80vh]">
         <div className="flex flex-col gap-1.5">
           <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Name</label>
           <input 
@@ -132,20 +131,20 @@ export const NodeSettingsPopover = () => {
 
         <div className="flex flex-col gap-2.5">
           <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Shape</label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {SHAPES.map(s => (
               <button
                 key={s.id}
                 onClick={() => updateNode(node.id, { shape: s.id })}
                 className={clsx(
-                  "flex flex-col items-center justify-center gap-1.5 py-2 px-1 rounded-lg border transition-all",
+                  "flex flex-col items-center justify-center gap-1.5 py-2.5 px-2 rounded-lg border transition-all",
                   node.data.shape === s.id || (!node.data.shape && s.id === 'rounded') 
                     ? "border-[var(--accent)] bg-accent/5 text-[var(--accent)] shadow-sm" 
                     : "border-gray-100 hover:border-gray-300 text-gray-400"
                 )}
               >
-                <s.icon size={18} strokeWidth={node.data.shape === s.id ? 2.5 : 2} />
-                <span className="text-[9px] font-bold uppercase tracking-tighter">{s.label}</span>
+                <s.icon size={20} strokeWidth={node.data.shape === s.id ? 2.5 : 2} />
+                <span className="text-[10px] font-bold uppercase tracking-tighter">{s.label}</span>
               </button>
             ))}
           </div>
@@ -153,7 +152,7 @@ export const NodeSettingsPopover = () => {
 
         <div className="flex flex-col gap-2.5">
           <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Color</label>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-4 gap-2.5">
             {ACCENT_COLORS.map(c => (
               <button
                 key={c.id}
@@ -173,11 +172,11 @@ export const NodeSettingsPopover = () => {
         </div>
 
         <div className="pt-4 border-t border-gray-100 flex items-center justify-between mt-1">
-          <button onClick={handleClone} className="text-[10px] font-bold text-[var(--accent)] flex items-center gap-1 hover:bg-accent/5 px-2 py-1 rounded-md transition-colors uppercase tracking-tight">
-            <Copy size={12} /> Clone
+          <button onClick={handleClone} className="text-[10px] font-bold text-[var(--accent)] flex items-center gap-1.5 hover:bg-accent/5 px-2 py-1 rounded-md transition-colors uppercase tracking-tight">
+            <Copy size={14} /> Clone
           </button>
-          <button onClick={handleDelete} className="text-[10px] font-bold text-red-500 flex items-center gap-1 hover:bg-red-50 px-2 py-1 rounded-md transition-colors uppercase tracking-tight">
-            <Trash2 size={12} /> Delete
+          <button onClick={handleDelete} className="text-[10px] font-bold text-red-500 flex items-center gap-1.5 hover:bg-red-50 px-2 py-1 rounded-md transition-colors uppercase tracking-tight">
+            <Trash2 size={14} /> Delete
           </button>
         </div>
       </div>
