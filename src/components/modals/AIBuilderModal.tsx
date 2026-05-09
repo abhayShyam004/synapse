@@ -215,7 +215,7 @@ Guidelines:
         </div>
       )}
 
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4" onClick={() => setAIBuilderOpen(false)}>
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#000000]/40 backdrop-blur-[2px] p-4" onClick={() => setAIBuilderOpen(false)}>
         <div 
           className="bg-white rounded-2xl shadow-2xl w-[600px] max-h-[80vh] flex flex-col overflow-hidden border border-gray-200 animate-in zoom-in-95 duration-200"
           onClick={e => e.stopPropagation()}
@@ -289,11 +289,11 @@ Guidelines:
                 <div className="w-8 h-8 rounded-full bg-white text-[var(--accent)] flex items-center justify-center shadow-sm border border-gray-100">
                   <Bot size={16} />
                 </div>
-                <div className="bg-white border border-gray-100 p-3 rounded-2xl rounded-tl-none shadow-sm flex items-center justify-center min-w-[50px]">
-                  <div className="flex gap-1">
-                    <span className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce" />
-                    <span className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce [animation-delay:0.2s]" />
-                    <span className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce [animation-delay:0.4s]" />
+                <div className="bg-white border border-gray-100 p-4 rounded-2xl rounded-tl-none shadow-sm flex items-center justify-center min-w-[60px]">
+                  <div className="flex gap-1.5">
+                    <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-duration:0.8s]" />
+                    <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-duration:0.8s] [animation-delay:0.2s]" />
+                    <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-duration:0.8s] [animation-delay:0.4s]" />
                   </div>
                 </div>
               </div>

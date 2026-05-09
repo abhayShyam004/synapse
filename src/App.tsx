@@ -29,6 +29,9 @@ function App() {
     const savedAccent = localStorage.getItem('synapse-accent') as any;
     if (savedAccent && ACCENT_COLORS[savedAccent as keyof typeof ACCENT_COLORS]) {
       updateSetting('accentColor', savedAccent);
+    } else {
+      // Force default to cyan if nothing or invalid is saved
+      updateSetting('accentColor', 'cyan');
     }
   }, []);
 

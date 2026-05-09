@@ -558,11 +558,9 @@
             const accentHex = colors[savedAccentName] || '#06B6D4';
             // Default to #B8BCC8 (solid-ish) if no accent is set, otherwise 20% of accent
             const dotColor = savedAccentName ? hexToRgba(accentHex, 0.2) : 'rgba(184, 188, 200, 0.8)';
-            const bgColor = savedAccentName ? hexToRgba(accentHex, 0.05) : '#F0F0F0';
             
             document.documentElement.style.setProperty('--accent', accentHex);
             document.documentElement.style.setProperty('--accent-dot', dotColor);
-            document.documentElement.style.setProperty('--accent-bg', bgColor);
         }
         syncAccent();
         window.addEventListener('storage', (e) => {

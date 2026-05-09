@@ -34,6 +34,8 @@ const Dashboard = () => {
     const savedAccent = localStorage.getItem('synapse-accent') as any;
     if (savedAccent && (ACCENT_COLORS as any)[savedAccent]) {
       updateSetting('accentColor', savedAccent);
+    } else {
+      updateSetting('accentColor', 'cyan');
     }
   }, []);
 
