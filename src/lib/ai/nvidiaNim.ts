@@ -4,7 +4,8 @@
  */
 export const fetchAISuggestion = async (prompt: string) => {
   const API_KEY = import.meta.env.VITE_NVIDIA_NIM_API_KEY;
-  const BASE_URL = 'https://integrate.api.nvidia.com/v1';
+  // Use relative path for Vite proxy in development
+  const BASE_URL = '/api/nvidia';
 
   if (!API_KEY) {
     console.warn('VITE_NVIDIA_NIM_API_KEY is not defined');
