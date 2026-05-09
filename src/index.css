@@ -8,6 +8,7 @@
 }
 
 :root {
+  --color-brand: #06B6D4;
   font-family: 'Inter', system-ui, sans-serif;
   color-scheme: light;
 }

@@ -1,19 +1,19 @@
 import { useState } from 'react';
 import { useSynapseStore } from '../../store/useSynapseStore';
-import { X, Settings, Monitor, Sparkles, Palette, Keyboard, Eye, EyeOff } from 'lucide-react';
+import { X, Settings, Monitor, Sparkles, Palette, Keyboard } from 'lucide-react';
 import { clsx } from 'clsx';
+import toast from 'react-hot-toast';
 
 export const SettingsModal = () => {
   const { 
     isSettingsOpen, toggleSettingsModal, 
     autoSave, snapToGrid, showMinimap, 
     canvasBackground, 
-    nimApiKey, ghostCardsEnabled, 
+    ghostCardsEnabled, idleSuggestionEnabled, idleTimeout, 
     accentColor, updateSetting 
   } = useSynapseStore();
 
   const [activeTab, setActiveTab] = useState<'general' | 'canvas' | 'ai' | 'appearance' | 'shortcuts'>('general');
-  const [showKey, setShowKey] = useState(false);
 
   if (!isSettingsOpen) return null;
 
@@ -25,10 +25,30 @@ export const SettingsModal = () => {
     { id: 'shortcuts', label: 'Shortcuts', icon: Keyboard },
   ] as const;
 
+  const handleSave = () => {
+    toast.success('Settings saved successfully');
+    toggleSettingsModal(false);
+  };
+
+  const Toggle = ({ checked, onChange }: { checked: boolean, onChange: (val: boolean) => void }) => (
+    <button 
+      onClick={() => onChange(!checked)}
+      className={clsx(
+        "w-10 h-5 rounded-full relative transition-colors duration-200 ease-in-out outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand",
+        checked ? "bg-[#06B6D4]" : "bg-gray-200"
+      )}
+    >
+      <div className={clsx(
+        "absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full shadow transform transition-transform duration-200 ease-in-out",
+        checked ? "translate-x-5" : "translate-x-0"
+      )} />
+    </button>
+  );
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm" onClick={() => toggleSettingsModal(false)}>
       <div 
-        className="bg-white rounded-xl shadow-2xl w-[560px] h-[480px] flex flex-col overflow-hidden border border-gray-200"
+        className="bg-white rounded-xl shadow-2xl w-[680px] h-[520px] flex flex-col overflow-hidden border border-gray-200"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50 shrink-0">
@@ -39,122 +59,206 @@ export const SettingsModal = () => {
             <X size={20} />
           </button>
         </div>
-
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex-1 flex overflow-hidden">
           {/* Sidebar */}
-          <div className="w-40 border-r border-gray-100 bg-gray-50 flex flex-col py-2 shrink-0">
-            {tabs.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={() => setActiveTab(id)}
-                className={clsx(
-                  "flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors text-left",
-                  activeTab === id ? "bg-white text-[#06B6D4] border-r-2 border-[#06B6D4]" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                )}
-              >
-                <Icon size={16} /> {label}
-              </button>
-            ))}
+          <div className="w-[180px] border-r border-gray-100 bg-gray-50 flex flex-col py-6 shrink-0">
+            <div className="px-6 mb-6">
+              <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Settings</h2>
+            </div>
+            <nav className="flex flex-col">
+              {tabs.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => setActiveTab(id)}
+                  className={clsx(
+                    "flex items-center gap-3 px-6 py-3 text-sm font-medium transition-all text-left relative",
+                    activeTab === id 
+                      ? "text-[#06B6D4] bg-cyan-50/50 border-l-4 border-[#06B6D4]" 
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-900 border-l-4 border-transparent"
+                  )}
+                >
+                  <Icon size={18} className={activeTab === id ? "text-[#06B6D4]" : "text-gray-400"} />
+                  {label}
+                </button>
+              ))}
+            </nav>
           </div>
 
           {/* Content */}
-          <div className="flex-1 p-6 overflow-y-auto bg-white">
-            {activeTab === 'general' && (
-              <div className="flex flex-col gap-6">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Workspace</h3>
-                  <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                    <span className="text-sm text-gray-700">Auto-save</span>
-                    <input type="checkbox" checked={autoSave} onChange={e => updateSetting('autoSave', e.target.checked)} className="accent-[#06B6D4] w-4 h-4" />
-                  </div>
-                  <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                    <span className="text-sm text-gray-700">Snap to grid</span>
-                    <input type="checkbox" checked={snapToGrid} onChange={e => updateSetting('snapToGrid', e.target.checked)} className="accent-[#06B6D4] w-4 h-4" />
-                  </div>
-                  <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                    <span className="text-sm text-gray-700">Show Minimap</span>
-                    <input type="checkbox" checked={showMinimap} onChange={e => updateSetting('showMinimap', e.target.checked)} className="accent-[#06B6D4] w-4 h-4" />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'canvas' && (
-              <div className="flex flex-col gap-6">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Canvas Style</h3>
-                  <div className="flex flex-col gap-3">
-                    <label className="flex items-center gap-2 text-sm text-gray-700">
-                      <input type="radio" checked={canvasBackground === 'dots'} onChange={() => updateSetting('canvasBackground', 'dots')} className="accent-[#06B6D4]" /> Dots
-                    </label>
-                    <label className="flex items-center gap-2 text-sm text-gray-700">
-                      <input type="radio" checked={canvasBackground === 'lines'} onChange={() => updateSetting('canvasBackground', 'lines')} className="accent-[#06B6D4]" /> Lines
-                    </label>
-                    <label className="flex items-center gap-2 text-sm text-gray-700">
-                      <input type="radio" checked={canvasBackground === 'none'} onChange={() => updateSetting('canvasBackground', 'none')} className="accent-[#06B6D4]" /> None
-                    </label>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'ai' && (
-              <div className="flex flex-col gap-6">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">NVIDIA NIM</h3>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs text-gray-500">API Key</label>
-                    <div className="relative">
-                      <input 
-                        type={showKey ? "text" : "password"} 
-                        value={nimApiKey}
-                        onChange={e => updateSetting('nimApiKey', e.target.value)}
-                        placeholder="nvapi-..."
-                        className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm outline-none focus:border-[#06B6D4] focus:ring-1 focus:ring-[#06B6D4] pr-10"
-                      />
-                      <button onClick={() => setShowKey(!showKey)} className="absolute right-2 top-1.5 text-gray-400 hover:text-gray-600">
-                        {showKey ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 p-8 overflow-y-auto bg-white">
+              {activeTab === 'general' && (
+                <div className="flex flex-col gap-8">
+                  <div>
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-6">Workspace</h3>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center justify-between h-12">
+                        <span className="text-sm font-medium text-gray-700">Auto-save changes</span>
+                        <Toggle checked={autoSave} onChange={v => updateSetting('autoSave', v)} />
+                      </div>
+                      <div className="flex items-center justify-between h-12">
+                        <span className="text-sm font-medium text-gray-700">Snap to grid</span>
+                        <Toggle checked={snapToGrid} onChange={v => updateSetting('snapToGrid', v)} />
+                      </div>
+                      <div className="flex items-center justify-between h-12">
+                        <span className="text-sm font-medium text-gray-700">Show Minimap</span>
+                        <Toggle checked={showMinimap} onChange={v => updateSetting('showMinimap', v)} />
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Features</h3>
-                  <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                    <span className="text-sm text-gray-700">AI Ghost Cards</span>
-                    <input type="checkbox" checked={ghostCardsEnabled} onChange={e => updateSetting('ghostCardsEnabled', e.target.checked)} className="accent-[#06B6D4] w-4 h-4" />
+              )}
+
+              {activeTab === 'canvas' && (
+                <div className="flex flex-col gap-8">
+                  <div>
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-6">Canvas Style</h3>
+                    <div className="flex flex-col gap-6">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">Background type</span>
+                        <div className="flex bg-gray-100 p-1 rounded-lg">
+                          {(['dots', 'lines', 'none'] as const).map(type => (
+                            <button
+                              key={type}
+                              onClick={() => updateSetting('canvasBackground', type)}
+                              className={clsx(
+                                "px-3 py-1 text-xs font-semibold rounded-md transition-all capitalize",
+                                canvasBackground === type ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                              )}
+                            >
+                              {type}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">Pattern color</span>
+                        <input 
+                          type="color" 
+                          value={useSynapseStore.getState().canvasDotColor}
+                          onChange={e => updateSetting('canvasDotColor', e.target.value)}
+                          className="w-8 h-8 rounded border-none cursor-pointer"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {activeTab === 'appearance' && (
-              <div className="flex flex-col gap-6">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Accent Color</h3>
-                  <div className="flex gap-3">
-                    <button onClick={() => updateSetting('accentColor', 'cyan')} className={`w-8 h-8 rounded-full bg-[#06B6D4] border-2 ${accentColor === 'cyan' ? 'border-gray-900 ring-2 ring-offset-1 ring-cyan-200' : 'border-transparent'}`} />
-                    <button onClick={() => updateSetting('accentColor', 'yellow')} className={`w-8 h-8 rounded-full bg-[#F59E0B] border-2 ${accentColor === 'yellow' ? 'border-gray-900 ring-2 ring-offset-1 ring-yellow-200' : 'border-transparent'}`} />
+              {activeTab === 'ai' && (
+                <div className="flex flex-col gap-8">
+                  <div>
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-6">NVIDIA NIM Integration</h3>
+                    <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6">
+                      <p className="text-xs text-blue-700 leading-relaxed">
+                        AI suggestions are powered by <strong>meta/llama-3.1-8b-instruct</strong>. 
+                        The API key is securely managed via environment variables.
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center justify-between h-12">
+                        <span className="text-sm font-medium text-gray-700">Enable Ghost Cards</span>
+                        <Toggle checked={ghostCardsEnabled} onChange={v => updateSetting('ghostCardsEnabled', v)} />
+                      </div>
+                      <div className="flex items-center justify-between h-12">
+                        <span className="text-sm font-medium text-gray-700">Idle suggestions</span>
+                        <Toggle checked={idleSuggestionEnabled} onChange={v => updateSetting('idleSuggestionEnabled', v)} />
+                      </div>
+                      <div className="flex items-center justify-between h-12">
+                        <span className="text-sm font-medium text-gray-700">Idle timeout</span>
+                        <select 
+                          value={idleTimeout}
+                          onChange={e => updateSetting('idleTimeout', Number(e.target.value))}
+                          className="text-sm border border-gray-200 rounded-md px-2 py-1 outline-none"
+                        >
+                          <option value={4}>4 seconds</option>
+                          <option value={8}>8 seconds</option>
+                          <option value={12}>12 seconds</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {activeTab === 'shortcuts' && (
-              <div className="flex flex-col gap-4">
-                <h3 className="text-sm font-semibold text-gray-900 mb-1">Keyboard Shortcuts</h3>
-                <div className="grid grid-cols-2 gap-y-3">
-                  <div className="text-sm text-gray-600">Undo</div>
-                  <div className="text-sm font-mono text-gray-900 bg-gray-100 px-2 py-0.5 rounded w-fit">Ctrl+Z</div>
-                  <div className="text-sm text-gray-600">Redo</div>
-                  <div className="text-sm font-mono text-gray-900 bg-gray-100 px-2 py-0.5 rounded w-fit">Ctrl+Y</div>
-                  <div className="text-sm text-gray-600">Save</div>
-                  <div className="text-sm font-mono text-gray-900 bg-gray-100 px-2 py-0.5 rounded w-fit">Ctrl+S</div>
-                  <div className="text-sm text-gray-600">Delete Node</div>
-                  <div className="text-sm font-mono text-gray-900 bg-gray-100 px-2 py-0.5 rounded w-fit">Backspace / Del</div>
+              {activeTab === 'appearance' && (
+                <div className="flex flex-col gap-8">
+                  <div>
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-6">Visual Theme</h3>
+                    <div className="flex flex-col gap-6">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">Accent color</span>
+                        <div className="flex gap-3">
+                          <button 
+                            onClick={() => updateSetting('accentColor', 'cyan')}
+                            className={clsx(
+                              "w-8 h-8 rounded-full bg-[#06B6D4] transition-all",
+                              accentColor === 'cyan' ? "ring-2 ring-offset-2 ring-[#06B6D4] scale-110" : "opacity-60 hover:opacity-100"
+                            )} 
+                          />
+                          <button 
+                            onClick={() => updateSetting('accentColor', 'yellow')}
+                            className={clsx(
+                              "w-8 h-8 rounded-full bg-[#F59E0B] transition-all",
+                              accentColor === 'yellow' ? "ring-2 ring-offset-2 ring-[#F59E0B] scale-110" : "opacity-60 hover:opacity-100"
+                            )} 
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+
+              {activeTab === 'shortcuts' && (
+                <div className="flex flex-col gap-6">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Keyboard Shortcuts</h3>
+                  <div className="border border-gray-100 rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 border-b border-gray-100">
+                        <tr>
+                          <th className="text-left px-4 py-2 font-semibold text-gray-600">Action</th>
+                          <th className="text-left px-4 py-2 font-semibold text-gray-600">Shortcut</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {[
+                          ['Undo', 'Ctrl+Z'],
+                          ['Redo', 'Ctrl+Shift+Z'],
+                          ['Save Workflow', 'Ctrl+S'],
+                          ['Delete Node', 'Delete'],
+                          ['Clone Node', 'Ctrl+D'],
+                          ['Close / Deselect', 'Escape'],
+                          ['Pan Canvas', 'Space+Drag'],
+                          ['Fit View', 'Ctrl+Shift+F'],
+                        ].map(([action, key]) => (
+                          <tr key={action}>
+                            <td className="px-4 py-2 text-gray-700">{action}</td>
+                            <td className="px-4 py-2 font-mono text-xs text-[#06B6D4] font-bold">{key}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 border-t border-gray-100 bg-gray-50 flex items-center justify-end gap-4 shrink-0">
+              <button 
+                onClick={() => toggleSettingsModal(false)}
+                className="text-sm font-medium text-gray-500 hover:text-gray-700"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleSave}
+                className="bg-[#06B6D4] text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-cyan-600 transition-all shadow-md shadow-cyan-100"
+              >
+                Save Changes
+              </button>
+            </div>
           </div>
         </div>
       </div>

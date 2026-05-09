@@ -6,7 +6,6 @@ export interface SettingsSlice {
   canvasBackground: 'dots' | 'lines' | 'none';
   canvasDotColor: string;
   zoomSpeed: number;
-  nimApiKey: string;
   ghostCardsEnabled: boolean;
   idleSuggestionEnabled: boolean;
   idleTimeout: number;
@@ -29,7 +28,6 @@ export const createSettingsSlice = (
   canvasBackground: 'dots',
   canvasDotColor: '#CBD5E1',
   zoomSpeed: 1,
-  nimApiKey: '',
   ghostCardsEnabled: true,
   idleSuggestionEnabled: false,
   idleTimeout: 4,

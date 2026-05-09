@@ -7,7 +7,7 @@ export const SearchOverlay = () => {
   if (!isSearchOpen) return null;
 
   return (
-    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-white rounded-lg shadow-lg border border-gray-200 p-2 w-96 flex items-center gap-2">
+    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-white rounded-lg shadow-lg border border-gray-200 p-2 w-[600px] flex items-center gap-2">
       <Search size={18} className="text-gray-400 shrink-0 ml-1" />
       <input
         autoFocus

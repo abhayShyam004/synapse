@@ -4,8 +4,22 @@ import { LeftSidebar } from './components/sidebar/LeftSidebar';
 import { TopToolbar } from './components/toolbar/TopToolbar';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { SearchOverlay } from './components/canvas/SearchOverlay';
+import { useSynapseStore } from './store/useSynapseStore';
+import { useEffect } from 'react';
+import { ReactFlowProvider } from '@xyflow/react';
 
 function App() {
+  const accentColor = useSynapseStore(state => state.accentColor);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (accentColor === 'cyan') {
+      root.style.setProperty('--color-brand', '#06B6D4');
+    } else if (accentColor === 'yellow') {
+      root.style.setProperty('--color-brand', '#F59E0B');
+    }
+  }, [accentColor]);
+
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden font-sans bg-white text-gray-900">
       <Toaster 
@@ -31,7 +45,9 @@ function App() {
         </aside>
         <section className="flex-1 relative bg-[#F3F4F6]">
           <SearchOverlay />
-          <WorkflowCanvas />
+          <ReactFlowProvider>
+            <WorkflowCanvas />
+          </ReactFlowProvider>
         </section>
       </main>
     </div>

@@ -40,19 +40,32 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
     setNodeSettingsPopover({ isOpen: true, nodeId: id });
   };
 
+  const typeBgColor = 
+    data.type === 'Trigger' ? 'bg-[#10B981]' :
+    data.type === 'Task' ? 'bg-[#3B82F6]' :
+    data.type === 'Decision' ? 'bg-[#374151]' :
+    data.type === 'Condition' ? 'bg-[#F59E0B]' :
+    data.type === 'AI Prompt' ? 'bg-[#8B5CF6]' :
+    data.type === 'Timer' ? 'bg-[#D97706]' :
+    data.type === 'Variable' ? 'bg-[#0D9488]' :
+    data.type === 'Loop' ? 'bg-[#EC4899]' :
+    data.type === 'Note' ? 'bg-[#6B7280]' :
+    'bg-gray-600';
+
   const headerBgColor = 
     data.color === 'blue' ? 'bg-[#3B82F6]' :
     data.color === 'green' ? 'bg-[#10B981]' :
     data.color === 'orange' ? 'bg-[#F59E0B]' :
     data.color === 'purple' ? 'bg-[#8B5CF6]' :
-    'bg-gray-600';
+    data.color === 'gray' ? 'bg-[#4B5563]' :
+    typeBgColor;
 
   return (
     <motion.div 
       initial={isGhost ? { opacity: 0.2 } : { scale: 0.9, opacity: 0 }}
       animate={isGhost ? { opacity: [0.4, 0.7, 0.4], transition: { repeat: Infinity, duration: 2 } } : { scale: 1, opacity: 1 }}
       className={clsx(
-        "group relative w-52 flex flex-col rounded-md bg-white border text-sm transition-all",
+        "group relative min-w-[220px] flex flex-col rounded-md bg-white border text-sm transition-all",
         selected ? "border-[#06B6D4] shadow-md ring-2 ring-[#06B6D4]/50" : "border-gray-200 shadow-sm",
         isGhost && "border-dashed border-[#0078D4] !opacity-60"
       )}
@@ -128,12 +141,12 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
       <Handle 
         type="target" 
         position={Position.Top} 
-        className="w-3 h-3 bg-[#06B6D4] border-2 border-white rounded-full z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-crosshair !-top-1.5"
+        className="w-2.5 h-2.5 bg-[#06B6D4] border-2 border-white rounded-full z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-crosshair !-top-1.25"
       />
       <Handle 
         type="source" 
         position={Position.Bottom} 
-        className="w-3 h-3 bg-[#06B6D4] border-2 border-white rounded-full z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-crosshair !-bottom-1.5"
+        className="w-2.5 h-2.5 bg-[#06B6D4] border-2 border-white rounded-full z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-crosshair !-bottom-1.25"
       />
 
       {isGhost && (

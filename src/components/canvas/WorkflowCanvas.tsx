@@ -1,4 +1,4 @@
-import { ReactFlow, Background, Controls, MiniMap, type Connection, BackgroundVariant } from '@xyflow/react';
+import { ReactFlow, Background, Controls, MiniMap, type Connection, BackgroundVariant, useReactFlow } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useSynapseStore } from '../../store/useSynapseStore';
 import { BaseNode } from './nodes/BaseNode';
@@ -7,6 +7,7 @@ import { AddElementPopover } from '../popovers/AddElementPopover';
 import { MetricsPopover } from '../popovers/MetricsPopover';
 import { NodeSettingsPopover } from '../popovers/NodeSettingsPopover';
 import { useEffect } from 'react';
+import toast from 'react-hot-toast';
 
 const nodeTypes = { custom: BaseNode };
 const edgeTypes = { custom: CustomEdge };
@@ -20,8 +21,16 @@ export const WorkflowCanvas = () => {
   const { 
     nodes, edges, onNodesChange, onEdgesChange, onConnect, 
     ghostCardsEnabled, addGhostNode, isCanvasLocked, 
-    undo, redo, deleteNode 
+    undo, redo, deleteNode,
+    snapToGrid, showMinimap, canvasBackground, canvasDotColor,
+    searchQuery, setSearchOpen
   } = useSynapseStore();
+
+  const { fitView } = useReactFlow();
+
+  useEffect(() => {
+    fitView();
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -34,14 +43,36 @@ export const WorkflowCanvas = () => {
           selectedNodes.forEach(n => deleteNode(n.id));
         }
       }
-      
+
+      if (e.key === 'Escape') {
+        setSearchOpen(false);
+      }
+
       if (e.ctrlKey || e.metaKey) {
         if (e.key === 'z') {
           e.preventDefault();
-          undo();
+          if (e.shiftKey) {
+            redo();
+          } else {
+            undo();
+          }
         } else if (e.key === 'y') {
           e.preventDefault();
           redo();
+        } else if (e.key === 's') {
+          e.preventDefault();
+          toast.success('Workflow saved manually');
+        } else if (e.key === 'd') {
+          e.preventDefault();
+          const selectedNode = nodes.find(n => n.selected);
+          if (selectedNode) {
+            const { cloneNode } = useSynapseStore.getState();
+            cloneNode(selectedNode.id);
+            toast.success('Node duplicated');
+          }
+        } else if (e.key === 'F' && e.shiftKey) {
+          e.preventDefault();
+          fitView();
         }
       }
     };
@@ -65,10 +96,14 @@ export const WorkflowCanvas = () => {
     }
   };
 
+  const filteredNodes = nodes.filter(n => 
+    !searchQuery || (n.data.label as string).toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="w-full h-full bg-[#F3F4F6]">
       <ReactFlow
-        nodes={nodes}
+        nodes={filteredNodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
@@ -80,16 +115,27 @@ export const WorkflowCanvas = () => {
         nodesConnectable={!isCanvasLocked}
         elementsSelectable={!isCanvasLocked}
         deleteKeyCode={['Backspace', 'Delete']}
+        snapToGrid={snapToGrid}
+        snapGrid={[20, 20]}
         fitView
       >
-        <Background color="#CBD5E1" gap={20} size={1.5} variant={BackgroundVariant.Dots} />
+        {canvasBackground !== 'none' && (
+          <Background 
+            color={canvasDotColor} 
+            gap={20} 
+            size={canvasBackground === 'dots' ? 1.5 : 1} 
+            variant={canvasBackground === 'dots' ? BackgroundVariant.Dots : BackgroundVariant.Lines} 
+          />
+        )}
         <Controls className="bg-white border border-gray-200 shadow-sm [&>button]:border-b [&>button]:border-gray-100" />
-        <MiniMap 
-          nodeColor="#9CA3AF" 
-          maskColor="rgba(243, 244, 246, 0.7)"
-          className="bg-white border border-gray-200 shadow-sm rounded-md overflow-hidden"
-          position="bottom-right"
-        />
+        {showMinimap && (
+          <MiniMap 
+            nodeColor="#9CA3AF" 
+            maskColor="rgba(243, 244, 246, 0.7)"
+            className="bg-white border border-gray-200 shadow-sm rounded-md overflow-hidden"
+            position="bottom-right"
+          />
+        )}
       </ReactFlow>
       
       <AddElementPopover />

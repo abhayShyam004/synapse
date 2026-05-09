@@ -37,7 +37,23 @@ export const CustomEdge = ({
 
   return (
     <>
-      <BaseEdge path={edgePath} markerEnd={markerEnd} style={{ ...style, strokeWidth: 1.5, stroke: '#10B981' }} />
+      <BaseEdge 
+        path={edgePath} 
+        markerEnd={markerEnd} 
+        style={{ 
+          ...style, 
+          strokeWidth: 1.5, 
+          stroke: '#94A3B8',
+          strokeDasharray: '5, 5',
+          animation: 'dashdraw 0.5s linear infinite'
+        }} 
+      />
+      <style>{`
+        @keyframes dashdraw {
+          from { stroke-dashoffset: 10; }
+          to { stroke-dashoffset: 0; }
+        }
+      `}</style>
       <EdgeLabelRenderer>
         <div
           style={{
@@ -48,7 +64,7 @@ export const CustomEdge = ({
           className="nodrag nopan"
         >
           <button
-            className="w-[20px] h-[20px] bg-[#06B6D4] rounded-full flex items-center justify-center text-white hover:bg-cyan-400 hover:scale-110 shadow-sm transition-all"
+            className="w-5 h-5 bg-[#06B6D4] rounded-full flex items-center justify-center text-white hover:bg-cyan-600 hover:scale-110 shadow-lg shadow-cyan-200/50 transition-all cursor-pointer"
             onClick={onEdgeClick}
           >
             <Plus size={14} strokeWidth={3} />

@@ -3,9 +3,11 @@ import { useSynapseStore } from '../../store/useSynapseStore';
 import { Search, Zap, Diamond, Settings2, Repeat, CheckSquare, Clock, Sparkles, Variable, StickyNote, X, Plus, Trash2, Loader2 } from 'lucide-react';
 import { fetchAISuggestion } from '../../lib/ai/nvidiaNim';
 import toast from 'react-hot-toast';
+import { useReactFlow } from '@xyflow/react';
 
 export const AddElementPopover = () => {
   const { addElementPopover, setAddElementPopover, addNode, variables, addVariable, removeVariable } = useSynapseStore();
+  const { screenToFlowPosition } = useReactFlow();
   const [activeTab, setActiveTab] = useState<'elements' | 'variables'>('elements');
   const [varKey, setVarKey] = useState('');
   const [varValue, setVarValue] = useState('');
@@ -20,10 +22,11 @@ export const AddElementPopover = () => {
   };
 
   const handleAdd = (label: string, type: string, color: string) => {
+    const position = screenToFlowPosition({ x: addElementPopover.x, y: addElementPopover.y });
     addNode({
       id: crypto.randomUUID(),
       type: 'custom',
-      position: { x: 250, y: 250 }, // Ideally centered on canvas, but let's just use defaults unless edgeId is set
+      position,
       data: { label, type, description: 'New ' + type, color, shape: 'rounded', expanded: true },
     });
     handleClose();
@@ -46,10 +49,11 @@ export const AddElementPopover = () => {
       const result = await fetchAISuggestion(prompt);
       const cleaned = result.replace(/```json\n?|\n?```/g, '').trim();
       const parsed = JSON.parse(cleaned);
+      const position = screenToFlowPosition({ x: addElementPopover.x, y: addElementPopover.y });
       addNode({
         id: crypto.randomUUID(),
         type: 'custom',
-        position: { x: 250, y: 250 },
+        position,
         data: { label: parsed.name, type: 'AI Prompt', description: parsed.description, color: 'purple', shape: 'rounded', expanded: true },
       });
       setAiPrompt('');

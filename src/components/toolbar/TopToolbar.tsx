@@ -22,23 +22,30 @@ export const TopToolbar = () => {
         <button className="p-1.5 hover:bg-gray-100 rounded-md text-gray-500 transition-colors hover:text-[#F59E0B]">
           <ArrowLeft size={18} />
         </button>
-        <div className="w-8 h-8 bg-gray-900 rounded-md flex items-center justify-center text-white font-bold text-lg leading-none">
-          S
-        </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <div className="grid grid-cols-2 gap-0.5 w-5 h-5">
+              <div className="w-2 h-2 rounded-full bg-[#06B6D4]"></div>
+              <div className="w-2 h-2 rounded-full bg-gray-900"></div>
+              <div className="w-2 h-2 rounded-full bg-gray-900"></div>
+              <div className="w-2 h-2 rounded-full bg-gray-900"></div>
+            </div>
+            <span className="font-bold text-lg text-gray-900 tracking-tight">Synapse</span>
+          </div>
+          <div className="w-px h-4 bg-gray-200 mx-1"></div>
           <input 
             value={workflowName}
             onChange={(e) => setWorkflowName(e.target.value)}
-            className="font-semibold text-[15px] text-gray-900 outline-none hover:bg-gray-50 focus:bg-gray-50 px-1 rounded border border-transparent focus:border-gray-200 transition-all"
+            className="font-medium text-[15px] text-gray-600 outline-none hover:bg-gray-50 focus:bg-gray-50 px-1 rounded border border-transparent focus:border-gray-200 transition-all"
           />
-          <span className="text-[10px] font-bold bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded-sm uppercase tracking-wide">
+          <span className="text-[10px] font-bold bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded-sm uppercase tracking-widest border border-gray-200">
             Draft
           </span>
         </div>
       </div>
 
       <div className="flex items-center gap-3">
-        <button onClick={() => expandAllNodes(true)} className="text-sm font-medium text-[#0078D4] hover:text-[#06B6D4] hover:underline mr-2 transition-colors">
+        <button onClick={() => expandAllNodes(true)} className="text-sm font-medium text-gray-500 hover:text-[#06B6D4] transition-colors">
           Expand All
         </button>
         
@@ -48,12 +55,12 @@ export const TopToolbar = () => {
 
         <button 
           onClick={handleTestRun}
-          className="text-sm font-medium text-[#0078D4] border border-[#0078D4] px-3 py-1.5 rounded-md hover:bg-blue-50 transition-colors"
+          className="text-sm font-medium text-[#0078D4] border border-[#0078D4] px-4 py-1.5 rounded-md hover:bg-blue-50 transition-colors"
         >
           Test Run
         </button>
 
-        <button onClick={handlePublish} className="flex items-center gap-1 text-sm font-medium text-white bg-[#06B6D4] hover:bg-cyan-600 px-3 py-1.5 rounded-md transition-colors">
+        <button onClick={handlePublish} className="flex items-center gap-1 text-sm font-semibold text-white bg-[#06B6D4] hover:bg-cyan-600 px-4 py-1.5 rounded-md transition-all shadow-sm shadow-cyan-100">
           Publish <ChevronDown size={14} className="text-white/80" />
         </button>
 
