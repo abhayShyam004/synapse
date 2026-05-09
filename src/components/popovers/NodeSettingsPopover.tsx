@@ -3,7 +3,7 @@ import { X, Trash2, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const NodeSettingsPopover = () => {
-  const { nodeSettingsPopover, setNodeSettingsPopover, nodes, updateNode, deleteNode, cloneNode } = useSynapseStore();
+  const { nodeSettingsPopover, setNodeSettingsPopover, nodes, updateNode, deleteNode, cloneNode, openDialog } = useSynapseStore();
 
   if (!nodeSettingsPopover.isOpen || !nodeSettingsPopover.nodeId) return null;
 
@@ -13,11 +13,16 @@ export const NodeSettingsPopover = () => {
   const handleClose = () => setNodeSettingsPopover({ isOpen: false });
 
   const handleDelete = () => {
-    if (confirm('Are you sure you want to delete this node?')) {
-      deleteNode(node.id);
-      toast.success('Node deleted');
-      handleClose();
-    }
+    openDialog({
+      title: 'Delete Node',
+      message: `Are you sure you want to delete "${node.data.label}"? This action cannot be undone.`,
+      type: 'confirm',
+      onConfirm: () => {
+        deleteNode(node.id);
+        toast.success('Node deleted');
+        handleClose();
+      }
+    });
   };
 
   const handleClone = () => {

@@ -46,6 +46,16 @@ export interface CanvasSlice {
   redo: () => void;
   currentWorkflowId: string | null;
   setCurrentWorkflowId: (id: string | null) => void;
+  dialog: {
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'confirm' | 'prompt';
+    defaultValue?: string;
+    onConfirm: (value?: string) => void;
+  };
+  openDialog: (data: Omit<CanvasSlice['dialog'], 'isOpen'>) => void;
+  closeDialog: () => void;
 }
 
 export const createCanvasSlice = (
@@ -76,6 +86,15 @@ export const createCanvasSlice = (
   isCanvasLocked: false,
   isSearchOpen: false,
   searchQuery: '',
+  dialog: {
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'confirm',
+    onConfirm: () => {},
+  },
+  openDialog: (data) => set(() => ({ dialog: { ...data, isOpen: true } })),
+  closeDialog: () => set((state) => ({ dialog: { ...state.dialog, isOpen: false } })),
   saveHistory: () => {
     set((state) => ({
       past: [...state.past, { nodes: state.nodes, edges: state.edges }].slice(-50),

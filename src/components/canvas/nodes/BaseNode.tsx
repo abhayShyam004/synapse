@@ -20,7 +20,7 @@ export interface BaseNodeData {
 export type BaseNodeProps = Node<BaseNodeData, 'custom'>;
 
 export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
-  const { acceptGhostNode, dismissGhostNode, updateNode, setAddElementPopover, setNodeSettingsPopover, edges } = useSynapseStore();
+  const { acceptGhostNode, dismissGhostNode, updateNode, setAddElementPopover, setNodeSettingsPopover, edges, openDialog } = useSynapseStore();
   const [isDismissing, setIsDismissing] = useState(false);
   
   const isGhost = data.variant === 'ghost';
@@ -120,8 +120,15 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
               className="px-3 py-2 flex items-center justify-between border-b border-gray-100 bg-white group/label"
               onDoubleClick={(e) => {
                 e.stopPropagation();
-                const newLabel = prompt('Enter new name:', data.label as string);
-                if (newLabel) updateNode(id, { label: newLabel });
+                openDialog({
+                  title: 'Rename Node',
+                  message: 'Enter a new label for this node:',
+                  type: 'prompt',
+                  defaultValue: data.label as string,
+                  onConfirm: (newValue) => {
+                    if (newValue) updateNode(id, { label: newValue });
+                  }
+                });
               }}
             >
               <span className="text-xs text-gray-800 truncate font-medium">{data.label || 'Action'}</span>

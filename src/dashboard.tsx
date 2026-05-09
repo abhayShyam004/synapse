@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import { Toaster, toast } from 'react-hot-toast'
 import { ArrowLeft, Plus, Folder, Clock, MoreVertical, Search, Trash2 } from 'lucide-react'
+import { useSynapseStore } from './store/useSynapseStore'
+import { GlobalDialog } from './components/modals/GlobalDialog'
 
 interface WorkflowMetadata {
   id: string;
@@ -12,6 +14,7 @@ interface WorkflowMetadata {
 }
 
 const Dashboard = () => {
+  const { openDialog } = useSynapseStore();
   const [workflows, setWorkflows] = useState<WorkflowMetadata[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -46,21 +49,33 @@ const Dashboard = () => {
 
   const renameWorkflow = (e: React.MouseEvent, id: string, currentName: string) => {
     e.stopPropagation();
-    const newName = prompt('Enter new synapse name:', currentName);
-    if (newName && newName !== currentName) {
-      const updated = workflows.map(w => w.id === id ? { ...w, name: newName, lastModified: 'Just now' } : w);
-      saveWorkflows(updated);
-      toast.success('Synapse renamed');
-    }
+    openDialog({
+      title: 'Rename Synapse',
+      message: 'Enter a new name for this workflow:',
+      type: 'prompt',
+      defaultValue: currentName,
+      onConfirm: (newName) => {
+        if (newName && newName !== currentName) {
+          const updated = workflows.map(w => w.id === id ? { ...w, name: newName, lastModified: 'Just now' } : w);
+          saveWorkflows(updated);
+          toast.success('Synapse renamed');
+        }
+      }
+    });
   };
 
   const deleteWorkflow = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (confirm('Delete this synapse permanently?')) {
-      const filtered = workflows.filter(w => w.id !== id);
-      saveWorkflows(filtered);
-      toast.success('Synapse deleted');
-    }
+    openDialog({
+      title: 'Delete Synapse',
+      message: 'Are you sure you want to delete this synapse permanently? This cannot be undone.',
+      type: 'confirm',
+      onConfirm: () => {
+        const filtered = workflows.filter(w => w.id !== id);
+        saveWorkflows(filtered);
+        toast.success('Synapse deleted');
+      }
+    });
   };
 
   const filteredWorkflows = workflows.filter(w => 
@@ -73,6 +88,7 @@ const Dashboard = () => {
       backgroundSize: '20px 20px'
     }}>
       <Toaster position="bottom-right" />
+      <GlobalDialog />
       
       {/* Header */}
       <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 sticky top-0 z-10 shadow-sm">

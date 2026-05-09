@@ -3,6 +3,7 @@ import { WorkflowCanvas } from './components/canvas/WorkflowCanvas';
 import { LeftSidebar } from './components/sidebar/LeftSidebar';
 import { TopToolbar } from './components/toolbar/TopToolbar';
 import { SettingsModal } from './components/modals/SettingsModal';
+import { GlobalDialog } from './components/modals/GlobalDialog';
 import { SearchOverlay } from './components/canvas/SearchOverlay';
 import { useSynapseStore } from './store/useSynapseStore';
 import { useEffect } from 'react';
@@ -45,6 +46,7 @@ function App() {
         }}
       />
       <SettingsModal />
+      <GlobalDialog />
       <TopToolbar />
       <main className="flex flex-1 overflow-hidden relative">
         <aside className="w-16 border-r border-gray-200 bg-white shrink-0 overflow-y-auto z-10 flex flex-col">
