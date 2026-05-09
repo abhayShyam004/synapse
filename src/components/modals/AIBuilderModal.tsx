@@ -13,6 +13,19 @@ interface Message {
   isFinal?: boolean;
 }
 
+/**
+ * Utility to extract JSON from a string that might contain other text.
+ */
+const extractJSON = (str: string) => {
+  try {
+    const match = str.match(/\{[\s\S]*\}/);
+    if (match) return JSON.parse(match[0]);
+    return JSON.parse(str);
+  } catch (e) {
+    throw new Error('Invalid JSON format');
+  }
+};
+
 export const AIBuilderModal = () => {
   const { isAIBuilderOpen, setAIBuilderOpen, addNode, onConnect, nodes, currentWorkflowId } = useSynapseStore();
   const { fitView } = useReactFlow();
@@ -64,13 +77,13 @@ export const AIBuilderModal = () => {
     setIsThinking(true);
 
     try {
-      let systemPrompt = `You are a workflow builder assistant. Your job is to gather ONLY the minimum information needed to build a workflow, then generate it. 
+      const systemPrompt = `You are a workflow builder assistant. Your job is to gather ONLY the minimum information needed to build a workflow. 
 Ask MAXIMUM 3 short questions total, one at a time. 
 
 Current question index: ${questionCount + 1}/3.
 
 Questions to ask in order:
-1. What is your goal? (already asked if turn > 1)
+1. What is your goal? (already asked if index > 1)
 2. What is your current level? (with 4 options)
 3. What is your timeline? (with 4 options)
 
@@ -78,22 +91,21 @@ After the 3rd answer, respond with: { "message": "Perfect, I have everything I n
 
 RULES:
 1. Return ONLY valid JSON: { "message": "string", "options": ["string", "string"], "readyToGenerate": boolean }
-2. Never ask more than 3 questions. Never repeat questions.
-3. Never ask about support systems, certifications, work experience, or metrics.
-4. Keep messages short and professional.
+2. NO conversational filler outside the JSON.
+3. Never ask more than 3 questions.
+4. Keep messages short.
 
 Conversation so far:
 ${newMessages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n')}`;
 
       const aiResponse = await fetchAISuggestion(systemPrompt);
-      const cleaned = aiResponse.replace(/```json\n?|\n?```/g, '').trim();
-      const parsed = JSON.parse(cleaned);
+      const parsed = extractJSON(aiResponse);
       
       const aiMessage: Message = {
         role: 'ai',
         content: parsed.message,
         options: parsed.options,
-        isFinal: parsed.readyToGenerate
+        isFinal: !!parsed.readyToGenerate
       };
 
       setMessages([...newMessages, aiMessage]);
@@ -117,7 +129,7 @@ The workflow should be a detailed step-by-step path (study plan or automation fl
 
 Structure:
 {
-  "nodes": [{ "id": "1", "type": "task|trigger|decision|condition|aiPrompt|timer|variable|loop|note", "name": "Human Readable Name", "description": "Details" }],
+  "nodes": [{ "id": "1", "type": "task|trigger|decision|condition|aiPrompt|timer|variable|loop|note", "name": "Human Readable Name", "description": "Brief step details" }],
   "edges": [{ "source": "1", "target": "2" }]
 }
 
@@ -126,12 +138,11 @@ Guidelines:
 - Horizontally centered around x:500.
 - Connect them linearly top to bottom.
 - Use ONLY these types: task, trigger, decision, condition, aiPrompt, timer, variable, loop, note.
-- Do NOT use generic placeholders. Use specific steps (e.g., "Learn Python Basics", "Arrays & Strings", "Interview Prep").
+- Use specific, meaningful node names.
 - Do not explain anything. Just JSON.`;
 
       const result = await fetchAISuggestion(prompt);
-      const cleaned = result.replace(/```json\n?|\n?```/g, '').trim();
-      const parsed = JSON.parse(cleaned);
+      const parsed = extractJSON(result);
 
       // Find rightmost node to offset
       const rightmostX = nodes.length > 0 ? Math.max(...nodes.map(n => n.position.x)) : 0;
@@ -168,6 +179,7 @@ Guidelines:
 
       toast.success(`Workflow generated! ${parsed.nodes.length} nodes added.`);
       setAIBuilderOpen(false);
+      
       // Reset state for next time
       setMessages([{ 
         role: 'ai', 
@@ -203,9 +215,9 @@ Guidelines:
         </div>
       )}
 
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4" onClick={() => setAIBuilderOpen(false)}>
         <div 
-          className="bg-white rounded-2xl shadow-2xl w-[600px] max-h-[80vh] flex flex-col overflow-hidden border border-gray-200"
+          className="bg-white rounded-2xl shadow-2xl w-[600px] max-h-[80vh] flex flex-col overflow-hidden border border-gray-200 animate-in zoom-in-95 duration-200"
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
@@ -247,7 +259,7 @@ Guidelines:
 
                 {/* Suggested Options Chips or Generate Button */}
                 {!isThinking && !isGenerating && m === lastAIMessage && (
-                  <div className="flex flex-wrap gap-2 ml-11 max-w-[85%]">
+                  <div className="flex flex-wrap gap-2 ml-11 max-w-[85%] animate-in fade-in slide-in-from-bottom-2 duration-300">
                     {m.isFinal ? (
                       <button
                         onClick={handleGenerate}
