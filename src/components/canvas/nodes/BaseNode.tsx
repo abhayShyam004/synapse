@@ -52,15 +52,11 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
   };
 
   const typeBgColor = 
-    data.type === 'Trigger' ? '#10B981' :
+    data.type === 'Goal' ? '#8B5CF6' :
+    data.type === 'Milestone' ? '#F59E0B' :
     data.type === 'Task' ? '#3B82F6' :
-    data.type === 'Decision' ? '#374151' :
-    data.type === 'Condition' ? '#F59E0B' :
-    data.type === 'AI Prompt' ? '#8B5CF6' :
-    data.type === 'Timer' ? '#D97706' :
-    data.type === 'Variable' ? '#0D9488' :
-    data.type === 'Loop' ? '#EC4899' :
-    data.type === 'Note' ? '#6B7280' :
+    data.type === 'Practice' ? '#10B981' :
+    data.type === 'Custom' ? '#4B5563' :
     '#4B5563';
 
   const colorMap: Record<string, string> = {

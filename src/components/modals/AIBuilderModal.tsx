@@ -193,7 +193,7 @@ STRICT RULES:
 - Every node must have a SPECIFIC, DETAILED name and description — no vague names.
 - Use Decision nodes to create real branching paths (Yes/No).
 - Every node must be connected — no orphan nodes.
-- Node types: trigger, task, decision, condition, aiPrompt, timer, variable, loop, note.
+- Node types: task, goal, practice, milestone, custom.
 - Positions: start at x:400 y:50, increment y by 160 per level, branches go x:200 (left) and x:650 (right), merges return to x:400.
 
 For a CS/interview/job preparation goal specifically:
@@ -201,10 +201,10 @@ For a CS/interview/job preparation goal specifically:
 - Include OS, CN, DBMS, OOP as separate detailed nodes.
 - Include backend framework nodes if mentioned.
 - Include mock interview, system design, resume nodes.
-- Use Decision nodes to branch beginner vs advanced paths.
+- Use Decision logic branching beginner vs advanced paths (but use the allowed node types, e.g., 'goal' or 'milestone' instead of 'decision' if appropriate, or just 'custom').
 
 Return ONLY this JSON, nothing else, no markdown, no explanation:
-{"nodes":[{"id":"n1","type":"trigger","name":"...","description":"...","position":{"x":400,"y":50}}],"edges":[{"id":"e1","source":"n1","target":"n2","label":"Yes"}]}`;
+{"nodes":[{"id":"n1","type":"task","name":"...","description":"...","position":{"x":400,"y":50}}],"edges":[{"id":"e1","source":"n1","target":"n2","label":"Yes"}]}`;
 
       let result;
       try {

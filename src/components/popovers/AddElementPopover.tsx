@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSynapseStore } from '../../store/useSynapseStore';
-import { Search, Zap, Diamond, Settings2, Repeat, CheckSquare, Clock, Sparkles, Variable, StickyNote, X, Loader2 } from 'lucide-react';
+import { Search, Zap, Diamond, Settings2, CheckSquare, Sparkles, X, Loader2 } from 'lucide-react';
 import { fetchAISuggestion } from '../../lib/ai/nvidiaNim';
 import toast from 'react-hot-toast';
 import { useReactFlow } from '@xyflow/react';
@@ -44,7 +44,7 @@ export const AddElementPopover = () => {
     if (!aiPrompt) return;
     setIsSuggesting(true);
     try {
-      const prompt = `You are a workflow node generator. The user wants to create a node described as: '${aiPrompt}'. Return JSON only: { "name": "string", "type": "task"|"trigger"|"decision"|"condition"|"aiPrompt"|"timer"|"variable"|"loop"|"note", "description": "string", "color": "string (hex)" }`;
+      const prompt = `You are a workflow node generator. The user wants to create a node described as: '${aiPrompt}'. Return JSON only: { "name": "string", "type": "Task"|"Goal"|"Practice"|"Milestone"|"Custom", "description": "string", "color": "string (hex)" }`;
       const result = await fetchAISuggestion(prompt);
       
       let parsed;
@@ -88,20 +88,16 @@ export const AddElementPopover = () => {
   };
 
   const elements = [
-    { category: 'Triggers', items: [{ label: 'Trigger Node', type: 'Trigger', color: 'green', icon: Zap }] },
-    { category: 'Logic', items: [
-      { label: 'Decision', type: 'Decision', color: 'gray', icon: Diamond },
-      { label: 'Condition', type: 'Condition', color: 'orange', icon: Settings2 },
-      { label: 'Loop', type: 'Loop', color: 'pink', icon: Repeat }
+    { category: 'Planning', items: [
+      { label: 'Goal', type: 'Goal', color: 'purple', icon: Sparkles },
+      { label: 'Milestone', type: 'Milestone', color: 'orange', icon: Diamond }
     ]},
-    { category: 'Actions', items: [
+    { category: 'Execution', items: [
       { label: 'Task', type: 'Task', color: 'blue', icon: CheckSquare },
-      { label: 'Timer', type: 'Timer', color: 'amber', icon: Clock }
+      { label: 'Practice', type: 'Practice', color: 'green', icon: Zap }
     ]},
-    { category: 'AI', items: [{ label: 'AI Prompt', type: 'AI Prompt', color: 'purple', icon: Sparkles }] },
-    { category: 'Data', items: [
-      { label: 'Variable', type: 'Variable', color: 'teal', icon: Variable },
-      { label: 'Note', type: 'Note', color: 'gray', icon: StickyNote }
+    { category: 'Other', items: [
+      { label: 'Custom', type: 'Custom', color: 'gray', icon: Settings2 }
     ]}
   ];
 
