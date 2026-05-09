@@ -152,15 +152,6 @@ export const WorkflowCanvas = () => {
     }
   };
 
-  const handleFloatingAdd = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setAddElementPopover({
-      isOpen: true,
-      x: window.innerWidth / 2,
-      y: window.innerHeight / 2,
-    });
-  };
-
   return (
     <div className="w-full h-full bg-[#F3F4F6] relative group/canvas" onClick={() => setContextMenu(null)}>
       <ReactFlow
@@ -204,28 +195,22 @@ export const WorkflowCanvas = () => {
 
         {/* Empty State */}
         {nodes.length === 0 && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0">
-            <div 
-              className="w-20 h-20 rounded-full flex items-center justify-center mb-6 shadow-md"
+          <div className="absolute inset-0 flex flex-col items-center justify-center z-0">
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setAddElementPopover({ isOpen: true, x: window.innerWidth / 2, y: window.innerHeight / 2 });
+              }}
+              className="w-20 h-20 rounded-full flex items-center justify-center mb-6 shadow-md hover:scale-110 active:scale-95 transition-all cursor-pointer pointer-events-auto"
               style={{ backgroundColor: 'var(--accent-light)', color: 'var(--accent)' }}
             >
               <Plus size={48} strokeWidth={2.5} />
-            </div>
-            <h2 className="text-xl font-bold text-gray-700">Add your first node</h2>
-            <p className="text-base text-gray-400 mt-2">Click the + button or right-click to get started</p>
+            </button>
+            <h2 className="text-xl font-bold text-gray-700 pointer-events-none">Add your first node</h2>
+            <p className="text-base text-gray-400 mt-2 pointer-events-none">Click the + button or right-click to get started</p>
           </div>
         )}
       </ReactFlow>
-
-      {/* Persistent Floating "+" Button */}
-      <button
-        onClick={handleFloatingAdd}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full flex items-center justify-center text-white shadow-2xl hover:scale-110 active:scale-95 transition-all z-30"
-        style={{ backgroundColor: 'var(--accent)' }}
-        title="Add Node"
-      >
-        <Plus size={32} strokeWidth={3} />
-      </button>
       
       <AddElementPopover />
 

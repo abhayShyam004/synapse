@@ -4,12 +4,12 @@ import toast from 'react-hot-toast';
 import { useSynapseStore } from '../../store/useSynapseStore';
 
 export const LeftSidebar = () => {
-  const { isCanvasLocked, toggleCanvasLock, toggleSettingsModal, setSearchOpen, setAddElementPopover } = useSynapseStore();
+  const { isCanvasLocked, toggleCanvasLock, toggleSettingsModal, setSearchOpen } = useSynapseStore();
 
   const handleAction = (id: string) => {
     switch (id) {
       case 'home': return window.location.href = '/';
-      case 'folder': return setAddElementPopover({ isOpen: true, x: 64, y: 100 });
+      case 'folder': return window.location.href = '/dashboard/';
       case 'orchestration': return toast.success('Currently viewing Workflow');
       case 'audiences': return toast.error('Collaboration is an upcoming feature', {
         icon: '🚧',
