@@ -1,10 +1,10 @@
-import { Home, Folder, GitMerge, Users, Bell, Search, Settings, Lock, Unlock } from 'lucide-react';
+import { Home, Folder, GitMerge, Users, Bell, Search, Settings, Lock, Unlock, Plus } from 'lucide-react';
 import { clsx } from 'clsx';
 import toast from 'react-hot-toast';
 import { useSynapseStore } from '../../store/useSynapseStore';
 
 export const LeftSidebar = () => {
-  const { isCanvasLocked, toggleCanvasLock, toggleSettingsModal, setSearchOpen } = useSynapseStore();
+  const { isCanvasLocked, toggleCanvasLock, toggleSettingsModal, setSearchOpen, setAddElementPopover } = useSynapseStore();
 
   const handleAction = (id: string) => {
     switch (id) {
@@ -15,6 +15,7 @@ export const LeftSidebar = () => {
         icon: '🚧',
         style: { borderLeft: '4px solid #F59E0B' }
       });
+      case 'add-node': return setAddElementPopover({ isOpen: true, x: 64, y: 220 });
       case 'notifications': return toast.success('No new notifications');
       case 'search': return setSearchOpen(true);
       case 'settings': return toggleSettingsModal(true);
@@ -26,6 +27,7 @@ export const LeftSidebar = () => {
     { Icon: Folder, id: 'folder', active: false },
     { Icon: GitMerge, id: 'orchestration', active: true },
     { Icon: Users, id: 'audiences', active: false },
+    { Icon: Plus, id: 'add-node', active: false },
   ];
 
   const bottomIcons = [

@@ -56,33 +56,37 @@ export const AddElementPopover = () => {
     if (!aiPrompt) return;
     setIsSuggesting(true);
     try {
-      const prompt = `Suggest a short name and 1-sentence description for a workflow node about "${aiPrompt}". Return JSON: {"name": "...", "description": "..."}`;
+      const prompt = `You are a workflow node generator. The user wants to create a node described as: '${aiPrompt}'. Return JSON only: { "name": "string", "type": "task"|"trigger"|"decision"|"condition"|"aiPrompt"|"timer"|"variable"|"loop"|"note", "description": "string", "color": "string (hex)" }`;
       const result = await fetchAISuggestion(prompt);
       const cleaned = result.replace(/```json\n?|\n?```/g, '').trim();
       const parsed = JSON.parse(cleaned);
       
       let position;
-      if (addElementPopover.edgeId) {
-        position = screenToFlowPosition({ x: addElementPopover.x, y: addElementPopover.y });
-      } else {
-        const { x, y, zoom } = getViewport();
-        position = {
-          x: -x / zoom + (window.innerWidth / 2) / zoom - 110,
-          y: -y / zoom + (window.innerHeight / 2) / zoom - 20,
-        };
-      }
+      const { x, y, zoom } = getViewport();
+      position = {
+        x: -x / zoom + (window.innerWidth / 2) / zoom - 110,
+        y: -y / zoom + (window.innerHeight / 2) / zoom - 20,
+      };
 
       addNode({
         id: crypto.randomUUID(),
         type: 'custom',
         position,
-        data: { label: parsed.name, type: 'AI Prompt', description: parsed.description, color: 'purple', shape: 'rounded', expanded: true },
+        data: { 
+          label: parsed.name, 
+          type: parsed.type.charAt(0).toUpperCase() + parsed.type.slice(1), 
+          description: parsed.description, 
+          color: parsed.color, 
+          shape: 'rounded', 
+          expanded: true 
+        },
       });
       setAiPrompt('');
       toast.success('AI Node generated!');
       handleClose();
     } catch (error) {
-      toast.error('AI Suggestion failed');
+      console.error(error);
+      toast.error('AI unavailable — check your API key in .env');
     } finally {
       setIsSuggesting(false);
     }

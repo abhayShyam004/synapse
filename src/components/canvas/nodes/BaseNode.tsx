@@ -20,7 +20,7 @@ export interface BaseNodeData {
 export type BaseNodeProps = Node<BaseNodeData, 'custom'>;
 
 export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
-  const { acceptGhostNode, dismissGhostNode, updateNode, setAddElementPopover, setNodeSettingsPopover, edges, openDialog } = useSynapseStore();
+  const { acceptGhostNode, dismissGhostNode, updateNode, setAddElementPopover, setNodeSettingsPopover, edges } = useSynapseStore();
   const [isDismissing, setIsDismissing] = useState(false);
   
   const isGhost = data.variant === 'ghost';
@@ -69,7 +69,29 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
     data.color === 'orange' ? 'bg-[#F59E0B]' :
     data.color === 'purple' ? 'bg-[#8B5CF6]' :
     data.color === 'gray' ? 'bg-[#4B5563]' :
+    data.color === 'cyan' ? 'bg-[#06B6D4]' :
+    data.color === 'amber' ? 'bg-[#F59E0B]' :
+    data.color === 'violet' ? 'bg-[#7C3AED]' :
+    data.color === 'rose' ? 'bg-[#F43F5E]' :
+    data.color === 'emerald' ? 'bg-[#10B981]' :
+    data.color === 'pink' ? 'bg-[#EC4899]' :
     typeBgColor;
+
+  // Shape Mapping
+  const defaultShape = 
+    data.type === 'Task' || data.type === 'Note' ? 'rectangle' :
+    data.type === 'Decision' || data.type === 'Condition' ? 'diamond' :
+    data.type === 'Timer' || data.type === 'Variable' ? 'pill' :
+    'rounded';
+
+  const shape = (data.shape as string) || defaultShape;
+
+  const shapeClasses = clsx(
+    shape === 'rounded' && "rounded-[20px]",
+    shape === 'diamond' && "rotate-45 w-[160px] h-[140px] flex items-center justify-center",
+    shape === 'pill' && "rounded-[50px]",
+    shape === 'rectangle' && "rounded-md"
+  );
 
   return (
     <motion.div 
@@ -81,114 +103,108 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
       }
       transition={{ duration: isDismissing ? 0.2 : 0.4 }}
       className={clsx(
-        "group relative min-w-[220px] flex flex-col rounded-md bg-white border text-sm transition-all",
-        selected ? "border-[var(--accent)] shadow-md ring-2 ring-[var(--accent)]/50" : "border-gray-200 shadow-sm",
-        isGhost && "border-dashed border-[var(--accent)] !opacity-60"
+        "group relative min-w-[180px] min-h-[56px] flex flex-col bg-white border text-sm transition-all overflow-visible",
+        selected ? "border-[var(--accent)] shadow-lg ring-2 ring-[var(--accent)]/50" : "border-gray-200 shadow-sm",
+        isGhost && "border-dashed border-[var(--accent)] !opacity-60",
+        shapeClasses
       )}
     >
-      {isGhost && (
-        <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 border border-purple-200 whitespace-nowrap">
-          <Sparkles size={10} /> AI Suggestion
+      {/* Content wrapper for diamond to un-rotate text */}
+      <div className={clsx("w-full h-full flex flex-col", shape === 'diamond' && "-rotate-45")}>
+        {isGhost && (
+          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 border border-purple-200 whitespace-nowrap z-10">
+            <Sparkles size={10} /> AI Suggestion
+          </div>
+        )}
+
+        {/* Header */}
+        <div 
+          className={clsx(`${headerBgColor} text-white px-4 py-2 flex flex-col cursor-pointer`, 
+            !isExpanded && (shape === 'pill' || shape === 'rounded') ? "rounded-full" : "rounded-t-[10px]",
+            shape === 'diamond' && "rounded-none h-full justify-center"
+          )}
+          onClick={toggleExpand}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider opacity-80">{data.type || 'Stage'}</span>
+            {!isGhost && shape !== 'diamond' && (
+              <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                <ChevronDown size={14} className="opacity-80" />
+              </motion.div>
+            )}
+          </div>
+          <span className="font-bold text-sm mt-0.5 leading-tight">{data.label || 'Action'}</span>
         </div>
-      )}
 
-      {/* Header */}
-      <div 
-        className={clsx(`${headerBgColor} text-white px-3 py-2 flex items-center justify-between cursor-pointer`, 
-          isExpanded ? "rounded-t-md" : "rounded-md"
-        )}
-        onClick={toggleExpand}
-      >
-        <span className="font-semibold text-xs tracking-wide">{data.type || 'Stage'}</span>
-        <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-          <ChevronDown size={14} className="opacity-80" />
-        </motion.div>
-      </div>
-
-      {/* Expandable Body */}
-      <AnimatePresence initial={false}>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="overflow-hidden"
-          >
-            {/* Body Row 1: Label */}
-            <div 
-              className="px-3 py-2 flex items-center justify-between border-b border-gray-100 bg-white group/label"
-              onDoubleClick={(e) => {
-                e.stopPropagation();
-                openDialog({
-                  title: 'Rename Node',
-                  message: 'Enter a new label for this node:',
-                  type: 'prompt',
-                  defaultValue: data.label as string,
-                  onConfirm: (newValue) => {
-                    if (newValue) updateNode(id, { label: newValue });
-                  }
-                });
-              }}
+        {/* Expandable Body */}
+        <AnimatePresence initial={false}>
+          {isExpanded && shape !== 'diamond' && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              className="overflow-hidden"
             >
-              <span className="text-xs text-gray-800 truncate font-medium">{data.label || 'Action'}</span>
-            </div>
+              {data.description && (
+                <div className="px-4 py-3 border-b border-gray-100 bg-white">
+                  <p className="text-xs text-gray-500 leading-relaxed">{data.description}</p>
+                </div>
+              )}
 
-            {/* Footer Row: Description/Triggers */}
-            <div className="bg-gray-50 px-3 py-2 rounded-b-md flex items-center justify-between">
-              <div className="flex flex-col">
-                <span className="text-[10px] font-medium text-gray-500 truncate">
-                  {data.description || `${connectedEdgesCount} connection${connectedEdgesCount !== 1 ? 's' : ''}`}
+              {/* Footer Row */}
+              <div className="bg-gray-50 px-4 py-2 flex items-center justify-between">
+                <span className="text-[10px] font-medium text-gray-400">
+                  {connectedEdgesCount} connection{connectedEdgesCount !== 1 ? 's' : ''}
                 </span>
+                <div className="flex items-center gap-1">
+                  <button 
+                    onClick={handleAddElement}
+                    className="text-[var(--accent)] hover:bg-accent/10 p-1 rounded-md transition-colors"
+                  >
+                    <Plus size={14} />
+                  </button>
+                  <button 
+                    onClick={handleSettings}
+                    className="text-gray-400 hover:text-[#F59E0B] transition-colors p-1 rounded-md hover:bg-amber-50"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={handleAddElement}
-                  className="text-[var(--accent)] hover:bg-cyan-50 p-1 rounded-sm transition-colors"
-                >
-                  <Plus size={12} />
-                </button>
-                <button 
-                  onClick={handleSettings}
-                  className="text-gray-400 hover:text-[#F59E0B] transition-colors p-1"
-                >
-                  <Pencil size={12} />
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* Connection Handles */}
       <Handle 
         type="target" 
         position={Position.Top} 
-        className="w-2.5 h-2.5 bg-[var(--accent)] border-2 border-white rounded-full z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-crosshair !-top-1.25"
+        className="w-2.5 h-2.5 bg-[var(--accent)] border-2 border-white rounded-full z-20 opacity-0 group-hover:opacity-100 transition-opacity cursor-crosshair !-top-1.25"
       />
       <Handle 
         type="source" 
         position={Position.Bottom} 
-        className="w-2.5 h-2.5 bg-[var(--accent)] border-2 border-white rounded-full z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-crosshair !-bottom-1.25"
+        className="w-2.5 h-2.5 bg-[var(--accent)] border-2 border-white rounded-full z-20 opacity-0 group-hover:opacity-100 transition-opacity cursor-crosshair !-bottom-1.25"
       />
 
       {isGhost && (
-        <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex gap-2 justify-center z-10">
+        <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 flex gap-2 justify-center z-20">
           <button 
-            onClick={() => acceptGhostNode(id)}
-            className="flex items-center gap-1 bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-1 rounded-md text-[10px] font-bold hover:bg-emerald-100 transition-colors shadow-sm"
+            onClick={(e) => { e.stopPropagation(); acceptGhostNode(id); }}
+            className="flex items-center gap-1 bg-emerald-50 text-emerald-600 border border-emerald-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-100 transition-colors shadow-sm whitespace-nowrap"
           >
-            <Check size={12} /> Accept
+            <Check size={14} /> Accept
           </button>
           <button 
             onClick={handleDismiss}
-            className="flex items-center gap-1 bg-red-50 text-red-600 border border-red-200 px-2 py-1 rounded-md text-[10px] font-bold hover:bg-red-100 transition-colors shadow-sm"
+            className="flex items-center gap-1 bg-red-50 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-100 transition-colors shadow-sm whitespace-nowrap"
           >
-            <X size={12} /> Dismiss
+            <X size={14} /> Dismiss
           </button>
         </div>
       )}
     </motion.div>
   );
 };
-

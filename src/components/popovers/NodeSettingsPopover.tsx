@@ -1,14 +1,75 @@
 import { useSynapseStore } from '../../store/useSynapseStore';
-import { X, Trash2, Copy } from 'lucide-react';
+import { X, Trash2, Copy, Square, Circle, Diamond, RectangleHorizontal } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useReactFlow } from '@xyflow/react';
+import { useEffect, useState, useRef } from 'react';
+import { clsx } from 'clsx';
+
+const ACCENT_COLORS = [
+  { name: 'Cyan', hex: '#06B6D4', id: 'cyan' },
+  { name: 'Amber', hex: '#F59E0B', id: 'amber' },
+  { name: 'Violet', hex: '#7C3AED', id: 'violet' },
+  { name: 'Rose', hex: '#F43F5E', id: 'rose' },
+  { name: 'Emerald', hex: '#10B981', id: 'emerald' },
+  { name: 'Blue', hex: '#3B82F6', id: 'blue' },
+  { name: 'Orange', hex: '#F97316', id: 'orange' },
+  { name: 'Pink', hex: '#EC4899', id: 'pink' },
+];
+
+const SHAPES = [
+  { id: 'rectangle', label: 'Rectangle', icon: Square },
+  { id: 'rounded', label: 'Rounded', icon: Circle },
+  { id: 'diamond', label: 'Diamond', icon: Diamond },
+  { id: 'pill', label: 'Pill', icon: RectangleHorizontal },
+];
 
 export const NodeSettingsPopover = () => {
   const { nodeSettingsPopover, setNodeSettingsPopover, nodes, updateNode, deleteNode, cloneNode, openDialog } = useSynapseStore();
-
-  if (!nodeSettingsPopover.isOpen || !nodeSettingsPopover.nodeId) return null;
+  const { getInternalNode } = useReactFlow();
+  const popoverRef = useRef<HTMLDivElement>(null);
+  
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
 
   const node = nodes.find(n => n.id === nodeSettingsPopover.nodeId);
-  if (!node) return null;
+
+  useEffect(() => {
+    if (nodeSettingsPopover.isOpen && nodeSettingsPopover.nodeId) {
+      const internalNode = getInternalNode(nodeSettingsPopover.nodeId);
+      if (internalNode) {
+        // Calculate screen coordinates
+        // React Flow 12 uses a coordinate system where we can get the element's bounding rect
+        const el = document.querySelector(`[data-id="${nodeSettingsPopover.nodeId}"]`);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          setCoords({
+            top: rect.top,
+            left: rect.right + 12
+          });
+        }
+      }
+    }
+  }, [nodeSettingsPopover.isOpen, nodeSettingsPopover.nodeId, getInternalNode]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleClose();
+    };
+    const handleClickOutside = (e: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as HTMLElement)) {
+        handleClose();
+      }
+    };
+    if (nodeSettingsPopover.isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [nodeSettingsPopover.isOpen]);
+
+  if (!nodeSettingsPopover.isOpen || !node) return null;
 
   const handleClose = () => setNodeSettingsPopover({ isOpen: false });
 
@@ -32,57 +93,86 @@ export const NodeSettingsPopover = () => {
   };
 
   return (
-    <div className="absolute right-4 top-20 bg-white rounded-lg shadow-xl border border-gray-200 w-72 flex flex-col z-50 overflow-hidden">
-      <div className="flex items-center justify-between p-3 border-b border-gray-100 bg-gray-50">
-        <h3 className="font-semibold text-gray-900 text-sm">Node Settings</h3>
-        <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">
-          <X size={16} />
+    <div 
+      ref={popoverRef}
+      className="fixed z-50 bg-white rounded-xl shadow-2xl border border-gray-200 w-80 flex flex-col overflow-hidden animate-in fade-in slide-in-from-left-2 duration-200"
+      style={{ top: coords.top, left: coords.left }}
+    >
+      <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
+        <h3 className="font-bold text-gray-900 text-sm tracking-tight">Node Settings</h3>
+        <button onClick={handleClose} className="text-gray-400 hover:text-gray-700 transition-colors p-1 hover:bg-gray-100 rounded-md">
+          <X size={18} />
         </button>
       </div>
 
-      <div className="p-4 flex flex-col gap-4">
-        <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Name</label>
+      <div className="p-5 flex flex-col gap-5 overflow-y-auto max-h-[70vh]">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Name</label>
           <input 
             value={(node.data.label as string) || ''} 
             onChange={e => updateNode(node.id, { label: e.target.value })}
-            className="w-full border border-gray-200 rounded-md px-3 py-1.5 text-sm outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]"
+            placeholder="Node label..."
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/10 transition-all font-medium"
           />
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Description</label>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Description</label>
           <textarea 
             value={(node.data.description as string) || ''} 
             onChange={e => updateNode(node.id, { description: e.target.value })}
-            className="w-full border border-gray-200 rounded-md px-3 py-1.5 text-sm outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] min-h-[60px]"
+            placeholder="Optional details..."
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/10 transition-all min-h-[80px] resize-none leading-relaxed text-gray-600"
           />
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Color Header</label>
-          <div className="flex gap-2">
-            {['gray', 'blue', 'green', 'orange', 'purple'].map(color => (
+        <div className="flex flex-col gap-2.5">
+          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Shape</label>
+          <div className="grid grid-cols-4 gap-2">
+            {SHAPES.map(s => (
               <button
-                key={color}
-                onClick={() => updateNode(node.id, { color })}
-                className={`w-6 h-6 rounded-full border-2 ${node.data.color === color ? 'border-[var(--accent)]' : 'border-transparent'} hover:scale-110 transition-transform`}
-                style={{
-                  backgroundColor: color === 'gray' ? '#4B5563' : 
-                                   color === 'blue' ? '#3B82F6' : 
-                                   color === 'green' ? '#10B981' : 
-                                   color === 'orange' ? '#F59E0B' : '#8B5CF6'
-                }}
-              />
+                key={s.id}
+                onClick={() => updateNode(node.id, { shape: s.id })}
+                className={clsx(
+                  "flex flex-col items-center justify-center gap-1.5 p-2 rounded-lg border transition-all group",
+                  node.data.shape === s.id || (!node.data.shape && s.id === 'rounded') 
+                    ? "border-[var(--accent)] bg-accent/5 text-[var(--accent)] shadow-sm" 
+                    : "border-gray-100 hover:border-gray-300 text-gray-400"
+                )}
+                title={s.label}
+              >
+                <s.icon size={20} strokeWidth={node.data.shape === s.id ? 2.5 : 2} />
+              </button>
             ))}
           </div>
         </div>
 
-        <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
-          <button onClick={handleClone} className="text-sm font-medium text-[#0078D4] flex items-center gap-1 hover:text-blue-700">
+        <div className="flex flex-col gap-2.5">
+          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Color</label>
+          <div className="grid grid-cols-4 gap-3">
+            {ACCENT_COLORS.map(c => (
+              <button
+                key={c.id}
+                onClick={() => updateNode(node.id, { color: c.id })}
+                className={clsx(
+                  "w-8 h-8 rounded-full transition-all flex items-center justify-center relative",
+                  node.data.color === c.id ? "ring-2 ring-offset-2 ring-gray-200" : "hover:scale-110"
+                )}
+                style={{ backgroundColor: c.hex }}
+              >
+                {node.data.color === c.id && (
+                  <div className="w-5 h-5 rounded-full border-2 border-white shadow-sm" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="pt-4 border-t border-gray-100 flex items-center justify-between mt-1">
+          <button onClick={handleClone} className="text-xs font-bold text-[var(--accent)] flex items-center gap-1.5 hover:bg-accent/5 px-2 py-1.5 rounded-md transition-colors uppercase tracking-tight">
             <Copy size={14} /> Clone
           </button>
-          <button onClick={handleDelete} className="text-sm font-medium text-red-500 flex items-center gap-1 hover:text-red-700">
+          <button onClick={handleDelete} className="text-xs font-bold text-red-500 flex items-center gap-1.5 hover:bg-red-50 px-2 py-1.5 rounded-md transition-colors uppercase tracking-tight">
             <Trash2 size={14} /> Delete
           </button>
         </div>
