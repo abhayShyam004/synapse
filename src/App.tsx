@@ -4,6 +4,7 @@ import { LeftSidebar } from './components/sidebar/LeftSidebar';
 import { TopToolbar } from './components/toolbar/TopToolbar';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { GlobalDialog } from './components/modals/GlobalDialog';
+import { AIBuilderModal } from './components/modals/AIBuilderModal';
 import { SearchOverlay } from './components/canvas/SearchOverlay';
 import { useSynapseStore } from './store/useSynapseStore';
 import { useEffect } from 'react';
@@ -34,7 +35,7 @@ function App() {
 
   useEffect(() => {
     const root = document.documentElement;
-    const baseHex = ACCENT_COLORS[accentColor] || ACCENT_COLORS.cyan;
+    const baseHex = ACCENT_COLORS[accentColor as keyof typeof ACCENT_COLORS] || ACCENT_COLORS.cyan;
     
     root.style.setProperty('--accent', baseHex);
     root.style.setProperty('--accent-light', `${baseHex}26`); // 15% opacity
@@ -62,6 +63,7 @@ function App() {
       />
       <SettingsModal />
       <GlobalDialog />
+      <AIBuilderModal />
       <TopToolbar />
       <main className="flex flex-1 overflow-hidden relative">
         <aside className="w-16 border-r border-gray-200 bg-white shrink-0 overflow-y-auto z-10 flex flex-col">

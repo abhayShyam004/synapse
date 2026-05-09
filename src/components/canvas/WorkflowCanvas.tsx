@@ -9,6 +9,7 @@ import { NodeSettingsPopover } from '../popovers/NodeSettingsPopover';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Plus } from 'lucide-react';
+import { fetchAISuggestion } from '../../lib/ai/nvidiaNim';
 
 const nodeTypes = { custom: BaseNode };
 const edgeTypes = { custom: CustomEdge };
@@ -122,24 +123,38 @@ export const WorkflowCanvas = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [nodes, isCanvasLocked, deleteNode, undo, redo, fitView, setSearchOpen]);
 
-  const handleConnect = (connection: Connection) => {
+  const handleConnect = async (connection: Connection) => {
     onConnect(connection);
     if (ghostCardsEnabled) {
       const sourceNode = nodes.find(n => n.id === connection.source);
       if (sourceNode) {
-        addGhostNode({
-          id: `ghost-${crypto.randomUUID()}`,
-          type: 'custom',
-          position: { x: sourceNode.position.x, y: sourceNode.position.y + 150 },
-          data: { 
-            label: 'AI Suggestion', 
-            type: 'Suggestion', 
-            color: 'white', 
-            variant: 'ghost', 
-            expanded: true,
-            sourceNodeId: sourceNode.id
-          },
-        });
+        try {
+          // Prepare context: Send existing structure to AI
+          const workflowContext = nodes.map(n => ({ name: n.data.label, type: n.data.type }));
+          const prompt = `You are a workflow planning AI. Given this workflow so far: ${JSON.stringify(workflowContext)}. 
+Suggest the single most logical next step. 
+Return JSON ONLY, no explanation: { "name": "string", "type": "task"|"trigger"|"decision"|"condition"|"aiPrompt"|"timer"|"variable"|"loop"|"note", "description": "string" }`;
+
+          const aiResponse = await fetchAISuggestion(prompt);
+          const suggestion = JSON.parse(aiResponse.replace(/```json\n?|\n?```/g, '').trim());
+
+          addGhostNode({
+            id: `ghost-${crypto.randomUUID()}`,
+            type: 'custom',
+            position: { x: sourceNode.position.x, y: sourceNode.position.y + 180 },
+            data: { 
+              label: suggestion.name, 
+              type: suggestion.type.charAt(0).toUpperCase() + suggestion.type.slice(1), 
+              description: suggestion.description, 
+              variant: 'ghost', 
+              expanded: true,
+              sourceNodeId: sourceNode.id
+            },
+          });
+        } catch (e) {
+          console.warn('Ghost suggestion failed:', e);
+          // Silently fail as requested
+        }
       }
     }
   };

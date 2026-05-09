@@ -48,6 +48,8 @@ export interface CanvasSlice {
   setCurrentWorkflowId: (id: string | null) => void;
   workflowName: string;
   setWorkflowName: (name: string) => void;
+  isAIBuilderOpen: boolean;
+  setAIBuilderOpen: (isOpen: boolean) => void;
   dialog: {
     isOpen: boolean;
     title: string;
@@ -90,6 +92,8 @@ export const createCanvasSlice = (
   searchQuery: '',
   currentWorkflowId: null,
   workflowName: 'Synapse Workflow',
+  isAIBuilderOpen: false,
+  setAIBuilderOpen: (isOpen) => set(() => ({ isAIBuilderOpen: isOpen })),
   dialog: {
     isOpen: false,
     title: '',
