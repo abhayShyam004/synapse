@@ -32,16 +32,15 @@ const Dashboard = () => {
   useEffect(() => {
     // Initial load from localStorage
     const savedAccent = localStorage.getItem('synapse-accent') as any;
-    if (savedAccent && ACCENT_COLORS[savedAccent as keyof typeof ACCENT_COLORS]) {
+    if (savedAccent && (ACCENT_COLORS as any)[savedAccent]) {
       updateSetting('accentColor', savedAccent);
     }
   }, []);
 
   useEffect(() => {
     const root = document.documentElement;
-    const baseHex = ACCENT_COLORS[accentColor as keyof typeof ACCENT_COLORS] || ACCENT_COLORS.cyan;
+    const baseHex = (ACCENT_COLORS as any)[accentColor] || ACCENT_COLORS.cyan;
     root.style.setProperty('--accent', baseHex);
-    root.style.setProperty('--accent-bg', `${baseHex}0D`);
     root.style.setProperty('--accent-dot', `${baseHex}66`);
   }, [accentColor]);
 
@@ -83,8 +82,22 @@ const Dashboard = () => {
       defaultValue: currentName,
       onConfirm: (newName) => {
         if (newName && newName !== currentName) {
+          // Update master list
           const updated = workflows.map(w => w.id === id ? { ...w, name: newName, lastModified: 'Just now' } : w);
           saveWorkflows(updated);
+
+          // Sync with individual workflow file if it exists
+          const savedWorkflow = localStorage.getItem(`synapse-workflow-${id}`);
+          if (savedWorkflow) {
+            try {
+              const data = JSON.parse(savedWorkflow);
+              data.name = newName;
+              localStorage.setItem(`synapse-workflow-${id}`, JSON.stringify(data));
+            } catch (err) {
+              console.error("Failed to sync rename to workflow file", err);
+            }
+          }
+          
           toast.success('Synapse renamed');
         }
       }
@@ -110,7 +123,8 @@ const Dashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] font-sans relative" style={{ 
+    <div className="min-h-screen font-sans relative" style={{ 
+      backgroundColor: '#F3F4F6',
       backgroundImage: 'radial-gradient(var(--accent-dot) 1.5px, transparent 1.5px)',
       backgroundSize: '20px 20px'
     }}>
@@ -125,7 +139,7 @@ const Dashboard = () => {
           </button>
           <div className="flex items-center gap-2">
             <div className="grid grid-cols-2 gap-0.5 w-5 h-5">
-              <div className="w-2 h-2 rounded-full bg-[#06B6D4]"></div>
+              <div className="w-2 h-2 rounded-full bg-[var(--accent)]"></div>
               <div className="w-2 h-2 rounded-full bg-gray-900"></div>
               <div className="w-2 h-2 rounded-full bg-gray-900"></div>
               <div className="w-2 h-2 rounded-full bg-gray-900"></div>
@@ -141,12 +155,12 @@ const Dashboard = () => {
               placeholder="Search synapses..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-gray-100 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-[#06B6D4] outline-none"
+              className="pl-10 pr-4 py-2 bg-gray-100 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-[var(--accent)] outline-none"
             />
           </div>
           <button 
             onClick={createNewSynapse}
-            className="bg-[#06B6D4] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-cyan-600 transition-all flex items-center gap-2 shadow-sm"
+            className="bg-[var(--accent)] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:brightness-90 transition-all flex items-center gap-2 shadow-sm"
           >
             <Plus size={18} /> New Synapse
           </button>
@@ -167,10 +181,10 @@ const Dashboard = () => {
             <div 
               key={s.id}
               onClick={() => window.location.href = `/work/?id=${s.id}`}
-              className="bg-white border border-gray-200 rounded-xl p-5 hover:border-[#06B6D4] hover:shadow-md transition-all cursor-pointer group relative"
+              className="bg-white border border-gray-200 rounded-xl p-5 hover:border-[var(--accent)] hover:shadow-md transition-all cursor-pointer group relative"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="w-10 h-10 bg-cyan-50 rounded-lg flex items-center justify-center text-[#06B6D4]">
+                <div className="w-10 h-10 bg-accent/5 rounded-lg flex items-center justify-center text-[var(--accent)]" style={{ backgroundColor: 'var(--accent-light)' }}>
                   <Folder size={20} />
                 </div>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -188,7 +202,7 @@ const Dashboard = () => {
                   </button>
                 </div>
               </div>
-              <h3 className="font-bold text-gray-900 mb-1 group-hover:text-[#06B6D4] transition-colors">{s.name}</h3>
+              <h3 className="font-bold text-gray-900 mb-1 group-hover:text-[var(--accent)] transition-colors">{s.name}</h3>
               <div className="flex items-center gap-4 text-xs text-gray-500">
                 <span className="flex items-center gap-1"><Clock size={14} /> {s.lastModified}</span>
                 <span>{s.nodes} nodes</span>
@@ -199,10 +213,10 @@ const Dashboard = () => {
           {/* Create New Placeholder */}
           <div 
             onClick={createNewSynapse}
-            className="border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center p-8 text-gray-400 hover:border-[#06B6D4] hover:text-[#06B6D4] transition-all cursor-pointer bg-white/50 group"
+            className="border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center p-8 text-gray-400 hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all cursor-pointer bg-white/50 group"
           >
-            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3 group-hover:bg-cyan-50 transition-colors">
-              <Plus size={24} className="group-hover:text-[#06B6D4]" />
+            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3 group-hover:bg-accent/5 transition-colors" style={{ backgroundColor: 'var(--accent-light)' }}>
+              <Plus size={24} className="group-hover:text-[var(--accent)]" />
             </div>
             <span className="font-semibold">Create new synapse</span>
           </div>

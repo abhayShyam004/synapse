@@ -36,11 +36,11 @@ function App() {
   useEffect(() => {
     const root = document.documentElement;
     const baseHex = ACCENT_COLORS[accentColor as keyof typeof ACCENT_COLORS] || ACCENT_COLORS.cyan;
-    
+
     root.style.setProperty('--accent', baseHex);
     root.style.setProperty('--accent-light', `${baseHex}26`); // 15% opacity
     root.style.setProperty('--accent-dot', `${baseHex}66`);   // 40% opacity
-    
+
     localStorage.setItem('synapse-accent', accentColor);
   }, [accentColor]);
 

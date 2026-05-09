@@ -181,8 +181,22 @@ Return JSON ONLY, no explanation: { "name": "string", "type": "task"|"trigger"|"
     }
   };
 
+  const ACCENT_COLORS_MAP = {
+    cyan: '#06B6D4',
+    amber: '#F59E0B',
+    violet: '#7C3AED',
+    rose: '#F43F5E',
+    emerald: '#10B981',
+    blue: '#3B82F6',
+    orange: '#F97316',
+    pink: '#EC4899',
+  };
+
+  const accentColor = useSynapseStore(state => state.accentColor);
+  const currentAccentHex = (ACCENT_COLORS_MAP as any)[accentColor] || '#06B6D4';
+
   return (
-    <div className="w-full h-full relative group/canvas" style={{ backgroundColor: '#F3F4F6' }}>
+    <div className="w-full h-full relative group/canvas" style={{ backgroundColor: '#F3F4F6' }} onClick={() => setContextMenu(null)}>
       <ReactFlow
         nodes={filteredNodes}
         edges={edges}
@@ -204,7 +218,8 @@ Return JSON ONLY, no explanation: { "name": "string", "type": "task"|"trigger"|"
       >
         {canvasBackground !== 'none' && (
           <Background 
-            color="var(--accent-dot)" 
+            color={currentAccentHex}
+            style={{ opacity: 0.4 }}
             gap={24} 
             size={2.5} 
             variant={canvasBackground === 'dots' ? BackgroundVariant.Dots : BackgroundVariant.Lines} 
