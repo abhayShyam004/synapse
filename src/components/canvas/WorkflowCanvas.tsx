@@ -192,25 +192,25 @@ export const WorkflowCanvas = () => {
             position="bottom-right"
           />
         )}
-
-        {/* Empty State */}
-        {nodes.length === 0 && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center z-0">
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                setAddElementPopover({ isOpen: true, x: window.innerWidth / 2, y: window.innerHeight / 2 });
-              }}
-              className="w-20 h-20 rounded-full flex items-center justify-center mb-6 shadow-md hover:scale-110 active:scale-95 transition-all cursor-pointer pointer-events-auto"
-              style={{ backgroundColor: 'var(--accent-light)', color: 'var(--accent)' }}
-            >
-              <Plus size={48} strokeWidth={2.5} />
-            </button>
-            <h2 className="text-xl font-bold text-gray-700 pointer-events-none">Add your first node</h2>
-            <p className="text-base text-gray-400 mt-2 pointer-events-none">Click the + button or right-click to get started</p>
-          </div>
-        )}
       </ReactFlow>
+
+      {/* Empty State Overlay */}
+      {nodes.length === 0 && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              setAddElementPopover({ isOpen: true, x: window.innerWidth / 2, y: window.innerHeight / 2 });
+            }}
+            className="w-20 h-20 rounded-full flex items-center justify-center mb-6 shadow-md hover:scale-110 active:scale-95 transition-all cursor-pointer pointer-events-auto"
+            style={{ backgroundColor: 'var(--accent-light)', color: 'var(--accent)' }}
+          >
+            <Plus size={48} strokeWidth={2.5} />
+          </button>
+          <h2 className="text-xl font-bold text-gray-700 pointer-events-none">Add your first node</h2>
+          <p className="text-base text-gray-400 mt-2 pointer-events-none">Click the + button or right-click to get started</p>
+        </div>
+      )}
       
       <AddElementPopover />
 
