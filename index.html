@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --cyan: var(--accent);
+            --accent: #06B6D4;
             --cyan-hover: #0891b2;
             --text-dark: #111827;
             --text-gray: #6B7280;
@@ -30,7 +30,6 @@
             background-color: var(--bg-light);
             color: var(--text-dark);
             overflow-x: hidden;
-            /* Subtle dot pattern */
             background-image: radial-gradient(#d1d5db 1px, transparent 1px);
             background-size: 24px 24px;
         }
@@ -64,21 +63,21 @@
         .logo-icon {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 4px;
-            width: 24px;
-            height: 24px;
+            gap: 2px;
+            width: 20px;
+            height: 20px;
         }
 
         .logo-dot {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             background-color: var(--text-dark);
         }
-        .logo-dot.cyan { background-color: var(--cyan); }
+        .logo-dot.accent { background-color: var(--accent); }
 
         .logo-text {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 700;
             letter-spacing: -0.5px;
         }
@@ -96,7 +95,7 @@
         }
 
         .nav-link:hover {
-            color: var(--text-dark);
+            color: var(--accent);
         }
 
         .nav-right {
@@ -124,12 +123,12 @@
         }
 
         .btn-outline:hover {
-            border-color: #d1d5db;
+            border-color: var(--accent);
             background-color: #f9fafb;
         }
 
         .btn-solid {
-            background-color: var(--cyan);
+            background-color: var(--accent);
             color: white;
             padding: 14px 32px;
             border-radius: 24px;
@@ -142,9 +141,9 @@
         }
 
         .btn-solid:hover {
-            background-color: var(--cyan-hover);
+            opacity: 0.9;
             transform: scale(1.03);
-            box-shadow: 0 10px 15px -3px rgba(6, 182, 212, 0.3);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
 
         /* Hero Section */
@@ -155,7 +154,7 @@
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding-top: 80px; /* offset navbar */
+            padding-top: 80px;
             position: relative;
         }
 
@@ -190,12 +189,12 @@
         .center-icon {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            width: 64px;
-            height: 64px;
+            gap: 6px;
+            width: 56px;
+            height: 56px;
             background: white;
-            padding: 12px;
-            border-radius: 16px;
+            padding: 10px;
+            border-radius: 14px;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             margin: 0 auto 40px auto;
         }
@@ -206,9 +205,9 @@
             border-radius: 50%;
             background-color: var(--text-dark);
         }
-        .center-icon .dot.cyan { background-color: var(--cyan); }
+        .center-icon .dot.accent { background-color: var(--accent); }
 
-        /* Floating Cards Base */
+        /* Floating Cards */
         .floating-card {
             position: absolute;
             background: white;
@@ -225,17 +224,15 @@
             100% { transform: translateY(0px) rotate(var(--rot)); }
         }
 
-        /* 1. Sticky Note (Top Left) */
         .card-sticky {
             top: 20%;
             left: 10%;
-            background: #FEF9C3; /* Yellow */
+            background: #FEF9C3;
             padding: 24px;
             width: 240px;
             border-radius: 4px;
             --rot: -4deg;
             transform: rotate(var(--rot));
-            animation-delay: 0s;
         }
         .card-sticky p {
             font-family: 'Caveat', cursive;
@@ -272,7 +269,7 @@
         .sub-card-checkbox .box {
             width: 32px;
             height: 32px;
-            background: var(--cyan);
+            background: var(--accent);
             border-radius: 6px;
             position: relative;
         }
@@ -288,7 +285,6 @@
             transform: rotate(45deg);
         }
 
-        /* 2. Synapse Node (Top Right) */
         .card-node {
             top: 15%;
             right: 12%;
@@ -301,27 +297,16 @@
             animation-delay: 1s;
         }
         .node-header {
-            background: #4B5563; /* Gray matching node style */
+            background: #4B5563;
             color: white;
             padding: 8px 12px;
             font-size: 11px;
             font-weight: 600;
             letter-spacing: 0.5px;
         }
-        .node-body {
-            padding: 16px;
-            background: white;
-        }
-        .node-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: #111827;
-            margin-bottom: 4px;
-        }
-        .node-desc {
-            font-size: 11px;
-            color: #6B7280;
-        }
+        .node-body { padding: 16px; background: white; }
+        .node-title { font-size: 13px; font-weight: 600; color: #111827; margin-bottom: 4px; }
+        .node-desc { font-size: 11px; color: #6B7280; }
         .node-handle {
             position: absolute;
             bottom: -6px;
@@ -329,12 +314,11 @@
             transform: translateX(-50%);
             width: 12px;
             height: 12px;
-            background: var(--cyan);
+            background: var(--accent);
             border: 2px solid white;
             border-radius: 50%;
         }
 
-        /* 3. Active Workflows (Bottom Left) */
         .card-workflows {
             bottom: 10%;
             left: 15%;
@@ -343,54 +327,17 @@
             transform: rotate(var(--rot));
             animation-delay: 0.5s;
         }
-        .card-title {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: #111827;
-            text-align: left;
-        }
-        .wf-row {
-            margin-bottom: 12px;
-        }
-        .wf-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 6px;
-        }
-        .wf-name {
-            font-size: 12px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .wf-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
+        .card-title { font-size: 14px; font-weight: 600; margin-bottom: 16px; color: #111827; text-align: left; }
+        .wf-row { margin-bottom: 12px; }
+        .wf-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+        .wf-name { font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+        .wf-dot { width: 8px; height: 8px; border-radius: 50%; }
         .wf-dot.orange { background: #F59E0B; }
         .wf-dot.green { background: #10B981; }
-        .wf-pct {
-            font-size: 11px;
-            font-weight: 600;
-            color: #4B5563;
-        }
-        .progress-bar {
-            width: 100%;
-            height: 4px;
-            background: #F3F4F6;
-            border-radius: 2px;
-            overflow: hidden;
-        }
-        .progress-fill {
-            height: 100%;
-            border-radius: 2px;
-        }
+        .wf-pct { font-size: 11px; font-weight: 600; color: #4B5563; }
+        .progress-bar { width: 100%; height: 4px; background: #F3F4F6; border-radius: 2px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 2px; background: var(--accent); }
 
-        /* 4. Integrations (Bottom Right) */
         .card-integrations {
             bottom: 15%;
             right: 15%;
@@ -399,10 +346,7 @@
             transform: rotate(var(--rot));
             animation-delay: 1.5s;
         }
-        .icon-row {
-            display: flex;
-            gap: 12px;
-        }
+        .icon-row { display: flex; gap: 12px; }
         .app-icon {
             width: 48px;
             height: 48px;
@@ -415,124 +359,41 @@
             font-weight: bold;
             font-size: 20px;
         }
-        /* CSS-drawn app icons */
         .icon-gmail { color: #EA4335; }
-        .icon-slack { color: #E5A823; position: relative; }
-        .icon-slack::before { content: '#'; color: #4A154B; }
-        .icon-calendar { background: #4285F4; color: white; flex-direction: column; font-size: 16px;}
+        .icon-calendar { background: #4285F4; color: white; flex-direction: column; font-size: 16px; position:relative; overflow:hidden;}
         .icon-calendar .top { background: #1A73E8; width: 100%; height: 12px; border-radius: 12px 12px 0 0; position:absolute; top:0;}
 
         /* Features Section */
-        .features {
-            background: white;
-            padding: 80px 20px;
-            text-align: center;
-            position: relative;
-            z-index: 20;
-        }
-
-        .features h2 {
-            font-size: 36px;
-            font-weight: 700;
-            margin-bottom: 60px;
-            color: #111827;
-        }
-
-        .features-grid {
-            display: flex;
-            justify-content: center;
-            gap: 24px;
-            max-width: 1000px;
-            margin: 0 auto;
-            flex-wrap: wrap;
-        }
-
+        .features { background: white; padding: 80px 20px; text-align: center; position: relative; z-index: 20; }
+        .features h2 { font-size: 36px; font-weight: 700; margin-bottom: 60px; color: #111827; }
+        .features-grid { display: flex; justify-content: center; gap: 24px; max-width: 1000px; margin: 0 auto; flex-wrap: wrap; }
         .feature-card {
-            background: white;
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 32px 24px;
-            width: 300px;
-            text-align: left;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: white; border: 1px solid var(--border-color); border-radius: 16px; padding: 32px 24px; width: 300px; text-align: left; transition: all 0.3s ease;
         }
-
-        .feature-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
-        }
-
-        .f-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            font-size: 24px;
-        }
-        
-        .f-icon.cyan { background: #ECFEFF; color: var(--accent); }
+        .feature-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); }
+        .f-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 24px; }
+        .f-icon.accent { background: color-mix(in srgb, var(--accent), transparent 90%); color: var(--accent); }
         .f-icon.yellow { background: #FEF3C7; color: #F59E0B; }
         .f-icon.dark { background: #F3F4F6; color: #4B5563; }
-
-        .feature-card h3 {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: #111827;
-        }
-
-        .feature-card p {
-            font-size: 14px;
-            color: #6B7280;
-            line-height: 1.5;
-        }
+        .feature-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 12px; color: #111827; }
+        .feature-card p { font-size: 14px; color: #6B7280; line-height: 1.5; }
 
         /* Footer */
         footer {
-            background: #F9FAFB;
-            border-top: 1px solid var(--border-color);
-            padding: 32px 4rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background: #F9FAFB; border-top: 1px solid var(--border-color); padding: 32px 4rem; display: flex; justify-content: space-between; align-items: center;
         }
+        .footer-left { display: flex; align-items: center; gap: 12px; font-size: 14px; color: #6B7280; }
+        .footer-logo { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; width: 16px; height: 16px; }
+        .footer-logo .logo-dot { width: 6px; height: 6px; border-radius: 50%; background-color: var(--text-dark); }
+        .footer-logo .logo-dot.accent { background-color: var(--accent); }
+        .footer-links { display: flex; gap: 24px; font-size: 14px; color: #4B5563; }
+        .footer-links a:hover { color: #111827; text-decoration: underline; }
 
-        .footer-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 14px;
-            color: #6B7280;
-        }
-
-        .footer-logo {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2px;
-            width: 16px;
-            height: 16px;
-        }
-        .footer-logo .logo-dot { width: 6px; height: 6px; }
-
-        .footer-links {
-            display: flex;
-            gap: 24px;
-            font-size: 14px;
-            color: #4B5563;
-        }
-
-        .footer-links a:hover {
-            color: #111827;
-            text-decoration: underline;
-        }
-
-        /* Responsive */
         @media (max-width: 1024px) {
             .floating-card { display: none; }
             .hero h1 { font-size: 56px; }
+            nav { padding: 1rem 2rem; }
+            footer { padding: 32px 2rem; }
         }
     </style>
 </head>
@@ -541,7 +402,7 @@
     <nav>
         <div class="nav-left">
             <div class="logo-icon">
-                <div class="logo-dot cyan"></div>
+                <div class="logo-dot accent"></div>
                 <div class="logo-dot"></div>
                 <div class="logo-dot"></div>
                 <div class="logo-dot"></div>
@@ -562,7 +423,7 @@
 
     <section class="hero">
         <div class="center-icon">
-            <div class="dot cyan"></div>
+            <div class="dot accent"></div>
             <div class="dot"></div>
             <div class="dot"></div>
             <div class="dot"></div>
@@ -574,7 +435,6 @@
             <a href="/work/" class="btn-solid">Get started free</a>
         </div>
 
-        <!-- 3D CSS Cards -->
         <div class="floating-card card-sticky">
             <div class="pin"></div>
             <p>Connect nodes to build powerful automations</p>
@@ -594,25 +454,19 @@
 
         <div class="floating-card card-workflows">
             <div class="card-title">Active Workflows</div>
-            
             <div class="wf-row">
                 <div class="wf-header">
                     <div class="wf-name"><div class="wf-dot orange"></div> Customer Onboarding</div>
                     <div class="wf-pct">60%</div>
                 </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: 60%; background: var(--cyan);"></div>
-                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 60%;"></div></div>
             </div>
-
             <div class="wf-row">
                 <div class="wf-header">
                     <div class="wf-name"><div class="wf-dot green"></div> Data Sync</div>
                     <div class="wf-pct">100%</div>
                 </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: 100%; background: #10B981;"></div>
-                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 100%; background: #10B981;"></div></div>
             </div>
         </div>
 
@@ -620,8 +474,8 @@
             <div class="card-title">100+ Integrations</div>
             <div class="icon-row">
                 <div class="app-icon icon-gmail">M</div>
-                <div class="app-icon icon-slack"></div>
-                <div class="app-icon icon-calendar" style="position:relative; overflow:hidden;">
+                <div class="app-icon" style="font-size: 24px; color: #4A154B;">#</div>
+                <div class="app-icon icon-calendar">
                     <div class="top"></div>
                     <span style="margin-top: 8px;">31</span>
                 </div>
@@ -634,7 +488,7 @@
         <h2>Everything you need to build smart workflows</h2>
         <div class="features-grid">
             <div class="feature-card">
-                <div class="f-icon cyan">◆</div>
+                <div class="f-icon accent">◆</div>
                 <h3>Visual Canvas</h3>
                 <p>Drag, connect and arrange nodes on an infinite canvas with snap-to-grid precision.</p>
             </div>
@@ -654,7 +508,7 @@
     <footer>
         <div class="footer-left">
             <div class="footer-logo">
-                <div class="logo-dot cyan"></div>
+                <div class="logo-dot accent"></div>
                 <div class="logo-dot"></div>
                 <div class="logo-dot"></div>
                 <div class="logo-dot"></div>
@@ -668,5 +522,18 @@
         </div>
     </footer>
 
+    <script>
+        function syncAccent() {
+            const savedAccent = localStorage.getItem('synapse-accent');
+            if (savedAccent) {
+                const colorValue = savedAccent === 'yellow' ? '#F59E0B' : '#06B6D4';
+                document.documentElement.style.setProperty('--accent', colorValue);
+            }
+        }
+        syncAccent();
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'synapse-accent') syncAccent();
+        });
+    </script>
 </body>
 </html>

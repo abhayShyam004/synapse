@@ -1,63 +1,20 @@
-import { Home, Folder, GitMerge, Users, BarChart2, Bell, Search, Settings, Lock, Unlock, Download, Upload } from 'lucide-react';
+import { Home, Folder, GitMerge, Users, Bell, Search, Settings, Lock, Unlock } from 'lucide-react';
 import { clsx } from 'clsx';
 import toast from 'react-hot-toast';
 import { useSynapseStore } from '../../store/useSynapseStore';
-import { useState, useRef, useEffect } from 'react';
 
 export const LeftSidebar = () => {
-  const { setMetricsPopover, isCanvasLocked, toggleCanvasLock, toggleSettingsModal, setSearchOpen, exportWorkflow, importWorkflow } = useSynapseStore();
-  const [isFolderOpen, setIsFolderOpen] = useState(false);
-  const folderRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (folderRef.current && !folderRef.current.contains(event.target as Node)) {
-        setIsFolderOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleExport = () => {
-    const json = exportWorkflow();
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'synapse-workflow.json';
-    a.click();
-    toast.success('Workflow exported successfully');
-    setIsFolderOpen(false);
-  };
-
-  const handleImport = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'application/json';
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if (e.target?.result) {
-            importWorkflow(e.target.result as string);
-            toast.success('Workflow imported successfully');
-          }
-        };
-        reader.readAsText(file);
-      }
-    };
-    input.click();
-    setIsFolderOpen(false);
-  };
+  const { isCanvasLocked, toggleCanvasLock, toggleSettingsModal, setSearchOpen } = useSynapseStore();
 
   const handleAction = (id: string) => {
     switch (id) {
-      case 'home': return toast.success('Synapse Home');
-      case 'folder': return setIsFolderOpen(!isFolderOpen);
-      case 'audiences': return toast.success('Collaboration — coming soon');
-      case 'metrics': return setMetricsPopover(true);
+      case 'home': return window.location.href = '/';
+      case 'folder': return window.location.href = '/dashboard/';
+      case 'orchestration': return toast.success('Currently viewing Workflow');
+      case 'audiences': return toast.error('Collaboration is an upcoming feature', {
+        icon: '🚧',
+        style: { borderLeft: '4px solid #F59E0B' }
+      });
       case 'notifications': return toast.success('No new notifications');
       case 'search': return setSearchOpen(true);
       case 'settings': return toggleSettingsModal(true);
@@ -69,7 +26,6 @@ export const LeftSidebar = () => {
     { Icon: Folder, id: 'folder', active: false },
     { Icon: GitMerge, id: 'orchestration', active: true },
     { Icon: Users, id: 'audiences', active: false },
-    { Icon: BarChart2, id: 'metrics', active: false },
   ];
 
   const bottomIcons = [
@@ -96,16 +52,6 @@ export const LeftSidebar = () => {
             >
               <Icon size={20} strokeWidth={2} />
             </button>
-            {id === 'folder' && isFolderOpen && (
-              <div ref={folderRef} className="absolute left-14 top-0 bg-white border border-gray-200 shadow-lg rounded-md w-48 py-1 z-50">
-                <button onClick={handleImport} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                  <Upload size={14} /> Import JSON
-                </button>
-                <button onClick={handleExport} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                  <Download size={14} /> Export JSON
-                </button>
-              </div>
-            )}
           </div>
         ))}
       </div>
