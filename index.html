@@ -176,20 +176,29 @@
 
         /* Hero Section */
         .hero {
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding: 80px 1.5rem 0 1.5rem;
+            padding: 100px 0 0 0;
             position: relative;
+        }
+
+        @media (min-width: 768px) {
+            .hero {
+                padding-top: 80px;
+                padding-left: 1.5rem;
+                padding-right: 1.5rem;
+            }
         }
 
         .hero-content {
             z-index: 10;
             max-width: 800px;
             width: 100%;
+            padding: 0 1.5rem;
         }
 
         .hero h1 {
@@ -260,7 +269,7 @@
         }
         .center-icon .dot.accent { background-color: var(--accent); }
 
-        /* Floating Cards */
+        /* Absolute Floating Cards (Desktop Only) */
         .floating-card {
             display: none;
             position: absolute;
@@ -272,16 +281,16 @@
             animation: float 4s ease-in-out infinite;
         }
 
-        @media (min-width: 1024px) {
+        @media (min-width: 768px) {
             .floating-card {
                 display: block;
             }
         }
 
         @keyframes float {
-            0% { transform: translateY(0px) rotate(var(--rot)); }
-            50% { transform: translateY(-15px) rotate(var(--rot)); }
-            100% { transform: translateY(0px) rotate(var(--rot)); }
+            0% { transform: translateY(0px) rotate(var(--rot, 0deg)); }
+            50% { transform: translateY(-15px) rotate(var(--rot, 0deg)); }
+            100% { transform: translateY(0px) rotate(var(--rot, 0deg)); }
         }
 
         .card-sticky {
@@ -294,7 +303,39 @@
             --rot: -4deg;
             transform: rotate(var(--rot));
         }
-        .card-sticky p {
+        
+        .card-node {
+            top: 18%;
+            right: 12%;
+            width: 220px;
+            padding: 0;
+            border-radius: 12px;
+            overflow: hidden;
+            --rot: 3deg;
+            transform: rotate(var(--rot));
+            animation-delay: 1s;
+        }
+
+        .card-workflows {
+            bottom: 12%;
+            left: 15%;
+            width: 280px;
+            --rot: -2deg;
+            transform: rotate(var(--rot));
+            animation-delay: 0.5s;
+        }
+
+        .card-integrations {
+            bottom: 18%;
+            right: 15%;
+            width: 260px;
+            --rot: 2deg;
+            transform: rotate(var(--rot));
+            animation-delay: 1.5s;
+        }
+
+        /* Shared Card Internals */
+        .sticky-p {
             font-family: 'Caveat', cursive;
             font-size: 22px;
             color: #4B5563;
@@ -326,12 +367,24 @@
             align-items: center;
             justify-content: center;
         }
+        .sub-card-checkbox.mobile {
+            left: 10px;
+            bottom: -20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+        }
         .sub-card-checkbox .box {
             width: 32px;
             height: 32px;
             background: var(--accent);
             border-radius: 6px;
             position: relative;
+        }
+        .sub-card-checkbox.mobile .box {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
         }
         .sub-card-checkbox .box::after {
             content: '';
@@ -344,19 +397,14 @@
             border-width: 0 3px 3px 0;
             transform: rotate(45deg);
         }
-
-        .card-node {
-            top: 18%;
-            right: 12%;
-            width: 220px;
-            padding: 0;
-            border-radius: 12px;
-            overflow: hidden;
-            --rot: 3deg;
-            transform: rotate(var(--rot));
-            animation-delay: 1s;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        .sub-card-checkbox.mobile .box::after {
+            left: 6px;
+            top: 3px;
+            width: 4px;
+            height: 8px;
+            border-width: 0 2px 2px 0;
         }
+
         .node-header {
             background: #374151;
             color: white;
@@ -364,8 +412,9 @@
             font-size: 11px;
             font-weight: 600;
             letter-spacing: 0.5px;
+            text-align: left;
         }
-        .node-body { padding: 16px; background: white; }
+        .node-body { padding: 16px; background: white; text-align: left; }
         .node-title { font-size: 13px; font-weight: 600; color: #111827; margin-bottom: 4px; }
         .node-desc { font-size: 11px; color: #6B7280; }
         .node-handle {
@@ -380,14 +429,6 @@
             border-radius: 50%;
         }
 
-        .card-workflows {
-            bottom: 12%;
-            left: 15%;
-            width: 280px;
-            --rot: -2deg;
-            transform: rotate(var(--rot));
-            animation-delay: 0.5s;
-        }
         .card-title { font-size: 14px; font-weight: 600; margin-bottom: 16px; color: #111827; text-align: left; }
         .wf-row { margin-bottom: 12px; }
         .wf-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
@@ -399,14 +440,6 @@
         .progress-bar { width: 100%; height: 4px; background: #F3F4F6; border-radius: 2px; overflow: hidden; }
         .progress-fill { height: 100%; border-radius: 2px; background: var(--accent); }
 
-        .card-integrations {
-            bottom: 18%;
-            right: 15%;
-            width: 260px;
-            --rot: 2deg;
-            transform: rotate(var(--rot));
-            animation-delay: 1.5s;
-        }
         .icon-row { display: flex; gap: 12px; }
         .app-icon {
             width: 48px;
@@ -420,9 +453,73 @@
             font-weight: bold;
             font-size: 20px;
         }
+        .app-icon.small {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            font-size: 16px;
+        }
         .icon-gmail { color: #EA4335; }
         .icon-calendar { background: #4285F4; color: white; flex-direction: column; font-size: 16px; position:relative; overflow:hidden;}
+        .icon-calendar.small { font-size: 12px; }
         .icon-calendar .top { background: #1A73E8; width: 100%; height: 12px; border-radius: 12px 12px 0 0; position:absolute; top:0;}
+        .icon-calendar.small .top { height: 8px; border-radius: 8px 8px 0 0; }
+
+        /* Mobile Cards Strip */
+        .mobile-cards-strip {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            gap: 12px;
+            padding: 0 16px 32px 16px;
+            margin-top: 32px;
+            width: 100vw;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .mobile-cards-strip::-webkit-scrollbar {
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .mobile-cards-strip {
+                display: none;
+            }
+        }
+
+        .strip-card {
+            scroll-snap-align: start;
+            width: 200px;
+            flex-shrink: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 16px;
+            position: relative;
+            animation: float 4s ease-in-out infinite;
+            --rot: 0deg;
+        }
+
+        .strip-card.sticky-note {
+            background: #FEF9C3;
+            border-radius: 4px;
+            animation-delay: 0s;
+        }
+
+        .strip-card.node-card {
+            padding: 0;
+            overflow: hidden;
+            animation-delay: 1s;
+        }
+
+        .strip-card.workflow-card {
+            animation-delay: 0.5s;
+        }
+
+        .strip-card.integrations-card {
+            animation-delay: 1.5s;
+        }
 
         /* Minimal Footer */
         footer {
@@ -432,6 +529,7 @@
             justify-content: space-between;
             align-items: center;
             border-top: 1px solid var(--border-color);
+            margin-top: auto;
         }
 
         @media (min-width: 768px) {
@@ -452,9 +550,6 @@
             color: var(--text-gray);
         }
 
-        @media (max-width: 1024px) {
-            /* Handled locally with classes */
-        }
     </style>
 </head>
 <body>
@@ -495,9 +590,61 @@
             <a href="/work/" class="btn-solid">Get started free</a>
         </div>
 
+        <!-- Mobile Scrolling Strip (<768px) -->
+        <div class="mobile-cards-strip">
+            <div class="strip-card sticky-note">
+                <div class="pin"></div>
+                <p class="sticky-p">Connect nodes to build powerful automations</p>
+                <div class="sub-card-checkbox mobile">
+                    <div class="box"></div>
+                </div>
+            </div>
+
+            <div class="strip-card workflow-card">
+                <div class="card-title">My Active Synapses</div>
+                <div class="wf-row">
+                    <div class="wf-header">
+                        <div class="wf-name"><div class="wf-dot orange"></div> Email Campaign</div>
+                        <div class="wf-pct">85%</div>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 85%;"></div></div>
+                </div>
+                <div class="wf-row">
+                    <div class="wf-header">
+                        <div class="wf-name"><div class="wf-dot green"></div> Inventory Sync</div>
+                        <div class="wf-pct">100%</div>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 100%; background: #10B981;"></div></div>
+                </div>
+            </div>
+
+            <div class="strip-card node-card">
+                <div class="node-header">TRIGGER</div>
+                <div class="node-body">
+                    <div class="node-title">Webhook received</div>
+                    <div class="node-desc">Listens for payload</div>
+                </div>
+                <div class="node-handle"></div>
+            </div>
+
+            <div class="strip-card integrations-card">
+                <div class="card-title">100+ Integrations</div>
+                <div class="icon-row">
+                    <div class="app-icon small icon-gmail">M</div>
+                    <div class="app-icon small" style="color: #4A154B;">#</div>
+                    <div class="app-icon small icon-calendar">
+                        <div class="top"></div>
+                        <span style="margin-top: 6px;">31</span>
+                    </div>
+                    <div class="app-icon small" style="background:#111827; color:white;">✦</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Absolute Floating Cards (Desktop Only >768px) -->
         <div class="floating-card card-sticky">
             <div class="pin"></div>
-            <p>Draft complex logic in seconds with AI ghost cards</p>
+            <p class="sticky-p">Draft complex logic in seconds with AI ghost cards</p>
             <div class="sub-card-checkbox">
                 <div class="box"></div>
             </div>
