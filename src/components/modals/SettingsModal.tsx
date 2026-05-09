@@ -183,23 +183,41 @@ export const SettingsModal = () => {
                   <div>
                     <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-6">Visual Theme</h3>
                     <div className="flex flex-col gap-6">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700">Accent color</span>
-                        <div className="flex gap-3">
-                          <button 
-                            onClick={() => updateSetting('accentColor', 'cyan')}
-                            className={clsx(
-                              "w-8 h-8 rounded-full bg-[#06B6D4] transition-all",
-                              accentColor === 'cyan' ? "ring-2 ring-offset-2 ring-[#06B6D4] scale-110" : "opacity-60 hover:opacity-100"
-                            )} 
-                          />
-                          <button 
-                            onClick={() => updateSetting('accentColor', 'yellow')}
-                            className={clsx(
-                              "w-8 h-8 rounded-full bg-[#F59E0B] transition-all",
-                              accentColor === 'yellow' ? "ring-2 ring-offset-2 ring-[#F59E0B] scale-110" : "opacity-60 hover:opacity-100"
-                            )} 
-                          />
+                      <div>
+                        <span className="text-sm font-medium text-gray-700 block mb-4">Accent color</span>
+                        <div className="grid grid-cols-4 gap-y-6 gap-x-4">
+                          {[
+                            { name: 'Cyan', hex: '#06B6D4', id: 'cyan' },
+                            { name: 'Amber', hex: '#F59E0B', id: 'amber' },
+                            { name: 'Violet', hex: '#7C3AED', id: 'violet' },
+                            { name: 'Rose', hex: '#F43F5E', id: 'rose' },
+                            { name: 'Emerald', hex: '#10B981', id: 'emerald' },
+                            { name: 'Blue', hex: '#3B82F6', id: 'blue' },
+                            { name: 'Orange', hex: '#F97316', id: 'orange' },
+                            { name: 'Pink', hex: '#EC4899', id: 'pink' },
+                          ].map(color => (
+                            <div key={color.id} className="flex flex-col items-center gap-2">
+                              <button 
+                                onClick={() => updateSetting('accentColor', color.id as any)}
+                                className={clsx(
+                                  "w-8 h-8 rounded-full transition-all relative flex items-center justify-center p-0",
+                                  accentColor === color.id ? "ring-2 ring-offset-0" : "hover:scale-110"
+                                )}
+                                style={{ 
+                                  backgroundColor: color.hex,
+                                  boxShadow: accentColor === color.id ? `0 0 0 2px ${color.hex}` : 'none'
+                                }}
+                              >
+                                {accentColor === color.id && (
+                                  <div className="w-[22px] h-[22px] rounded-full border-2 border-white" />
+                                )}
+                              </button>
+                              <span className={clsx(
+                                "text-[10px] font-bold tracking-tighter uppercase",
+                                accentColor === color.id ? "text-gray-900" : "text-gray-400"
+                              )}>{color.name}</span>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     </div>

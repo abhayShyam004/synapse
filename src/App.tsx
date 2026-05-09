@@ -9,22 +9,37 @@ import { useSynapseStore } from './store/useSynapseStore';
 import { useEffect } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
 
+const ACCENT_COLORS = {
+  cyan: '#06B6D4',
+  amber: '#F59E0B',
+  violet: '#7C3AED',
+  rose: '#F43F5E',
+  emerald: '#10B981',
+  blue: '#3B82F6',
+  orange: '#F97316',
+  pink: '#EC4899',
+};
+
 function App() {
   const accentColor = useSynapseStore(state => state.accentColor);
   const updateSetting = useSynapseStore(state => state.updateSetting);
 
   useEffect(() => {
     // Initial load from localStorage if present
-    const savedAccent = localStorage.getItem('synapse-accent');
-    if (savedAccent && (savedAccent === 'cyan' || savedAccent === 'yellow')) {
-      updateSetting('accentColor', savedAccent as 'cyan' | 'yellow');
+    const savedAccent = localStorage.getItem('synapse-accent') as any;
+    if (savedAccent && ACCENT_COLORS[savedAccent as keyof typeof ACCENT_COLORS]) {
+      updateSetting('accentColor', savedAccent);
     }
   }, []);
 
   useEffect(() => {
     const root = document.documentElement;
-    const colorValue = accentColor === 'yellow' ? '#F59E0B' : '#06B6D4';
-    root.style.setProperty('--accent', colorValue);
+    const baseHex = ACCENT_COLORS[accentColor] || ACCENT_COLORS.cyan;
+    
+    root.style.setProperty('--accent', baseHex);
+    root.style.setProperty('--accent-light', `${baseHex}26`); // 15% opacity
+    root.style.setProperty('--accent-dot', `${baseHex}40`);   // 25% opacity
+    
     localStorage.setItem('synapse-accent', accentColor);
   }, [accentColor]);
 

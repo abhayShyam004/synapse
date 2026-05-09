@@ -6,8 +6,9 @@ import { CustomEdge } from './edges/CustomEdge';
 import { AddElementPopover } from '../popovers/AddElementPopover';
 import { MetricsPopover } from '../popovers/MetricsPopover';
 import { NodeSettingsPopover } from '../popovers/NodeSettingsPopover';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { Plus } from 'lucide-react';
 
 const nodeTypes = { custom: BaseNode };
 const edgeTypes = { custom: CustomEdge };
@@ -23,11 +24,12 @@ export const WorkflowCanvas = () => {
     ghostCardsEnabled, addGhostNode, isCanvasLocked, 
     undo, redo, deleteNode,
     snapToGrid, showMinimap, canvasBackground,
-    searchQuery, setSearchOpen,
+    searchQuery, setSearchOpen, setAddElementPopover,
     loadWorkflow, currentWorkflowId, setCurrentWorkflowId
   } = useSynapseStore();
 
   const { fitView } = useReactFlow();
+  const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
 
   // Load workflow based on URL ID
   useEffect(() => {
@@ -70,8 +72,9 @@ export const WorkflowCanvas = () => {
 
       if (e.key === 'Escape') {
         setSearchOpen(false);
+        setContextMenu(null);
       }
-
+      
       if (e.ctrlKey || e.metaKey) {
         if (e.key === 'z') {
           e.preventDefault();
@@ -103,7 +106,7 @@ export const WorkflowCanvas = () => {
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [nodes, isCanvasLocked, deleteNode, undo, redo]);
+  }, [nodes, isCanvasLocked, deleteNode, undo, redo, fitView, setSearchOpen]);
 
   const handleConnect = (connection: Connection) => {
     onConnect(connection);
@@ -131,14 +134,42 @@ export const WorkflowCanvas = () => {
     !searchQuery || (n.data.label as string).toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const onPaneContextMenu = (event: React.MouseEvent | MouseEvent) => {
+    event.preventDefault();
+    if ('clientX' in event) {
+      setContextMenu({ x: event.clientX, y: event.clientY });
+    }
+  };
+
+  const handleAddNodeFromContext = () => {
+    if (contextMenu) {
+      setAddElementPopover({
+        isOpen: true,
+        x: contextMenu.x,
+        y: contextMenu.y,
+      });
+      setContextMenu(null);
+    }
+  };
+
+  const handleFloatingAdd = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setAddElementPopover({
+      isOpen: true,
+      x: window.innerWidth / 2,
+      y: window.innerHeight / 2,
+    });
+  };
+
   return (
-    <div className="w-full h-full bg-[#F3F4F6]">
+    <div className="w-full h-full bg-[#F3F4F6] relative group/canvas" onClick={() => setContextMenu(null)}>
       <ReactFlow
         nodes={filteredNodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={handleConnect}
+        onPaneContextMenu={onPaneContextMenu}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
@@ -152,9 +183,9 @@ export const WorkflowCanvas = () => {
       >
         {canvasBackground !== 'none' && (
           <Background 
-            color="#C8CDD6" 
-            gap={20} 
-            size={2} 
+            color="var(--accent-dot)" 
+            gap={24} 
+            size={2.5} 
             variant={canvasBackground === 'dots' ? BackgroundVariant.Dots : BackgroundVariant.Lines} 
           />
         )}
@@ -170,9 +201,50 @@ export const WorkflowCanvas = () => {
             position="bottom-right"
           />
         )}
+
+        {/* Empty State */}
+        {nodes.length === 0 && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0">
+            <div 
+              className="w-20 h-20 rounded-full flex items-center justify-center mb-6 shadow-md"
+              style={{ backgroundColor: 'var(--accent-light)', color: 'var(--accent)' }}
+            >
+              <Plus size={48} strokeWidth={2.5} />
+            </div>
+            <h2 className="text-xl font-bold text-gray-700">Add your first node</h2>
+            <p className="text-base text-gray-400 mt-2">Click the + button or right-click to get started</p>
+          </div>
+        )}
       </ReactFlow>
+
+      {/* Persistent Floating "+" Button */}
+      <button
+        onClick={handleFloatingAdd}
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full flex items-center justify-center text-white shadow-2xl hover:scale-110 active:scale-95 transition-all z-30"
+        style={{ backgroundColor: 'var(--accent)' }}
+        title="Add Node"
+      >
+        <Plus size={32} strokeWidth={3} />
+      </button>
       
       <AddElementPopover />
+
+      {/* Small Context Menu */}
+      {contextMenu && (
+        <div 
+          className="absolute z-50 bg-white border border-gray-200 shadow-xl rounded-md py-1 min-w-[140px]"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button 
+            onClick={handleAddNodeFromContext}
+            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+          >
+            <Plus size={14} className="text-[var(--accent)]" /> Add Node
+          </button>
+        </div>
+      )}
+
       <MetricsPopover />
       <NodeSettingsPopover />
     </div>

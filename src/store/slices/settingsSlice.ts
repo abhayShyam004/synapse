@@ -9,7 +9,7 @@ export interface SettingsSlice {
   ghostCardsEnabled: boolean;
   idleSuggestionEnabled: boolean;
   idleTimeout: number;
-  accentColor: 'cyan' | 'yellow' | 'both';
+  accentColor: 'cyan' | 'amber' | 'violet' | 'rose' | 'emerald' | 'blue' | 'orange' | 'pink';
   nodeHeaderStyle: 'dark' | 'colored';
   fontSize: 'small' | 'medium' | 'large';
   

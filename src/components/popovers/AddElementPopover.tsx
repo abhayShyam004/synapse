@@ -7,7 +7,7 @@ import { useReactFlow } from '@xyflow/react';
 
 export const AddElementPopover = () => {
   const { addElementPopover, setAddElementPopover, addNode, variables, addVariable, removeVariable } = useSynapseStore();
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, getViewport } = useReactFlow();
   const [activeTab, setActiveTab] = useState<'elements' | 'variables'>('elements');
   const [varKey, setVarKey] = useState('');
   const [varValue, setVarValue] = useState('');
@@ -22,7 +22,18 @@ export const AddElementPopover = () => {
   };
 
   const handleAdd = (label: string, type: string, color: string) => {
-    const position = screenToFlowPosition({ x: addElementPopover.x, y: addElementPopover.y });
+    let position;
+    if (addElementPopover.edgeId) {
+      position = screenToFlowPosition({ x: addElementPopover.x, y: addElementPopover.y });
+    } else {
+      const { x, y, zoom } = getViewport();
+      // Calculate center of current viewport in flow space
+      position = {
+        x: -x / zoom + (window.innerWidth / 2) / zoom - 110, // -110 is half of node width
+        y: -y / zoom + (window.innerHeight / 2) / zoom - 20,
+      };
+    }
+
     addNode({
       id: crypto.randomUUID(),
       type: 'custom',
@@ -49,7 +60,18 @@ export const AddElementPopover = () => {
       const result = await fetchAISuggestion(prompt);
       const cleaned = result.replace(/```json\n?|\n?```/g, '').trim();
       const parsed = JSON.parse(cleaned);
-      const position = screenToFlowPosition({ x: addElementPopover.x, y: addElementPopover.y });
+      
+      let position;
+      if (addElementPopover.edgeId) {
+        position = screenToFlowPosition({ x: addElementPopover.x, y: addElementPopover.y });
+      } else {
+        const { x, y, zoom } = getViewport();
+        position = {
+          x: -x / zoom + (window.innerWidth / 2) / zoom - 110,
+          y: -y / zoom + (window.innerHeight / 2) / zoom - 20,
+        };
+      }
+
       addNode({
         id: crypto.randomUUID(),
         type: 'custom',

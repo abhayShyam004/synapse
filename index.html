@@ -10,6 +10,7 @@
     <style>
         :root {
             --accent: #06B6D4;
+            --accent-dot: #B8BCC8;
             --text-dark: #111827;
             --text-gray: #6B7280;
             --text-light: #9CA3AF;
@@ -29,7 +30,7 @@
             background-color: var(--bg-light);
             color: var(--text-dark);
             overflow-x: hidden;
-            background-image: radial-gradient(#d1d5db 1.5px, transparent 1.5px);
+            background-image: radial-gradient(var(--accent-dot) 1.5px, transparent 1.5px);
             background-size: 24px 24px;
         }
 
@@ -91,6 +92,7 @@
             font-weight: 500;
             color: #374151;
             transition: color 0.2s ease;
+            cursor: pointer;
         }
 
         .nav-link:hover {
@@ -127,7 +129,7 @@
         }
 
         .btn-solid {
-            background-color: var(--accent);
+            background-color: #06B6D4;
             color: white;
             padding: 14px 32px;
             border-radius: 24px;
@@ -142,7 +144,7 @@
         .btn-solid:hover {
             opacity: 0.9;
             transform: scale(1.03);
-            box-shadow: 0 10px 15px -3px rgba(0, 120, 212, 0.2);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
 
         /* Hero Section */
@@ -153,7 +155,7 @@
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding-top: 60px;
+            padding-top: 80px;
             position: relative;
         }
 
@@ -408,7 +410,7 @@
         </div>
         <div class="nav-center">
             <a href="/dashboard/" class="nav-link">Synapses</a>
-            <a href="#" class="nav-link" onclick="toggleLandingSettings(true)">Settings</a>
+            <a class="nav-link" onclick="toggleLandingSettings(true)">Settings</a>
             <a href="/work/" class="nav-link">Work</a>
         </div>
         <div class="nav-right">
@@ -433,7 +435,7 @@
 
         <div class="floating-card card-sticky">
             <div class="pin"></div>
-            <p>Connect nodes to build powerful automations</p>
+            <p>Draft complex logic in seconds with AI ghost cards</p>
             <div class="sub-card-checkbox">
                 <div class="box"></div>
             </div>
@@ -495,21 +497,27 @@
 
     <!-- Settings Modal -->
     <div id="settingsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 24, 39, 0.5); backdrop-filter: blur(4px); z-index: 200; align-items: center; justify-content: center;">
-        <div style="background: white; border-radius: 12px; width: 400px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border: 1px solid #E5E7EB;">
+        <div style="background: white; border-radius: 12px; width: 440px; padding: 32px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border: 1px solid #E5E7EB;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                <h3 style="font-weight: 700; font-size: 18px; margin: 0;">Landing Settings</h3>
-                <button onclick="toggleLandingSettings(false)" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #9CA3AF;">&times;</button>
+                <h3 style="font-weight: 700; font-size: 20px; margin: 0; color: #111827;">Landing Settings</h3>
+                <button onclick="toggleLandingSettings(false)" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #9CA3AF; line-height: 1;">&times;</button>
             </div>
             
-            <div style="margin-bottom: 24px;">
-                <p style="font-size: 12px; font-weight: 700; color: #6B7280; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.05em;">Accent Color</p>
-                <div style="display: flex; gap: 12px;">
-                    <button onclick="setLandingAccent('cyan')" style="width: 32px; height: 32px; border-radius: 50%; background: #06B6D4; border: 2px solid white; cursor: pointer; box-shadow: 0 0 0 2px #E5E7EB; transition: transform 0.2s;"></button>
-                    <button onclick="setLandingAccent('yellow')" style="width: 32px; height: 32px; border-radius: 50%; background: #F59E0B; border: 2px solid white; cursor: pointer; box-shadow: 0 0 0 2px #E5E7EB; transition: transform 0.2s;"></button>
+            <div style="margin-bottom: 32px;">
+                <p style="font-size: 12px; font-weight: 700; color: #6B7280; text-transform: uppercase; margin-bottom: 16px; letter-spacing: 0.05em;">Accent Color</p>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+                    <button onclick="setLandingAccent('cyan')" title="Cyan" style="width: 40px; height: 40px; border-radius: 50%; background: #06B6D4; border: 2px solid white; cursor: pointer; box-shadow: 0 0 0 2px #E5E7EB;"></button>
+                    <button onclick="setLandingAccent('amber')" title="Amber" style="width: 40px; height: 40px; border-radius: 50%; background: #F59E0B; border: 2px solid white; cursor: pointer; box-shadow: 0 0 0 2px #E5E7EB;"></button>
+                    <button onclick="setLandingAccent('violet')" title="Violet" style="width: 40px; height: 40px; border-radius: 50%; background: #7C3AED; border: 2px solid white; cursor: pointer; box-shadow: 0 0 0 2px #E5E7EB;"></button>
+                    <button onclick="setLandingAccent('rose')" title="Rose" style="width: 40px; height: 40px; border-radius: 50%; background: #F43F5E; border: 2px solid white; cursor: pointer; box-shadow: 0 0 0 2px #E5E7EB;"></button>
+                    <button onclick="setLandingAccent('emerald')" title="Emerald" style="width: 40px; height: 40px; border-radius: 50%; background: #10B981; border: 2px solid white; cursor: pointer; box-shadow: 0 0 0 2px #E5E7EB;"></button>
+                    <button onclick="setLandingAccent('blue')" title="Blue" style="width: 40px; height: 40px; border-radius: 50%; background: #3B82F6; border: 2px solid white; cursor: pointer; box-shadow: 0 0 0 2px #E5E7EB;"></button>
+                    <button onclick="setLandingAccent('orange')" title="Orange" style="width: 40px; height: 40px; border-radius: 50%; background: #F97316; border: 2px solid white; cursor: pointer; box-shadow: 0 0 0 2px #E5E7EB;"></button>
+                    <button onclick="setLandingAccent('pink')" title="Pink" style="width: 40px; height: 40px; border-radius: 50%; background: #EC4899; border: 2px solid white; cursor: pointer; box-shadow: 0 0 0 2px #E5E7EB;"></button>
                 </div>
             </div>
 
-            <p style="font-size: 11px; color: #9CA3AF; line-height: 1.4; margin: 0;">These settings affect the visual theme and will sync with your workflow environment.</p>
+            <p style="font-size: 12px; color: #6B7280; line-height: 1.5; margin: 0; background: #F9FAFB; padding: 12px; border-radius: 8px;">These settings synchronize across your entire Synapse environment including the dashboard and workspace.</p>
         </div>
     </div>
 
@@ -525,12 +533,33 @@
             toggleLandingSettings(false);
         }
 
-        function syncAccent() {
-            const savedAccent = localStorage.getItem('synapse-accent');
-            if (savedAccent) {
-                const colorValue = savedAccent === 'yellow' ? '#F59E0B' : '#06B6D4';
-                document.documentElement.style.setProperty('--accent', colorValue);
+        function hexToRgba(hex, opacity) {
+            let r = 0, g = 0, b = 0;
+            if (hex.length == 4) {
+                r = "0x" + hex[1] + hex[1];
+                g = "0x" + hex[2] + hex[2];
+                b = "0x" + hex[3] + hex[3];
+            } else if (hex.length == 7) {
+                r = "0x" + hex[1] + hex[2];
+                g = "0x" + hex[3] + hex[4];
+                b = "0x" + hex[5] + hex[6];
             }
+            return "rgba(" + +r + "," + +g + "," + +b + "," + opacity + ")";
+        }
+
+        function syncAccent() {
+            const savedAccentName = localStorage.getItem('synapse-accent');
+            const colors = {
+                cyan: '#06B6D4', amber: '#F59E0B', violet: '#7C3AED', rose: '#F43F5E',
+                emerald: '#10B981', blue: '#3B82F6', orange: '#F97316', pink: '#EC4899'
+            };
+            
+            const accentHex = colors[savedAccentName] || '#06B6D4';
+            // Default to #B8BCC8 (solid-ish) if no accent is set, otherwise 20% of accent
+            const dotColor = savedAccentName ? hexToRgba(accentHex, 0.2) : 'rgba(184, 188, 200, 0.8)';
+            
+            document.documentElement.style.setProperty('--accent', accentHex);
+            document.documentElement.style.setProperty('--accent-dot', dotColor);
         }
         syncAccent();
         window.addEventListener('storage', (e) => {
