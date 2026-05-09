@@ -8,9 +8,31 @@
 }
 
 :root {
-  --color-brand: #06B6D4;
+  --accent: #06B6D4;
   font-family: 'Inter', system-ui, sans-serif;
   color-scheme: light;
+}
+
+@utility bg-accent {
+  background-color: var(--accent);
+}
+
+@utility text-accent {
+  color: var(--accent);
+}
+
+@utility border-accent {
+  border-color: var(--accent);
+}
+
+@utility ring-accent {
+  --tw-ring-color: var(--accent);
+}
+
+@utility hover-text-accent {
+  &:hover {
+    color: var(--accent);
+  }
 }
 
 body {

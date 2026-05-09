@@ -210,9 +210,37 @@ export const createCanvasSlice = (
     }));
   },
   acceptGhostNode: (id: string) => {
-    set((state) => ({
-      nodes: state.nodes.map(n => n.id === id ? { ...n, data: { ...n.data, variant: 'default' } } : n)
-    }));
+    set((state) => {
+      const ghostNode = state.nodes.find(n => n.id === id);
+      if (!ghostNode) return state;
+
+      const sourceNodeId = ghostNode.data.sourceNodeId as string | undefined;
+      let newEdges = [...state.edges];
+
+      if (sourceNodeId) {
+        const sourceNode = state.nodes.find(n => n.id === sourceNodeId);
+        if (sourceNode) {
+          // Create connecting edge
+          newEdges.push({
+            id: `e-${sourceNodeId}-${id}`,
+            source: sourceNodeId,
+            target: id,
+            type: 'custom'
+          });
+          
+          // Ensure position is correct (source Y + 150)
+          ghostNode.position = {
+            x: sourceNode.position.x,
+            y: sourceNode.position.y + 150
+          };
+        }
+      }
+
+      return {
+        nodes: state.nodes.map(n => n.id === id ? { ...n, data: { ...n.data, variant: 'default' } } : n),
+        edges: newEdges
+      };
+    });
   },
   dismissGhostNode: (id: string) => {
     set((state) => ({

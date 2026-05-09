@@ -25,7 +25,7 @@ export const TopToolbar = () => {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <div className="grid grid-cols-2 gap-0.5 w-5 h-5">
-              <div className="w-2 h-2 rounded-full bg-[#06B6D4]"></div>
+              <div className="w-2 h-2 rounded-full bg-[var(--accent)]"></div>
               <div className="w-2 h-2 rounded-full bg-gray-900"></div>
               <div className="w-2 h-2 rounded-full bg-gray-900"></div>
               <div className="w-2 h-2 rounded-full bg-gray-900"></div>
@@ -45,7 +45,7 @@ export const TopToolbar = () => {
       </div>
 
       <div className="flex items-center gap-3">
-        <button onClick={() => expandAllNodes(true)} className="text-sm font-medium text-gray-500 hover:text-[#06B6D4] transition-colors">
+        <button onClick={() => expandAllNodes(true)} className="text-sm font-medium text-gray-500 hover:text-[var(--accent)] transition-colors">
           Expand All
         </button>
         
@@ -60,7 +60,11 @@ export const TopToolbar = () => {
           Test Run
         </button>
 
-        <button onClick={handlePublish} className="flex items-center gap-1 text-sm font-semibold text-white bg-[#06B6D4] hover:bg-cyan-600 px-4 py-1.5 rounded-md transition-all shadow-sm shadow-cyan-100">
+        <button 
+          onClick={handlePublish} 
+          style={{ backgroundColor: 'var(--accent)' }}
+          className="flex items-center gap-1 text-sm font-semibold text-white hover:brightness-90 px-4 py-1.5 rounded-md transition-all shadow-sm shadow-cyan-100"
+        >
           Publish <ChevronDown size={14} className="text-white/80" />
         </button>
 

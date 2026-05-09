@@ -85,9 +85,13 @@ export const LeftSidebar = () => {
           <div key={id} className="relative w-full flex justify-center">
             <button 
               onClick={() => handleAction(id)}
+              style={{ 
+                color: active ? 'var(--accent)' : undefined,
+                backgroundColor: active ? 'color-mix(in srgb, var(--accent), transparent 90%)' : undefined
+              }}
               className={clsx(
                 "p-2 rounded-md transition-colors flex items-center justify-center w-10 h-10",
-                active ? "text-[#06B6D4] bg-cyan-50" : "text-gray-500 hover:text-gray-900 hover:bg-gray-100 hover:text-[#06B6D4]"
+                !active && "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
               )}
             >
               <Icon size={20} strokeWidth={2} />
@@ -110,7 +114,7 @@ export const LeftSidebar = () => {
           <div key={id} className="relative w-full flex justify-center">
             <button 
               onClick={() => handleAction(id)}
-              className="p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 hover:text-[#06B6D4] transition-colors flex items-center justify-center w-10 h-10 relative"
+              className="p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 hover-text-accent transition-colors flex items-center justify-center w-10 h-10 relative"
             >
               <Icon size={20} strokeWidth={2} />
               {id === 'notifications' && (

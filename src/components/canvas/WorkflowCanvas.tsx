@@ -22,7 +22,7 @@ export const WorkflowCanvas = () => {
     nodes, edges, onNodesChange, onEdgesChange, onConnect, 
     ghostCardsEnabled, addGhostNode, isCanvasLocked, 
     undo, redo, deleteNode,
-    snapToGrid, showMinimap, canvasBackground, canvasDotColor,
+    snapToGrid, showMinimap, canvasBackground,
     searchQuery, setSearchOpen
   } = useSynapseStore();
 
@@ -90,7 +90,14 @@ export const WorkflowCanvas = () => {
           id: `ghost-${crypto.randomUUID()}`,
           type: 'custom',
           position: { x: sourceNode.position.x, y: sourceNode.position.y + 150 },
-          data: { label: 'AI Suggestion', type: 'Suggestion', color: 'white', variant: 'ghost', expanded: true },
+          data: { 
+            label: 'AI Suggestion', 
+            type: 'Suggestion', 
+            color: 'white', 
+            variant: 'ghost', 
+            expanded: true,
+            sourceNodeId: sourceNode.id
+          },
         });
       }
     }
@@ -121,9 +128,9 @@ export const WorkflowCanvas = () => {
       >
         {canvasBackground !== 'none' && (
           <Background 
-            color={canvasDotColor} 
+            color="#C8CDD6" 
             gap={20} 
-            size={canvasBackground === 'dots' ? 1.5 : 1} 
+            size={2} 
             variant={canvasBackground === 'dots' ? BackgroundVariant.Dots : BackgroundVariant.Lines} 
           />
         )}

@@ -10,7 +10,7 @@ export const MetricsPopover = () => {
     <div className="absolute top-16 right-40 bg-white rounded-lg shadow-xl border border-gray-200 w-64 flex flex-col z-50 overflow-hidden">
       <div className="flex items-center justify-between p-3 border-b border-gray-100 bg-gray-50">
         <h3 className="font-semibold text-gray-900 text-sm flex items-center gap-2">
-          <Activity size={14} className="text-[#06B6D4]" /> Workflow Metrics
+          <Activity size={14} className="text-[var(--accent)]" /> Workflow Metrics
         </h3>
         <button onClick={() => setMetricsPopover(false)} className="text-gray-400 hover:text-gray-600">
           <X size={16} />

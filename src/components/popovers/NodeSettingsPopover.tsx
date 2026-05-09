@@ -41,7 +41,7 @@ export const NodeSettingsPopover = () => {
           <input 
             value={(node.data.label as string) || ''} 
             onChange={e => updateNode(node.id, { label: e.target.value })}
-            className="w-full border border-gray-200 rounded-md px-3 py-1.5 text-sm outline-none focus:border-[#06B6D4] focus:ring-1 focus:ring-[#06B6D4]"
+            className="w-full border border-gray-200 rounded-md px-3 py-1.5 text-sm outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]"
           />
         </div>
 
@@ -50,7 +50,7 @@ export const NodeSettingsPopover = () => {
           <textarea 
             value={(node.data.description as string) || ''} 
             onChange={e => updateNode(node.id, { description: e.target.value })}
-            className="w-full border border-gray-200 rounded-md px-3 py-1.5 text-sm outline-none focus:border-[#06B6D4] focus:ring-1 focus:ring-[#06B6D4] min-h-[60px]"
+            className="w-full border border-gray-200 rounded-md px-3 py-1.5 text-sm outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] min-h-[60px]"
           />
         </div>
 
@@ -61,7 +61,7 @@ export const NodeSettingsPopover = () => {
               <button
                 key={color}
                 onClick={() => updateNode(node.id, { color })}
-                className={`w-6 h-6 rounded-full border-2 ${node.data.color === color ? 'border-[#06B6D4]' : 'border-transparent'} hover:scale-110 transition-transform`}
+                className={`w-6 h-6 rounded-full border-2 ${node.data.color === color ? 'border-[var(--accent)]' : 'border-transparent'} hover:scale-110 transition-transform`}
                 style={{
                   backgroundColor: color === 'gray' ? '#4B5563' : 
                                    color === 'blue' ? '#3B82F6' : 

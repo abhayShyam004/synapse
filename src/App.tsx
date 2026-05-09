@@ -10,14 +10,21 @@ import { ReactFlowProvider } from '@xyflow/react';
 
 function App() {
   const accentColor = useSynapseStore(state => state.accentColor);
+  const updateSetting = useSynapseStore(state => state.updateSetting);
+
+  useEffect(() => {
+    // Initial load from localStorage if present
+    const savedAccent = localStorage.getItem('synapse-accent');
+    if (savedAccent && (savedAccent === 'cyan' || savedAccent === 'yellow')) {
+      updateSetting('accentColor', savedAccent as 'cyan' | 'yellow');
+    }
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
-    if (accentColor === 'cyan') {
-      root.style.setProperty('--color-brand', '#06B6D4');
-    } else if (accentColor === 'yellow') {
-      root.style.setProperty('--color-brand', '#F59E0B');
-    }
+    const colorValue = accentColor === 'yellow' ? '#F59E0B' : '#06B6D4';
+    root.style.setProperty('--accent', colorValue);
+    localStorage.setItem('synapse-accent', accentColor);
   }, [accentColor]);
 
   return (

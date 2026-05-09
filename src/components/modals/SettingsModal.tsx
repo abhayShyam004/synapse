@@ -35,7 +35,7 @@ export const SettingsModal = () => {
       onClick={() => onChange(!checked)}
       className={clsx(
         "w-10 h-5 rounded-full relative transition-colors duration-200 ease-in-out outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand",
-        checked ? "bg-[#06B6D4]" : "bg-gray-200"
+        checked ? "bg-[var(--accent)]" : "bg-gray-200"
       )}
     >
       <div className={clsx(
@@ -53,7 +53,7 @@ export const SettingsModal = () => {
       >
         <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50 shrink-0">
           <h2 className="font-semibold text-gray-900 text-lg flex items-center gap-2">
-            <Settings size={18} className="text-[#06B6D4]" /> Settings
+            <Settings size={18} className="text-[var(--accent)]" /> Settings
           </h2>
           <button onClick={() => toggleSettingsModal(false)} className="text-gray-400 hover:text-gray-700 transition-colors">
             <X size={20} />
@@ -73,11 +73,14 @@ export const SettingsModal = () => {
                   className={clsx(
                     "flex items-center gap-3 px-6 py-3 text-sm font-medium transition-all text-left relative",
                     activeTab === id 
-                      ? "text-[#06B6D4] bg-cyan-50/50 border-l-4 border-[#06B6D4]" 
+                      ? "text-[var(--accent)] border-l-4 border-[var(--accent)]" 
                       : "text-gray-500 hover:bg-gray-100 hover:text-gray-900 border-l-4 border-transparent"
                   )}
+                  style={{
+                    backgroundColor: activeTab === id ? 'color-mix(in srgb, var(--accent), transparent 95%)' : undefined
+                  }}
                 >
-                  <Icon size={18} className={activeTab === id ? "text-[#06B6D4]" : "text-gray-400"} />
+                  <Icon size={18} className={activeTab === id ? "text-[var(--accent)]" : "text-gray-400"} />
                   {label}
                 </button>
               ))}
@@ -148,13 +151,7 @@ export const SettingsModal = () => {
               {activeTab === 'ai' && (
                 <div className="flex flex-col gap-8">
                   <div>
-                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-6">NVIDIA NIM Integration</h3>
-                    <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6">
-                      <p className="text-xs text-blue-700 leading-relaxed">
-                        AI suggestions are powered by <strong>meta/llama-3.1-8b-instruct</strong>. 
-                        The API key is securely managed via environment variables.
-                      </p>
-                    </div>
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-6">AI Configuration</h3>
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center justify-between h-12">
                         <span className="text-sm font-medium text-gray-700">Enable Ghost Cards</span>
@@ -234,7 +231,7 @@ export const SettingsModal = () => {
                         ].map(([action, key]) => (
                           <tr key={action}>
                             <td className="px-4 py-2 text-gray-700">{action}</td>
-                            <td className="px-4 py-2 font-mono text-xs text-[#06B6D4] font-bold">{key}</td>
+                            <td className="px-4 py-2 font-mono text-xs text-[var(--accent)] font-bold">{key}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -254,7 +251,8 @@ export const SettingsModal = () => {
               </button>
               <button 
                 onClick={handleSave}
-                className="bg-[#06B6D4] text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-cyan-600 transition-all shadow-md shadow-cyan-100"
+                style={{ backgroundColor: 'var(--accent)' }}
+                className="text-white px-6 py-2 rounded-lg text-sm font-semibold hover:brightness-90 transition-all shadow-md shadow-cyan-100"
               >
                 Save Changes
               </button>

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
 import { clsx } from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,6 +13,7 @@ export interface BaseNodeData {
   shape?: string;
   variant?: 'default' | 'ghost';
   expanded?: boolean;
+  sourceNodeId?: string;
   [key: string]: unknown;
 }
 
@@ -19,6 +21,7 @@ export type BaseNodeProps = Node<BaseNodeData, 'custom'>;
 
 export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
   const { acceptGhostNode, dismissGhostNode, updateNode, setAddElementPopover, setNodeSettingsPopover, edges } = useSynapseStore();
+  const [isDismissing, setIsDismissing] = useState(false);
   
   const isGhost = data.variant === 'ghost';
   const isExpanded = data.expanded !== false;
@@ -38,6 +41,14 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
   const handleSettings = (e: React.MouseEvent) => {
     e.stopPropagation();
     setNodeSettingsPopover({ isOpen: true, nodeId: id });
+  };
+
+  const handleDismiss = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDismissing(true);
+    setTimeout(() => {
+      dismissGhostNode(id);
+    }, 200);
   };
 
   const typeBgColor = 
@@ -63,11 +74,16 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
   return (
     <motion.div 
       initial={isGhost ? { opacity: 0.2 } : { scale: 0.9, opacity: 0 }}
-      animate={isGhost ? { opacity: [0.4, 0.7, 0.4], transition: { repeat: Infinity, duration: 2 } } : { scale: 1, opacity: 1 }}
+      animate={
+        isDismissing ? { opacity: 0, scale: 0.95 } :
+        isGhost ? { opacity: [0.4, 0.7, 0.4], transition: { repeat: Infinity, duration: 2 } } : 
+        { scale: 1, opacity: 1 }
+      }
+      transition={{ duration: isDismissing ? 0.2 : 0.4 }}
       className={clsx(
         "group relative min-w-[220px] flex flex-col rounded-md bg-white border text-sm transition-all",
-        selected ? "border-[#06B6D4] shadow-md ring-2 ring-[#06B6D4]/50" : "border-gray-200 shadow-sm",
-        isGhost && "border-dashed border-[#0078D4] !opacity-60"
+        selected ? "border-[var(--accent)] shadow-md ring-2 ring-[var(--accent)]/50" : "border-gray-200 shadow-sm",
+        isGhost && "border-dashed border-[var(--accent)] !opacity-60"
       )}
     >
       {isGhost && (
@@ -121,7 +137,7 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
               <div className="flex items-center gap-2">
                 <button 
                   onClick={handleAddElement}
-                  className="text-[#06B6D4] hover:bg-cyan-50 p-1 rounded-sm transition-colors"
+                  className="text-[var(--accent)] hover:bg-cyan-50 p-1 rounded-sm transition-colors"
                 >
                   <Plus size={12} />
                 </button>
@@ -141,12 +157,12 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
       <Handle 
         type="target" 
         position={Position.Top} 
-        className="w-2.5 h-2.5 bg-[#06B6D4] border-2 border-white rounded-full z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-crosshair !-top-1.25"
+        className="w-2.5 h-2.5 bg-[var(--accent)] border-2 border-white rounded-full z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-crosshair !-top-1.25"
       />
       <Handle 
         type="source" 
         position={Position.Bottom} 
-        className="w-2.5 h-2.5 bg-[#06B6D4] border-2 border-white rounded-full z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-crosshair !-bottom-1.25"
+        className="w-2.5 h-2.5 bg-[var(--accent)] border-2 border-white rounded-full z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-crosshair !-bottom-1.25"
       />
 
       {isGhost && (
@@ -158,7 +174,7 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
             <Check size={12} /> Accept
           </button>
           <button 
-            onClick={() => dismissGhostNode(id)}
+            onClick={handleDismiss}
             className="flex items-center gap-1 bg-red-50 text-red-600 border border-red-200 px-2 py-1 rounded-md text-[10px] font-bold hover:bg-red-100 transition-colors shadow-sm"
           >
             <X size={12} /> Dismiss

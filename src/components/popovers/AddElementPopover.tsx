@@ -97,13 +97,13 @@ export const AddElementPopover = () => {
       <div className="flex border-b border-gray-100">
         <button 
           onClick={() => setActiveTab('elements')} 
-          className={`flex-1 py-2 text-xs font-medium ${activeTab === 'elements' ? 'text-[#06B6D4] border-b-2 border-[#06B6D4]' : 'text-gray-500'}`}
+          className={`flex-1 py-2 text-xs font-medium ${activeTab === 'elements' ? 'text-[var(--accent)] border-b-2 border-[var(--accent)]' : 'text-gray-500'}`}
         >
           Elements
         </button>
         <button 
           onClick={() => setActiveTab('variables')} 
-          className={`flex-1 py-2 text-xs font-medium ${activeTab === 'variables' ? 'text-[#06B6D4] border-b-2 border-[#06B6D4]' : 'text-gray-500'}`}
+          className={`flex-1 py-2 text-xs font-medium ${activeTab === 'variables' ? 'text-[var(--accent)] border-b-2 border-[var(--accent)]' : 'text-gray-500'}`}
         >
           Variables
         </button>
@@ -119,7 +119,7 @@ export const AddElementPopover = () => {
                 placeholder="Search Elements" 
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:border-[#06B6D4] focus:ring-1 focus:ring-[#06B6D4]"
+                className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]"
               />
             </div>
           </div>
@@ -177,19 +177,19 @@ export const AddElementPopover = () => {
           <div className="flex flex-col gap-2 mb-4">
             <input 
               placeholder="Variable Key" 
-              className="px-2 py-1.5 text-sm border border-gray-200 rounded-md outline-none focus:border-[#06B6D4]" 
+              className="px-2 py-1.5 text-sm border border-gray-200 rounded-md outline-none focus:border-[var(--accent)]" 
               value={varKey}
               onChange={e => setVarKey(e.target.value)}
             />
             <input 
               placeholder="Variable Value" 
-              className="px-2 py-1.5 text-sm border border-gray-200 rounded-md outline-none focus:border-[#06B6D4]" 
+              className="px-2 py-1.5 text-sm border border-gray-200 rounded-md outline-none focus:border-[var(--accent)]" 
               value={varValue}
               onChange={e => setVarValue(e.target.value)}
             />
             <button 
               onClick={handleAddVariable}
-              className="flex items-center justify-center gap-2 bg-[#06B6D4] text-white py-1.5 rounded-md text-sm font-medium hover:bg-cyan-600"
+              className="flex items-center justify-center gap-2 bg-[var(--accent)] text-white py-1.5 rounded-md text-sm font-medium hover:bg-cyan-600"
             >
               <Plus size={14} /> Add Variable
             </button>

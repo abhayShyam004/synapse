@@ -26,7 +26,7 @@ export const createSettingsSlice = (
   snapToGrid: true,
   showMinimap: true,
   canvasBackground: 'dots',
-  canvasDotColor: '#CBD5E1',
+  canvasDotColor: '#C8CDD6',
   zoomSpeed: 1,
   ghostCardsEnabled: true,
   idleSuggestionEnabled: false,
