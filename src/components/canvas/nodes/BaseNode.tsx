@@ -98,7 +98,7 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
       }
       transition={{ duration: isDismissing ? 0.2 : 0.4 }}
       className={clsx(
-        "group relative min-w-[220px] flex flex-col bg-white border text-sm transition-all shadow-sm overflow-hidden",
+        "group relative min-w-[220px] flex flex-col bg-white border text-sm transition-all shadow-sm",
         selected ? "border-[var(--accent)] ring-2 ring-[var(--accent)]/50 shadow-lg" : "border-gray-200",
         isGhost && "border-dashed border-[var(--accent)] !opacity-60",
         borderRadius
@@ -106,7 +106,9 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
     >
       {/* Header Bar */}
       <div 
-        className={clsx(`text-white px-4 py-2.5 h-[60px] flex flex-col justify-center relative cursor-pointer group/header`)}
+        className={clsx(`text-white px-4 py-2.5 h-[60px] flex flex-col justify-center relative cursor-pointer group/header overflow-hidden`,
+          isExpanded ? "rounded-t-[inherit]" : borderRadius
+        )}
         style={{ backgroundColor: headerBgColor }}
         onClick={toggleExpand}
       >        <div className="flex items-center justify-between">
