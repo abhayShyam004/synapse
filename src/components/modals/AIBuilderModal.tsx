@@ -12,6 +12,7 @@ interface Message {
   options?: string[];
   isFinal?: boolean;
 }
+
 /**
  * Robust JSON extraction that handles markdown blocks and conversational text.
  */
@@ -80,7 +81,6 @@ export const AIBuilderModal = () => {
     setMessages(newMessages);
     setInput('');
     
-    // If we've already asked 3 questions, the 4th response triggers final state
     if (questionCount >= 3) {
       const finalAIMessage: Message = {
         role: 'ai',
@@ -106,10 +106,9 @@ INSTRUCTIONS:
 1. Return ONLY valid JSON: { "message": "string", "options": ["string", "string"], "readyToGenerate": boolean }
 2. NO conversational text outside the JSON.
 3. If this is question 3, set "readyToGenerate": true.
-4. Always provide 2-4 chips in "options".
-5. Never ask about metrics, support systems, or generic career advice.`;
+4. Always provide 2-4 chips in "options".`;
 
-      const aiResponse = await fetchAISuggestion(systemPrompt);
+      const aiResponse = await fetchAISuggestion(systemPrompt, 'meta/llama-3.1-8b-instruct');
       const parsed = extractJSON(aiResponse);
       
       const aiMessage: Message = {
@@ -131,60 +130,97 @@ INSTRUCTIONS:
 
   const handleGenerate = async () => {
     setIsGenerating(true);
-    try {
-      const systemPrompt = `Expert workflow architect. Generate a COMPREHENSIVE branching workflow JSON based on the user's goal.
-
-Rules:
-1. 20-35 nodes.
-2. Use real branching logic (Decision nodes with multiple paths).
-3. Nodes must be TECHNICAL and SPECIFIC (e.g., "FastAPI Middleware", "React Query Cache").
-4. Every node must have edges. 
-5. Position nodes: Start at y:50, each level +y:160. Branching: left x:200, right x:600, center x:400.
-6. Return format: { "nodes": [{ "id": "n1", "type": "trigger|task|decision|condition|aiPrompt|timer|variable|loop|note", "name": "Name", "description": "Details", "position": { "x": 400, "y": 50 } }], "edges": [{ "id": "e1", "source": "n1", "target": "n2", "label": "Yes" }] }
-7. No explanation. Just JSON.
-
-Conversation context:
+    
+    const summaryPrompt = `Summarize this workflow conversation in 2-3 sentences:
 ${messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n')}`;
 
-      const result = await fetchAISuggestion(systemPrompt);
-      const parsed = extractJSON(result);
+    try {
+      const summary = await fetchAISuggestion(summaryPrompt, 'meta/llama-3.1-8b-instruct');
+      
+      const generationPrompt = `You are a workflow architect AI. Generate a detailed, specific, branching workflow.
 
+User's goal summary: ${summary}
+
+STRICT RULES:
+- Generate exactly 20-30 nodes.
+- Every node must have a SPECIFIC, DETAILED name and description — no vague names.
+- Use Decision nodes to create real branching paths (Yes/No).
+- Every node must be connected — no orphan nodes.
+- Node types: trigger, task, decision, condition, aiPrompt, timer, variable, loop, note.
+- Positions: start at x:400 y:50, increment y by 160 per level, branches go x:200 (left) and x:650 (right), merges return to x:400.
+
+For a CS/interview/job preparation goal specifically:
+- Include separate nodes for each DSA topic (arrays, linked lists, trees, graphs, DP, etc.) with specific LeetCode problem numbers.
+- Include OS, CN, DBMS, OOP as separate detailed nodes.
+- Include backend framework nodes if mentioned.
+- Include mock interview, system design, resume nodes.
+- Use Decision nodes to branch beginner vs advanced paths.
+
+Return ONLY this JSON, nothing else, no markdown, no explanation:
+{"nodes":[{"id":"n1","type":"trigger","name":"...","description":"...","position":{"x":400,"y":50}}],"edges":[{"id":"e1","source":"n1","target":"n2","label":"Yes"}]}`;
+
+      let result;
+      try {
+        result = await fetchAISuggestion(generationPrompt, 'meta/llama-3.3-70b-instruct');
+      } catch (e) {
+        console.warn("70B failed, retrying once with simpler prompt...");
+        result = await fetchAISuggestion("Fix this JSON for a workflow: " + generationPrompt, 'meta/llama-3.3-70b-instruct');
+      }
+
+      const parsed = extractJSON(result);
+      
       // 1. Validation & Auto-Correction
-      const validNodes = parsed.nodes || [];
-      let validEdges = parsed.edges || [];
+      const validNodes = (parsed.nodes || []).filter((n: any) => n.id && n.type);
+      const validNodeIds = new Set(validNodes.map((n: any) => n.id));
+      let validEdges = (parsed.edges || []).filter((e: any) => validNodeIds.has(e.source) && validNodeIds.has(e.target));
 
       // Ensure every node has at least one connection
       validNodes.forEach((node: any, idx: number) => {
         const hasEdge = validEdges.some((e: any) => e.source === node.id || e.target === node.id);
         if (!hasEdge && idx > 0) {
-          // Connect to previous node if disconnected
           validEdges.push({
-            id: `e-fix-${idx}`,
+            id: `e-fix-${idx}-${crypto.randomUUID().slice(0,4)}`,
             source: validNodes[idx-1].id,
             target: node.id
           });
         }
       });
 
-      // 2. Layout Adjustment & Offset
-      const rightmostExistingX = nodes.length > 0 ? Math.max(...nodes.map(n => n.position.x)) : -200;
-      const xOffset = rightmostExistingX + 350;
+      // 2. Auto-Layout Pass (Level-based spacing)
+      const nodesByY: Record<number, any[]> = {};
+      validNodes.forEach((n: any) => {
+        const y = n.position?.y || 0;
+        if (!nodesByY[y]) nodesByY[y] = [];
+        nodesByY[y].push(n);
+      });
 
-      // Force minimal gap to prevent overlaps
-      const processedNodes = validNodes.map((n: any) => ({
-        ...n,
-        position: {
-          x: (n.position?.x || 400) + xOffset,
-          y: n.position?.y || 100
+      Object.keys(nodesByY).forEach(yStr => {
+        const yNodes = nodesByY[Number(yStr)];
+        const count = yNodes.length;
+        if (count > 1) {
+          const totalWidth = 600;
+          const startX = 400 - (totalWidth / 2);
+          const gap = totalWidth / (count - 1);
+          yNodes.forEach((n, i) => {
+            n.position.x = startX + (i * gap);
+          });
+        } else if (count === 1) {
+          yNodes[0].position.x = 400;
         }
-      }));
+      });
 
-      // 3. Add to Canvas
-      processedNodes.forEach((n: any) => {
+      // 3. Canvas Placement
+      const rightmostExistingX = nodes.length > 0 ? Math.max(...nodes.map(n => n.position.x)) : -200;
+      const xOffset = rightmostExistingX + 400;
+
+      validNodes.forEach((n: any) => {
         addNode({
-          id: `${currentWorkflowId || 'ai'}-${n.id}`,
+          id: `${currentWorkflowId || 'ai'}-${n.id}-${crypto.randomUUID().slice(0, 4)}`,
           type: 'custom',
-          position: n.position,
+          position: {
+            x: (n.position?.x || 400) + xOffset,
+            y: n.position?.y || 100
+          },
           data: { 
             label: n.name, 
             type: n.type.charAt(0).toUpperCase() + n.type.slice(1), 
@@ -195,28 +231,24 @@ ${messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n')}`;
         });
       });
 
-      // Add edges with a slight delay for node registration
+      // Add Edges
       setTimeout(() => {
         validEdges.forEach((e: any) => {
           onConnect({ 
-            source: `${currentWorkflowId || 'ai'}-${e.source}`, 
-            target: `${currentWorkflowId || 'ai'}-${e.target}`,
-            sourceHandle: null,
-            targetHandle: null,
-            label: e.label // Pass the label ("Yes"/"No")
+            source: nodes.find(existing => existing.id.includes(e.source))?.id || `${currentWorkflowId || 'ai'}-${e.source}`, 
+            target: nodes.find(existing => existing.id.includes(e.target))?.id || `${currentWorkflowId || 'ai'}-${e.target}`,
+            sourceHandle: null, targetHandle: null,
+            label: e.label
           } as any);
         });
         
-        // Final View Adjustment
         setTimeout(() => {
           fitView({ padding: 0.15, duration: 800 });
         }, 300);
-      }, 500);
+      }, 600);
 
-      toast.success(`✦ Workflow generated — ${validNodes.length} nodes, ${validEdges.length} connections added`);
+      toast.success(`✦ Workflow generated — ${validNodes.length} nodes added`);
       setAIBuilderOpen(false);
-      
-      // Reset state for next time
       setMessages([{ 
         role: 'ai', 
         content: "Hi! Let's build your workflow together. What are you trying to automate or plan? Describe your goal in a sentence or two.",
@@ -225,7 +257,7 @@ ${messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n')}`;
       setQuestionCount(1);
     } catch (error) {
       console.error(error);
-      toast.error('Something went wrong during generation. Try again.');
+      toast.error('AI Architect failed to generate the structure. Please try a different goal.');
     } finally {
       setIsGenerating(false);
     }
@@ -235,19 +267,13 @@ ${messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n')}`;
 
   return (
     <>
-      {/* Full-screen Loading State for Generation */}
       {isGenerating && (
         <div className="fixed inset-0 z-[200] bg-white flex flex-col items-center justify-center animate-in fade-in duration-500">
-          <div className="flex flex-col items-center gap-6">
-            <div className="relative">
-               <div className="w-16 h-16 border-4 border-gray-100 rounded-full border-t-[var(--accent)] animate-spin" />
-               <Sparkles className="absolute inset-0 m-auto text-[var(--accent)] animate-pulse" size={24} />
-            </div>
-            <div className="flex flex-col items-center text-center px-6">
+           <div className="w-16 h-16 border-4 border-gray-100 rounded-full border-t-[var(--accent)] animate-spin mb-6" />
+           <div className="flex flex-col items-center text-center px-6">
               <h2 className="text-xl font-bold text-gray-900 mb-1">Architecting your workflow...</h2>
-              <p className="text-gray-400 text-sm max-w-xs">Generating detailed branching logic and specific technical nodes</p>
-            </div>
-          </div>
+              <p className="text-gray-400 text-sm max-w-xs">Using Llama 70B to design your branching path</p>
+           </div>
         </div>
       )}
 
@@ -273,7 +299,7 @@ ${messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n')}`;
                 {!isThinking && !isGenerating && m === lastAIMessage && (
                   <div className="flex flex-wrap gap-2 ml-11 max-w-[85%]">
                     {m.isFinal ? (
-                      <button onClick={handleGenerate} className="px-6 py-2.5 rounded-full text-white font-bold text-sm shadow-lg hover:scale-105 transition-all flex items-center gap-2 active:scale-95" style={{ backgroundColor: 'var(--accent)' }}><Sparkles size={16} /> Generate My Workflow</button>
+                      <button onClick={handleGenerate} className="px-6 py-2.5 rounded-full text-white font-bold text-sm shadow-lg hover:scale-105 transition-all flex items-center gap-2" style={{ backgroundColor: 'var(--accent)' }}><Sparkles size={16} /> Generate My Workflow</button>
                     ) : (
                       m.options?.map(opt => <button key={opt} onClick={() => handleSend(opt)} className="bg-white border border-[var(--accent)] text-[var(--accent)] px-4 py-2 rounded-lg text-xs font-semibold hover:bg-[var(--accent)] hover:text-white transition-all shadow-sm">{opt}</button>)
                     )}

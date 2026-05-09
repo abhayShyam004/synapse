@@ -2,7 +2,7 @@
 /**
  * Fetches an AI suggestion from NVIDIA NIM API using Llama 3.1 8B model.
  */
-export const fetchAISuggestion = async (prompt: string) => {
+export const fetchAISuggestion = async (prompt: string, model: string = 'meta/llama-3.1-8b-instruct') => {
   const API_KEY = import.meta.env.VITE_NVIDIA_NIM_API_KEY;
   // Use relative path for Vite proxy in development
   const BASE_URL = '/api/nvidia';
@@ -18,7 +18,7 @@ export const fetchAISuggestion = async (prompt: string) => {
       'Authorization': `Bearer ${API_KEY}`,
     },
     body: JSON.stringify({
-      model: 'meta/llama-3.1-8b-instruct',
+      model: model,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
       max_tokens: 4096,
