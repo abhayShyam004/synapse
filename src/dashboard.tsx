@@ -30,18 +30,28 @@ const Dashboard = () => {
   };
 
   const createNewSynapse = () => {
+    const id = crypto.randomUUID();
     const newWorkflow: WorkflowMetadata = {
-      id: crypto.randomUUID(),
+      id,
       name: `New Synapse ${workflows.length + 1}`,
       lastModified: 'Just now',
-      nodes: 1,
+      nodes: 0,
     };
     saveWorkflows([newWorkflow, ...workflows]);
     toast.success('Synapse created!');
-    // Redirect after a small delay to show toast
     setTimeout(() => {
-      window.location.href = '/work/';
+      window.location.href = `/work/?id=${id}`;
     }, 800);
+  };
+
+  const renameWorkflow = (e: React.MouseEvent, id: string, currentName: string) => {
+    e.stopPropagation();
+    const newName = prompt('Enter new synapse name:', currentName);
+    if (newName && newName !== currentName) {
+      const updated = workflows.map(w => w.id === id ? { ...w, name: newName, lastModified: 'Just now' } : w);
+      saveWorkflows(updated);
+      toast.success('Synapse renamed');
+    }
   };
 
   const deleteWorkflow = (e: React.MouseEvent, id: string) => {
@@ -113,7 +123,7 @@ const Dashboard = () => {
           {filteredWorkflows.map(s => (
             <div 
               key={s.id}
-              onClick={() => window.location.href = '/work/'}
+              onClick={() => window.location.href = `/work/?id=${s.id}`}
               className="bg-white border border-gray-200 rounded-xl p-5 hover:border-[#06B6D4] hover:shadow-md transition-all cursor-pointer group relative"
             >
               <div className="flex items-start justify-between mb-4">
@@ -127,7 +137,10 @@ const Dashboard = () => {
                   >
                     <Trash2 size={16} />
                   </button>
-                  <button className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md">
+                  <button 
+                    onClick={(e) => renameWorkflow(e, s.id, s.name)}
+                    className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                  >
                     <MoreVertical size={16} />
                   </button>
                 </div>

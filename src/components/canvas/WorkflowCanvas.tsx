@@ -23,10 +23,34 @@ export const WorkflowCanvas = () => {
     ghostCardsEnabled, addGhostNode, isCanvasLocked, 
     undo, redo, deleteNode,
     snapToGrid, showMinimap, canvasBackground,
-    searchQuery, setSearchOpen
+    searchQuery, setSearchOpen,
+    loadWorkflow, currentWorkflowId, setCurrentWorkflowId
   } = useSynapseStore();
 
   const { fitView } = useReactFlow();
+
+  // Load workflow based on URL ID
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    if (id && id !== currentWorkflowId) {
+      setCurrentWorkflowId(id);
+      loadWorkflow(id);
+    }
+  }, [currentWorkflowId, loadWorkflow, setCurrentWorkflowId]);
+
+  // Periodic saving for the current workflow
+  useEffect(() => {
+    if (!currentWorkflowId) return;
+    const save = () => {
+      localStorage.setItem(`synapse-workflow-${currentWorkflowId}`, JSON.stringify({ nodes, edges }));
+    };
+    const interval = setInterval(save, 2000); // Save every 2 seconds
+    return () => {
+      clearInterval(interval);
+      save(); // Final save on unmount
+    };
+  }, [currentWorkflowId, nodes, edges]);
 
   useEffect(() => {
     fitView();

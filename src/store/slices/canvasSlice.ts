@@ -39,9 +39,13 @@ export interface CanvasSlice {
   setSearchQuery: (query: string) => void;
   importWorkflow: (json: string) => void;
   exportWorkflow: () => string;
+  resetWorkflow: () => void;
+  loadWorkflow: (id: string) => void;
   saveHistory: () => void;
   undo: () => void;
   redo: () => void;
+  currentWorkflowId: string | null;
+  setCurrentWorkflowId: (id: string | null) => void;
 }
 
 export const createCanvasSlice = (
@@ -269,5 +273,29 @@ export const createCanvasSlice = (
   exportWorkflow: () => {
     const { nodes, edges } = get();
     return JSON.stringify({ nodes, edges }, null, 2);
+  },
+  currentWorkflowId: null,
+  setCurrentWorkflowId: (id) => set(() => ({ currentWorkflowId: id })),
+  resetWorkflow: () => {
+    set(() => ({ 
+      nodes: [], 
+      edges: [], 
+      past: [], 
+      future: [],
+      addElementPopover: { isOpen: false, x: 0, y: 0 },
+    }));
+  },
+  loadWorkflow: (id: string) => {
+    const saved = localStorage.getItem(`synapse-workflow-${id}`);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        set(() => ({ nodes: data.nodes, edges: data.edges, past: [], future: [] }));
+      } catch (e) {
+        console.error("Failed to load workflow", e);
+      }
+    } else {
+      get().resetWorkflow();
+    }
   }
 });
