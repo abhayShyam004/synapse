@@ -19,7 +19,10 @@ export const TopToolbar = () => {
   return (
     <header className="h-14 border-b border-gray-200 bg-white flex items-center justify-between px-4 shrink-0 z-20 relative shadow-sm">
       <div className="flex items-center gap-4">
-        <button className="p-1.5 hover:bg-gray-100 rounded-md text-gray-500 transition-colors hover:text-[#F59E0B]">
+        <button 
+          onClick={() => window.location.href = '/'}
+          className="p-1.5 hover:bg-gray-100 rounded-md text-gray-500 transition-colors hover:text-[var(--accent)]"
+        >
           <ArrowLeft size={18} />
         </button>
         <div className="flex items-center gap-3">

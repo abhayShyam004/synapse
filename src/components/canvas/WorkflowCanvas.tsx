@@ -134,7 +134,10 @@ export const WorkflowCanvas = () => {
             variant={canvasBackground === 'dots' ? BackgroundVariant.Dots : BackgroundVariant.Lines} 
           />
         )}
-        <Controls className="bg-white border border-gray-200 shadow-sm [&>button]:border-b [&>button]:border-gray-100" />
+        <Controls 
+          showInteractive={!isCanvasLocked}
+          className="bg-white border border-gray-200 shadow-sm [&>button]:border-b [&>button]:border-gray-100 rounded-md overflow-hidden" 
+        />
         {showMinimap && (
           <MiniMap 
             nodeColor="#9CA3AF" 
