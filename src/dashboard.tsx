@@ -14,9 +14,36 @@ interface WorkflowMetadata {
 }
 
 const Dashboard = () => {
-  const { openDialog } = useSynapseStore();
+  const { openDialog, accentColor, updateSetting } = useSynapseStore();
   const [workflows, setWorkflows] = useState<WorkflowMetadata[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const ACCENT_COLORS = {
+    cyan: '#06B6D4',
+    amber: '#F59E0B',
+    violet: '#7C3AED',
+    rose: '#F43F5E',
+    emerald: '#10B981',
+    blue: '#3B82F6',
+    orange: '#F97316',
+    pink: '#EC4899',
+  };
+
+  useEffect(() => {
+    // Initial load from localStorage
+    const savedAccent = localStorage.getItem('synapse-accent') as any;
+    if (savedAccent && ACCENT_COLORS[savedAccent as keyof typeof ACCENT_COLORS]) {
+      updateSetting('accentColor', savedAccent);
+    }
+  }, []);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const baseHex = ACCENT_COLORS[accentColor as keyof typeof ACCENT_COLORS] || ACCENT_COLORS.cyan;
+    root.style.setProperty('--accent', baseHex);
+    root.style.setProperty('--accent-bg', `${baseHex}0D`);
+    root.style.setProperty('--accent-dot', `${baseHex}66`);
+  }, [accentColor]);
 
   // Load workflows from localStorage on mount
   useEffect(() => {
@@ -83,8 +110,9 @@ const Dashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] font-sans relative" style={{ 
-      backgroundImage: 'radial-gradient(#C8CDD6 1.5px, transparent 1.5px)',
+    <div className="min-h-screen font-sans relative" style={{ 
+      backgroundColor: 'var(--accent-bg)',
+      backgroundImage: 'radial-gradient(var(--accent-dot) 1.5px, transparent 1.5px)',
       backgroundSize: '20px 20px'
     }}>
       <Toaster position="bottom-right" />

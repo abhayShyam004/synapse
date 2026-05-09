@@ -153,7 +153,7 @@ export const WorkflowCanvas = () => {
   };
 
   return (
-    <div className="w-full h-full relative group/canvas" style={{ backgroundColor: '#F3F4F6' }}>
+    <div className="w-full h-full relative group/canvas" style={{ backgroundColor: 'var(--accent-bg)' }}>
       <ReactFlow
         nodes={filteredNodes}
         edges={edges}
@@ -171,7 +171,7 @@ export const WorkflowCanvas = () => {
         snapToGrid={snapToGrid}
         snapGrid={[20, 20]}
         fitView
-        style={{ backgroundColor: '#F3F4F6' }}
+        style={{ backgroundColor: 'var(--accent-bg)' }}
       >
         {canvasBackground !== 'none' && (
           <Background 
