@@ -25,7 +25,8 @@ export const WorkflowCanvas = () => {
     undo, redo, deleteNode,
     snapToGrid, showMinimap, canvasBackground,
     searchQuery, setSearchOpen, setAddElementPopover,
-    loadWorkflow, currentWorkflowId, setCurrentWorkflowId
+    loadWorkflow, currentWorkflowId, setCurrentWorkflowId,
+    workflowName
   } = useSynapseStore();
 
   const { fitView } = useReactFlow();
@@ -45,14 +46,27 @@ export const WorkflowCanvas = () => {
   useEffect(() => {
     if (!currentWorkflowId) return;
     const save = () => {
-      localStorage.setItem(`synapse-workflow-${currentWorkflowId}`, JSON.stringify({ nodes, edges }));
+      // Save canvas data
+      localStorage.setItem(`synapse-workflow-${currentWorkflowId}`, JSON.stringify({ nodes, edges, name: workflowName }));
+      
+      // Sync metadata to dashboard list
+      const savedList = localStorage.getItem('synapse-workflows-list');
+      if (savedList) {
+        const list = JSON.parse(savedList);
+        const updatedList = list.map((w: any) => 
+          w.id === currentWorkflowId 
+            ? { ...w, name: workflowName, nodes: nodes.length, lastModified: 'Just now' } 
+            : w
+        );
+        localStorage.setItem('synapse-workflows-list', JSON.stringify(updatedList));
+      }
     };
     const interval = setInterval(save, 2000); // Save every 2 seconds
     return () => {
       clearInterval(interval);
       save(); // Final save on unmount
     };
-  }, [currentWorkflowId, nodes, edges]);
+  }, [currentWorkflowId, nodes, edges, workflowName]);
 
   useEffect(() => {
     fitView();
@@ -153,7 +167,7 @@ export const WorkflowCanvas = () => {
   };
 
   return (
-    <div className="w-full h-full bg-[#F3F4F6] relative group/canvas" onClick={() => setContextMenu(null)}>
+    <div className="w-full h-full relative group/canvas" style={{ backgroundColor: '#F3F4F6' }}>
       <ReactFlow
         nodes={filteredNodes}
         edges={edges}
@@ -175,7 +189,7 @@ export const WorkflowCanvas = () => {
       >
         {canvasBackground !== 'none' && (
           <Background 
-            color="#BBBFC9" 
+            color="var(--accent-dot)" 
             gap={24} 
             size={2.5} 
             variant={canvasBackground === 'dots' ? BackgroundVariant.Dots : BackgroundVariant.Lines} 

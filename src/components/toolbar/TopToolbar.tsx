@@ -2,11 +2,9 @@ import { useSynapseStore } from '../../store/useSynapseStore';
 import toast from 'react-hot-toast';
 import { ArrowLeft, ChevronDown, Sparkles, Settings as SettingsIcon } from 'lucide-react';
 import { clsx } from 'clsx';
-import { useState } from 'react';
 
 export const TopToolbar = () => {
-  const { ghostCardsEnabled, toggleGhostCards, expandAllNodes, setMetricsPopover, toggleSettingsModal } = useSynapseStore();
-  const [workflowName, setWorkflowName] = useState('Synapse Workflow');
+  const { ghostCardsEnabled, toggleGhostCards, expandAllNodes, setMetricsPopover, toggleSettingsModal, workflowName, setWorkflowName } = useSynapseStore();
 
   const handleTestRun = () => {
     toast.success('Test run started');

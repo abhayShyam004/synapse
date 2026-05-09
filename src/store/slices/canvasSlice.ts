@@ -46,6 +46,8 @@ export interface CanvasSlice {
   redo: () => void;
   currentWorkflowId: string | null;
   setCurrentWorkflowId: (id: string | null) => void;
+  workflowName: string;
+  setWorkflowName: (name: string) => void;
   dialog: {
     isOpen: boolean;
     title: string;
@@ -86,6 +88,8 @@ export const createCanvasSlice = (
   isCanvasLocked: false,
   isSearchOpen: false,
   searchQuery: '',
+  currentWorkflowId: null,
+  workflowName: 'Synapse Workflow',
   dialog: {
     isOpen: false,
     title: '',
@@ -138,8 +142,6 @@ export const createCanvasSlice = (
           future: []
         };
       }
-      // For position changes (dragging), wait until drag ends to save history, 
-      // or rely on a specific hook. For now, we only save history on add/remove automatically.
       return newState;
     });
   },
@@ -169,13 +171,10 @@ export const createCanvasSlice = (
       const newNode = { ...node, data: { ...node.data, expanded: false } };
       let newEdges = [...state.edges];
       
-      // If we are adding via an edge (edge splitting)
       if (state.addElementPopover.edgeId) {
         const edgeToSplit = state.edges.find(e => e.id === state.addElementPopover.edgeId);
         if (edgeToSplit) {
-          // Remove old edge
           newEdges = newEdges.filter(e => e.id !== state.addElementPopover.edgeId);
-          // Add two new edges
           newEdges.push(
             { id: `e-${edgeToSplit.source}-${newNode.id}`, source: edgeToSplit.source, target: newNode.id, type: 'custom' },
             { id: `e-${newNode.id}-${edgeToSplit.target}`, source: newNode.id, target: edgeToSplit.target, type: 'custom' }
@@ -243,7 +242,6 @@ export const createCanvasSlice = (
       if (sourceNodeId) {
         const sourceNode = state.nodes.find(n => n.id === sourceNodeId);
         if (sourceNode) {
-          // Create connecting edge
           newEdges.push({
             id: `e-${sourceNodeId}-${id}`,
             source: sourceNodeId,
@@ -251,7 +249,6 @@ export const createCanvasSlice = (
             type: 'custom'
           });
           
-          // Ensure position is correct (source Y + 150)
           ghostNode.position = {
             x: sourceNode.position.x,
             y: sourceNode.position.y + 150
@@ -283,24 +280,25 @@ export const createCanvasSlice = (
     try {
       const data = JSON.parse(json);
       if (data.nodes && data.edges) {
-        set(() => ({ nodes: data.nodes, edges: data.edges }));
+        set(() => ({ nodes: data.nodes, edges: data.edges, workflowName: data.name || 'Imported Workflow' }));
       }
     } catch (e) {
       console.error("Failed to parse workflow JSON", e);
     }
   },
   exportWorkflow: () => {
-    const { nodes, edges } = get();
-    return JSON.stringify({ nodes, edges }, null, 2);
+    const { nodes, edges, workflowName } = get();
+    return JSON.stringify({ nodes, edges, name: workflowName }, null, 2);
   },
-  currentWorkflowId: null,
   setCurrentWorkflowId: (id) => set(() => ({ currentWorkflowId: id })),
+  setWorkflowName: (name) => set(() => ({ workflowName: name })),
   resetWorkflow: () => {
     set(() => ({ 
       nodes: [], 
       edges: [], 
       past: [], 
       future: [],
+      workflowName: 'New Synapse',
       addElementPopover: { isOpen: false, x: 0, y: 0 },
     }));
   },
@@ -309,7 +307,13 @@ export const createCanvasSlice = (
     if (saved) {
       try {
         const data = JSON.parse(saved);
-        set(() => ({ nodes: data.nodes, edges: data.edges, past: [], future: [] }));
+        set(() => ({ 
+          nodes: data.nodes || [], 
+          edges: data.edges || [], 
+          workflowName: data.name || 'Untitled Synapse',
+          past: [], 
+          future: [] 
+        }));
       } catch (e) {
         console.error("Failed to load workflow", e);
       }
