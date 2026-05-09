@@ -14,7 +14,7 @@ interface Message {
 }
 
 export const AIBuilderModal = () => {
-  const { isAIBuilderOpen, setAIBuilderOpen, addNode, onConnect, nodes } = useSynapseStore();
+  const { isAIBuilderOpen, setAIBuilderOpen, addNode, onConnect, nodes, currentWorkflowId } = useSynapseStore();
   const { fitView } = useReactFlow();
   
   const [messages, setMessages] = useState<Message[]>([
@@ -28,6 +28,7 @@ export const AIBuilderModal = () => {
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [questionCount, setQuestionCount] = useState(1);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -48,23 +49,41 @@ export const AIBuilderModal = () => {
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
     setInput('');
+    
+    // Hard limit: if we already asked 3 questions, we force termination
+    if (questionCount >= 3) {
+      const finalAIMessage: Message = {
+        role: 'ai',
+        content: "Perfect, I have everything I need! Ready to build your workflow?",
+        isFinal: true
+      };
+      setMessages([...newMessages, finalAIMessage]);
+      return;
+    }
+
     setIsThinking(true);
 
     try {
-      const userMessageCount = newMessages.filter(m => m.role === 'user').length;
-      
-      let systemPrompt = `You are a workflow planning assistant. We are having a short conversation (max 4 turns) to build a workflow.
-Current turn: ${userMessageCount}/4.
+      let systemPrompt = `You are a workflow builder assistant. Your job is to gather ONLY the minimum information needed to build a workflow, then generate it. 
+Ask MAXIMUM 3 short questions total, one at a time. 
 
-Conversation so far:
-${newMessages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n')}
+Current question index: ${questionCount + 1}/3.
+
+Questions to ask in order:
+1. What is your goal? (already asked if turn > 1)
+2. What is your current level? (with 4 options)
+3. What is your timeline? (with 4 options)
+
+After the 3rd answer, respond with: { "message": "Perfect, I have everything I need!", "options": [], "readyToGenerate": true }
 
 RULES:
-1. Return ONLY valid JSON in this format: { "message": "string", "options": ["string", "string"], "isFinal": boolean }
-2. If this is the 3rd or 4th user response, OR you have enough info, set "isFinal": true and say "Great, I have enough to build your workflow. Generating now...".
-3. Otherwise, ask a short, relevant question.
-4. Always provide 2-4 logical suggested answer options as chips.
-5. Do NOT ask about support systems or metrics. Focus on goal, level, timeline, or tech stack.`;
+1. Return ONLY valid JSON: { "message": "string", "options": ["string", "string"], "readyToGenerate": boolean }
+2. Never ask more than 3 questions. Never repeat questions.
+3. Never ask about support systems, certifications, work experience, or metrics.
+4. Keep messages short and professional.
+
+Conversation so far:
+${newMessages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n')}`;
 
       const aiResponse = await fetchAISuggestion(systemPrompt);
       const cleaned = aiResponse.replace(/```json\n?|\n?```/g, '').trim();
@@ -74,17 +93,11 @@ RULES:
         role: 'ai',
         content: parsed.message,
         options: parsed.options,
-        isFinal: parsed.isFinal
+        isFinal: parsed.readyToGenerate
       };
 
-      setMessages([...newMessages, aiMessage] as Message[]);
-
-      if (parsed.isFinal) {
-        // Auto-trigger generation after a brief delay
-        setTimeout(() => {
-          handleGenerate([...newMessages, aiMessage]);
-        }, 1500);
-      }
+      setMessages([...newMessages, aiMessage]);
+      setQuestionCount(prev => prev + 1);
     } catch (error) {
       console.error(error);
       toast.error('AI is having trouble responding. Please try again.');
@@ -93,18 +106,18 @@ RULES:
     }
   };
 
-  const handleGenerate = async (currentMessages: Message[]) => {
+  const handleGenerate = async () => {
     setIsGenerating(true);
     try {
       const prompt = `Based on this conversation:
-${currentMessages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n')}
+${messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n')}
 
-Generate a complete, high-quality workflow as JSON. Return ONLY valid JSON, no other text.
-The workflow should be a detailed step-by-step path based on the user's goal.
+Generate a complete, high-quality, and contextually RELEVANT workflow as JSON. Return ONLY valid JSON, no other text.
+The workflow should be a detailed step-by-step path (study plan or automation flow) based on the user's goal.
 
 Structure:
 {
-  "nodes": [{ "id": "1", "type": "task|trigger|decision|condition|aiPrompt|timer|variable|loop|note", "name": "Step Name", "description": "Details" }],
+  "nodes": [{ "id": "1", "type": "task|trigger|decision|condition|aiPrompt|timer|variable|loop|note", "name": "Human Readable Name", "description": "Details" }],
   "edges": [{ "source": "1", "target": "2" }]
 }
 
@@ -112,8 +125,8 @@ Guidelines:
 - Space nodes vertically 160px apart.
 - Horizontally centered around x:500.
 - Connect them linearly top to bottom.
-- Use meaningful names (e.g., "Python Fundamentals", "DSA Basics").
-- Use ONLY these types: task, trigger, decision, condition, aiPrompt, timer, variable, note.
+- Use ONLY these types: task, trigger, decision, condition, aiPrompt, timer, variable, loop, note.
+- Do NOT use generic placeholders. Use specific steps (e.g., "Learn Python Basics", "Arrays & Strings", "Interview Prep").
 - Do not explain anything. Just JSON.`;
 
       const result = await fetchAISuggestion(prompt);
@@ -155,12 +168,13 @@ Guidelines:
 
       toast.success(`Workflow generated! ${parsed.nodes.length} nodes added.`);
       setAIBuilderOpen(false);
-      // Reset messages for next time
+      // Reset state for next time
       setMessages([{ 
         role: 'ai', 
         content: "Hi! Let's build your workflow together. What are you trying to automate or plan? Describe your goal in a sentence or two.",
         options: ["Get a software dev job", "Build a side project", "Learn for interviews", "Career switch to tech"]
       }]);
+      setQuestionCount(1);
     } catch (error) {
       console.error(error);
       toast.error('Something went wrong during generation. Try again.');
@@ -169,7 +183,6 @@ Guidelines:
     }
   };
 
-  const currentWorkflowId = useSynapseStore(state => state.currentWorkflowId);
   const lastAIMessage = [...messages].reverse().find(m => m.role === 'ai');
 
   return (
@@ -184,7 +197,7 @@ Guidelines:
             </div>
             <div className="flex flex-col items-center">
               <h2 className="text-xl font-bold text-gray-900 mb-1">Building your workflow...</h2>
-              <p className="text-gray-400 text-sm">Synthesizing study path and connections</p>
+              <p className="text-gray-400 text-sm">Synthesizing personalized path and connections</p>
             </div>
           </div>
         </div>
@@ -232,18 +245,28 @@ Guidelines:
                   </div>
                 </div>
 
-                {/* Suggested Options Chips */}
-                {!isThinking && m === lastAIMessage && m.options && !m.isFinal && (
+                {/* Suggested Options Chips or Generate Button */}
+                {!isThinking && !isGenerating && m === lastAIMessage && (
                   <div className="flex flex-wrap gap-2 ml-11 max-w-[85%]">
-                    {m.options.map(opt => (
+                    {m.isFinal ? (
                       <button
-                        key={opt}
-                        onClick={() => handleSend(opt)}
-                        className="bg-white border border-[var(--accent)] text-[var(--accent)] px-4 py-2 rounded-lg text-xs font-semibold hover:bg-[var(--accent)] hover:text-white transition-all shadow-sm active:scale-95"
+                        onClick={handleGenerate}
+                        style={{ backgroundColor: 'var(--accent)' }}
+                        className="px-6 py-2.5 rounded-full text-white font-bold text-sm shadow-lg hover:scale-105 transition-all flex items-center gap-2 active:scale-95"
                       >
-                        {opt}
+                        <Sparkles size={16} /> Generate My Workflow
                       </button>
-                    ))}
+                    ) : (
+                      m.options?.map(opt => (
+                        <button
+                          key={opt}
+                          onClick={() => handleSend(opt)}
+                          className="bg-white border border-[var(--accent)] text-[var(--accent)] px-4 py-2 rounded-lg text-xs font-semibold hover:bg-[var(--accent)] hover:text-white transition-all shadow-sm active:scale-95"
+                        >
+                          {opt}
+                        </button>
+                      ))
+                    )}
                   </div>
                 )}
               </div>
