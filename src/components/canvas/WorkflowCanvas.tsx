@@ -160,7 +160,7 @@ Return JSON ONLY, no explanation: { "name": "string", "type": "task"|"trigger"|"
   };
 
   const filteredNodes = nodes.filter(n => 
-    !searchQuery || (n.data.label as string).toLowerCase().includes(searchQuery.toLowerCase())
+    !searchQuery || (n.data.label as string || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const onPaneContextMenu = (event: React.MouseEvent | MouseEvent) => {
