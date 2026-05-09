@@ -18,7 +18,6 @@ interface Message {
  */
 const extractJSON = (str: string) => {
   try {
-    // Look for content between the first { and the last }
     const start = str.indexOf('{');
     const end = str.lastIndexOf('}');
     if (start !== -1 && end !== -1 && end > start) {
@@ -73,7 +72,7 @@ export const AIBuilderModal = () => {
     if (questionCount >= 3) {
       const finalAIMessage: Message = {
         role: 'ai',
-        content: "Perfect, I have everything I need! Ready to build your workflow?",
+        content: "Perfect, I have everything I need! Ready to build your detailed workflow?",
         isFinal: true
       };
       setMessages([...newMessages, finalAIMessage]);
@@ -121,33 +120,74 @@ INSTRUCTIONS:
   const handleGenerate = async () => {
     setIsGenerating(true);
     try {
-      const prompt = `Based on this conversation:
+      const systemPrompt = `You are an expert workflow architect. Generate a DETAILED, COMPREHENSIVE workflow with real branching logic based on the user's goal.
+
+Conversation context:
 ${messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n')}
 
-Generate a detailed, step-by-step workflow as JSON. Return ONLY JSON.
-Structure:
-{
-  "nodes": [{ "id": "n1", "type": "task|trigger|decision|condition|aiPrompt|timer|variable|loop|note", "name": "Human Name", "description": "Details" }],
-  "edges": [{ "source": "n1", "target": "n2" }]
-}
-
 Rules:
-- Linearly connect all nodes.
-- Vertical gap 160px.
-- Horizontal center x:500.
-- Use SPECIFIC, meaningful names (e.g. "Arrays & Hashing" not "Study DSA").`;
+1. Generate 20-35 nodes minimum for complex goals.
+2. Use branching (Decision nodes with multiple paths) wherever logical.
+3. Nodes must be SPECIFIC and DETAILED. For a CS interview prep goal, include specific topics like "Arrays & Strings — Two Pointer, Sliding Window", "Trees — BFS, DFS, BST", "Dynamic Programming — Memoization, Tabulation", "System Design — Load Balancers, Caching", etc.
+4. Every node must have a clear, specific name.
+5. Connect ALL nodes with edges — no floating disconnected nodes.
+6. Decision nodes MUST have 2 outgoing edges to different paths, which merge back later.
+7. Position nodes in a proper layout:
+   - Start nodes at y:50
+   - Each level adds y:160
+   - Branching paths: left branch x:200, right branch x:600, center x:400
+   - After merge: back to center x:400
+8. Return ONLY valid JSON, no explanation.
 
-      const result = await fetchAISuggestion(prompt);
+Return format:
+{
+  "nodes": [
+    { "id": "n1", "type": "trigger|task|decision|condition|aiPrompt|timer|variable|loop|note", "name": "specific name", "description": "specific description", "position": { "x": 400, "y": 50 } }
+  ],
+  "edges": [
+    { "id": "e1", "source": "n1", "target": "n2", "label": "optional label (e.g. Yes/No)" }
+  ]
+}`;
+
+      const result = await fetchAISuggestion(systemPrompt);
       const parsed = extractJSON(result);
 
-      const rightmostX = nodes.length > 0 ? Math.max(...nodes.map(n => n.position.x)) : 0;
-      const xOffset = nodes.length > 0 ? rightmostX + 350 : 0;
+      // 1. Validation & Auto-Correction
+      const validNodes = parsed.nodes || [];
+      let validEdges = parsed.edges || [];
 
-      parsed.nodes.forEach((n: any, index: number) => {
+      // Ensure every node has at least one connection
+      validNodes.forEach((node: any, idx: number) => {
+        const hasEdge = validEdges.some((e: any) => e.source === node.id || e.target === node.id);
+        if (!hasEdge && idx > 0) {
+          // Connect to previous node if disconnected
+          validEdges.push({
+            id: `e-fix-${idx}`,
+            source: validNodes[idx-1].id,
+            target: node.id
+          });
+        }
+      });
+
+      // 2. Layout Adjustment & Offset
+      const rightmostExistingX = nodes.length > 0 ? Math.max(...nodes.map(n => n.position.x)) : -200;
+      const xOffset = rightmostExistingX + 350;
+
+      // Force minimal gap to prevent overlaps
+      const processedNodes = validNodes.map((n: any) => ({
+        ...n,
+        position: {
+          x: (n.position?.x || 400) + xOffset,
+          y: n.position?.y || 100
+        }
+      }));
+
+      // 3. Add to Canvas
+      processedNodes.forEach((n: any) => {
         addNode({
-          id: `${currentWorkflowId || 'ai'}-${n.id}-${crypto.randomUUID().slice(0, 4)}`,
+          id: `${currentWorkflowId || 'ai'}-${n.id}`,
           type: 'custom',
-          position: { x: xOffset + 500, y: (index * 160) + 100 },
+          position: n.position,
           data: { 
             label: n.name, 
             type: n.type.charAt(0).toUpperCase() + n.type.slice(1), 
@@ -158,27 +198,37 @@ Rules:
         });
       });
 
+      // Add edges with a slight delay for node registration
       setTimeout(() => {
-        parsed.edges.forEach((e: any) => {
+        validEdges.forEach((e: any) => {
           onConnect({ 
             source: `${currentWorkflowId || 'ai'}-${e.source}`, 
             target: `${currentWorkflowId || 'ai'}-${e.target}`,
-            sourceHandle: null, targetHandle: null
-          });
+            sourceHandle: null,
+            targetHandle: null,
+            label: e.label // Pass the label ("Yes"/"No")
+          } as any);
         });
-        fitView({ duration: 800 });
+        
+        // Final View Adjustment
+        setTimeout(() => {
+          fitView({ padding: 0.15, duration: 800 });
+        }, 300);
       }, 500);
 
-      toast.success('Workflow generated!');
+      toast.success(`✦ Workflow generated — ${validNodes.length} nodes, ${validEdges.length} connections added`);
       setAIBuilderOpen(false);
+      
+      // Reset state for next time
       setMessages([{ 
-        role: 'ai', content: "Hi! Let's build your workflow. What's your goal?",
-        options: ["Get a job", "Side project", "Interview prep"]
+        role: 'ai', 
+        content: "Hi! Let's build your workflow together. What are you trying to automate or plan? Describe your goal in a sentence or two.",
+        options: ["Get a software dev job", "Build a side project", "Learn for interviews", "Career switch to tech"]
       }]);
       setQuestionCount(1);
     } catch (error) {
       console.error(error);
-      toast.error('Error during generation.');
+      toast.error('Something went wrong during generation. Try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -188,10 +238,19 @@ Rules:
 
   return (
     <>
+      {/* Full-screen Loading State for Generation */}
       {isGenerating && (
         <div className="fixed inset-0 z-[200] bg-white flex flex-col items-center justify-center animate-in fade-in duration-500">
-           <div className="w-16 h-16 border-4 border-gray-100 rounded-full border-t-[var(--accent)] animate-spin mb-6" />
-           <h2 className="text-xl font-bold text-gray-900">Building your workflow...</h2>
+          <div className="flex flex-col items-center gap-6">
+            <div className="relative">
+               <div className="w-16 h-16 border-4 border-gray-100 rounded-full border-t-[var(--accent)] animate-spin" />
+               <Sparkles className="absolute inset-0 m-auto text-[var(--accent)] animate-pulse" size={24} />
+            </div>
+            <div className="flex flex-col items-center text-center px-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-1">Architecting your workflow...</h2>
+              <p className="text-gray-400 text-sm max-w-xs">Generating detailed branching logic and specific technical nodes</p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -217,7 +276,7 @@ Rules:
                 {!isThinking && !isGenerating && m === lastAIMessage && (
                   <div className="flex flex-wrap gap-2 ml-11 max-w-[85%]">
                     {m.isFinal ? (
-                      <button onClick={handleGenerate} className="px-6 py-2.5 rounded-full text-white font-bold text-sm shadow-lg hover:scale-105 transition-all flex items-center gap-2" style={{ backgroundColor: 'var(--accent)' }}><Sparkles size={16} /> Generate My Workflow</button>
+                      <button onClick={handleGenerate} className="px-6 py-2.5 rounded-full text-white font-bold text-sm shadow-lg hover:scale-105 transition-all flex items-center gap-2 active:scale-95" style={{ backgroundColor: 'var(--accent)' }}><Sparkles size={16} /> Generate My Workflow</button>
                     ) : (
                       m.options?.map(opt => <button key={opt} onClick={() => handleSend(opt)} className="bg-white border border-[var(--accent)] text-[var(--accent)] px-4 py-2 rounded-lg text-xs font-semibold hover:bg-[var(--accent)] hover:text-white transition-all shadow-sm">{opt}</button>)
                     )}

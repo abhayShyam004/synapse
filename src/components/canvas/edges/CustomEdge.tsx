@@ -12,6 +12,7 @@ export const CustomEdge = ({
   targetPosition,
   style = {},
   markerEnd,
+  label,
 }: EdgeProps) => {
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
@@ -63,13 +64,20 @@ export const CustomEdge = ({
           }}
           className="nodrag nopan"
         >
-          <button
-            className="w-5 h-5 rounded-full flex items-center justify-center text-white hover:brightness-90 hover:scale-110 shadow-lg transition-all cursor-pointer"
-            style={{ backgroundColor: 'var(--accent)' }}
-            onClick={onEdgeClick}
-          >
-            <Plus size={14} strokeWidth={3} />
-          </button>
+          <div className="flex flex-col items-center gap-1">
+            {label && (
+              <div className="bg-white border border-gray-200 px-1.5 py-0.5 rounded text-[10px] font-bold text-gray-500 shadow-sm whitespace-nowrap">
+                {label}
+              </div>
+            )}
+            <button
+              className="w-5 h-5 rounded-full flex items-center justify-center text-white hover:brightness-90 hover:scale-110 shadow-lg transition-all cursor-pointer"
+              style={{ backgroundColor: 'var(--accent)' }}
+              onClick={onEdgeClick}
+            >
+              <Plus size={14} strokeWidth={3} />
+            </button>
+          </div>
         </div>
       </EdgeLabelRenderer>
     </>
