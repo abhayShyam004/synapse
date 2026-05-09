@@ -9,6 +9,7 @@
 
 :root {
   --accent: #06B6D4;
+  --accent-dot: #C8CDD6;
   font-family: 'Inter', system-ui, sans-serif;
   color-scheme: light;
 }

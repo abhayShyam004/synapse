@@ -23,7 +23,7 @@ export const createSettingsSlice = (
 ): SettingsSlice => ({
   isSettingsOpen: false,
   autoSave: true,
-  snapToGrid: true,
+  snapToGrid: false,
   showMinimap: true,
   canvasBackground: 'dots',
   canvasDotColor: '#C8CDD6',

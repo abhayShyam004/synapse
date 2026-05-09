@@ -38,7 +38,7 @@ function App() {
     
     root.style.setProperty('--accent', baseHex);
     root.style.setProperty('--accent-light', `${baseHex}26`); // 15% opacity
-    root.style.setProperty('--accent-dot', `${baseHex}40`);   // 25% opacity
+    root.style.setProperty('--accent-dot', `${baseHex}66`);   // 40% opacity (66 is ~40% in hex)
     
     localStorage.setItem('synapse-accent', accentColor);
   }, [accentColor]);
