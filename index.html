@@ -45,7 +45,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem 4rem;
+            padding: 1rem 1.5rem;
             background-color: var(--bg-white);
             border-bottom: 1px solid var(--border-color);
             position: fixed;
@@ -53,6 +53,12 @@
             left: 0;
             width: 100%;
             z-index: 100;
+        }
+
+        @media (min-width: 768px) {
+            nav {
+                padding: 1rem 4rem;
+            }
         }
 
         .nav-left {
@@ -84,8 +90,14 @@
         }
 
         .nav-center {
-            display: flex;
+            display: none;
             gap: 32px;
+        }
+
+        @media (min-width: 768px) {
+            .nav-center {
+                display: flex;
+            }
         }
 
         .nav-link {
@@ -103,13 +115,20 @@
         .nav-right {
             display: flex;
             align-items: center;
-            gap: 24px;
+            gap: 16px;
         }
 
         .sign-in {
+            display: none;
             font-size: 14px;
             font-weight: 500;
             color: #374151;
+        }
+
+        @media (min-width: 768px) {
+            .sign-in {
+                display: block;
+            }
         }
 
         .btn-outline {
@@ -140,6 +159,13 @@
             cursor: pointer;
             transition: all 0.3s ease;
             display: inline-block;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .btn-solid {
+                width: auto;
+            }
         }
 
         .btn-solid:hover {
@@ -156,21 +182,29 @@
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding-top: 80px;
+            padding: 80px 1.5rem 0 1.5rem;
             position: relative;
         }
 
         .hero-content {
             z-index: 10;
             max-width: 800px;
+            width: 100%;
         }
 
         .hero h1 {
-            font-size: 72px;
+            font-size: 40px;
             line-height: 1.1;
-            letter-spacing: -2px;
+            letter-spacing: -1px;
             margin-bottom: 24px;
             font-weight: 700;
+        }
+
+        @media (min-width: 768px) {
+            .hero h1 {
+                font-size: 72px;
+                letter-spacing: -2px;
+            }
         }
 
         .hero h1 .muted {
@@ -179,7 +213,7 @@
         }
 
         .hero p {
-            font-size: 18px;
+            font-size: 16px;
             color: var(--text-gray);
             margin-bottom: 40px;
             max-width: 600px;
@@ -188,18 +222,34 @@
             line-height: 1.5;
         }
 
+        @media (min-width: 768px) {
+            .hero p {
+                font-size: 18px;
+            }
+        }
+
         /* Center Icon */
         .center-icon {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 6px;
-            width: 56px;
-            height: 56px;
+            width: 48px;
+            height: 48px;
             background: white;
-            padding: 10px;
-            border-radius: 14px;
+            padding: 8px;
+            border-radius: 12px;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            margin: 0 auto 40px auto;
+            margin: 0 auto 32px auto;
+        }
+
+        @media (min-width: 768px) {
+            .center-icon {
+                width: 56px;
+                height: 56px;
+                padding: 10px;
+                border-radius: 14px;
+                margin: 0 auto 40px auto;
+            }
         }
 
         .center-icon .dot {
@@ -212,6 +262,7 @@
 
         /* Floating Cards */
         .floating-card {
+            display: none;
             position: absolute;
             background: white;
             border-radius: 16px;
@@ -219,6 +270,12 @@
             padding: 20px;
             z-index: 5;
             animation: float 4s ease-in-out infinite;
+        }
+
+        @media (min-width: 1024px) {
+            .floating-card {
+                display: block;
+            }
         }
 
         @keyframes float {
@@ -370,11 +427,17 @@
         /* Minimal Footer */
         footer {
             background-color: var(--bg-light);
-            padding: 2rem 4rem;
+            padding: 2rem 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-top: 1px solid var(--border-color);
+        }
+
+        @media (min-width: 768px) {
+            footer {
+                padding: 2rem 4rem;
+            }
         }
 
         .footer-logo {
@@ -390,10 +453,7 @@
         }
 
         @media (max-width: 1024px) {
-            .floating-card { display: none; }
-            .hero h1 { font-size: 56px; }
-            nav { padding: 1rem 2rem; }
-            footer { padding: 2rem; }
+            /* Handled locally with classes */
         }
     </style>
 </head>
@@ -410,9 +470,10 @@
             <span class="logo-text">Synapse</span>
         </div>
         <div class="nav-center">
-            <a href="/dashboard/" class="nav-link">Synapses</a>
-            <a class="nav-link" onclick="toggleLandingSettings(true)">Settings</a>
-            <a href="/work/" class="nav-link">Work</a>
+            <a href="#" class="nav-link">Features</a>
+            <a href="/work/" class="nav-link">Solutions</a>
+            <a href="/work/" class="nav-link">Resources</a>
+            <a href="/work/" class="nav-link">Pricing</a>
         </div>
         <div class="nav-right">
             <a href="/work/" class="sign-in">Sign in</a>
@@ -498,7 +559,7 @@
 
     <!-- Settings Modal -->
     <div id="settingsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 24, 39, 0.5); backdrop-filter: blur(4px); z-index: 200; align-items: center; justify-content: center;">
-        <div style="background: white; border-radius: 12px; width: 440px; padding: 32px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border: 1px solid #E5E7EB;">
+        <div style="background: white; border-radius: 12px; width: 440px; padding: 32px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border: 1px solid #E5E7EB; max-width: 90vw;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                 <h3 style="font-weight: 700; font-size: 20px; margin: 0; color: #111827;">Landing Settings</h3>
                 <button onclick="toggleLandingSettings(false)" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #9CA3AF; line-height: 1;">&times;</button>

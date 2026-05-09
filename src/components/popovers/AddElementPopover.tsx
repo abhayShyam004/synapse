@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSynapseStore } from '../../store/useSynapseStore';
 import { Search, Zap, Diamond, Settings2, CheckSquare, Sparkles, X, Loader2 } from 'lucide-react';
 import { fetchAISuggestion } from '../../lib/ai/nvidiaNim';
@@ -11,6 +11,13 @@ export const AddElementPopover = () => {
   const [aiPrompt, setAiPrompt] = useState('');
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   if (!addElementPopover.isOpen) return null;
 
@@ -101,76 +108,89 @@ export const AddElementPopover = () => {
     ]}
   ];
 
+  const desktopStyle = { top: Math.min(addElementPopover.y, window.innerHeight - 500), left: Math.min(addElementPopover.x, window.innerWidth - 320) };
+  const mobileStyle = {};
+
   return (
-    <div 
-      className="absolute bg-white rounded-lg shadow-xl border border-gray-200 w-80 flex flex-col z-50 overflow-hidden"
-      style={{ top: Math.min(addElementPopover.y, window.innerHeight - 500), left: Math.min(addElementPopover.x, window.innerWidth - 320) }}
-    >
-      <div className="flex items-center justify-between p-3 border-b border-gray-100">
-        <h3 className="font-semibold text-gray-900 text-sm tracking-tight">Add Element</h3>
-        <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 p-1"><X size={16} /></button>
-      </div>
-
-      <div className="p-2 flex flex-col max-h-[500px] overflow-y-auto">
-        <div className="px-2 py-2">
-          <div className="relative">
-            <Search size={14} className="absolute left-2.5 top-2 text-gray-400" />
-            <input 
-              type="text" 
-              placeholder="Search Elements" 
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]"
-            />
+    <>
+      {isMobile && (
+        <div className="fixed inset-0 z-[60] bg-black/20 backdrop-blur-sm animate-in fade-in" onClick={handleClose} />
+      )}
+      <div 
+        className="fixed inset-x-0 bottom-0 z-[70] h-[70vh] w-full bg-white rounded-t-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-full duration-300 md:absolute md:inset-auto md:w-80 md:h-auto md:rounded-lg md:border md:border-gray-200 md:z-50 md:shadow-xl md:animate-in md:fade-in md:zoom-in-95"
+        style={isMobile ? mobileStyle : desktopStyle}
+      >
+        {isMobile && (
+          <div className="w-full flex justify-center pt-3 pb-1">
+            <div className="w-12 h-1.5 bg-gray-200 rounded-full" />
           </div>
+        )}
+        <div className="flex items-center justify-between p-3 border-b border-gray-100">
+          <h3 className="font-semibold text-gray-900 text-sm tracking-tight">Add Element</h3>
+          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 p-1"><X size={16} /></button>
         </div>
 
-        <div className="px-2 py-2">
-           <div className="flex items-center gap-2 mb-2">
-             <input 
-               value={aiPrompt}
-               onChange={e => setAiPrompt(e.target.value)}
-               placeholder="Describe a node to generate..."
-               className="flex-1 text-xs border border-gray-200 rounded-md px-2 py-1.5 outline-none focus:border-purple-400"
-             />
-             <button 
-               onClick={handleAISuggest}
-               disabled={isSuggesting || !aiPrompt}
-               className="bg-purple-100 text-purple-700 p-1.5 rounded-md hover:bg-purple-200 disabled:opacity-50"
-             >
-               {isSuggesting ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-             </button>
-           </div>
-        </div>
-
-        {elements.map((group) => {
-          const filteredItems = group.items.filter(item => item.label.toLowerCase().includes(searchQuery.toLowerCase()));
-          if (filteredItems.length === 0) return null;
-          return (
-            <div key={group.category} className="px-2 mb-1 mt-2">
-              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">{group.category}</p>
-              {filteredItems.map(item => (
-                <button 
-                  key={item.type}
-                  onClick={() => handleAdd(item.label, item.type, item.color)} 
-                  className="w-full flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-50 px-2 py-2 rounded-md transition-colors"
-                >
-                  <item.icon size={14} className={
-                    item.color === 'green' ? 'text-[#10B981]' :
-                    item.color === 'blue' ? 'text-[#3B82F6]' :
-                    item.color === 'orange' ? 'text-[#F59E0B]' :
-                    item.color === 'amber' ? 'text-[#F59E0B]' :
-                    item.color === 'purple' ? 'text-[#8B5CF6]' :
-                    item.color === 'teal' ? 'text-[#0D9488]' :
-                    item.color === 'pink' ? 'text-[#EC4899]' :
-                    'text-gray-500'
-                  } /> {item.label}
-                </button>
-              ))}
+        <div className="p-2 flex flex-col flex-1 overflow-y-auto">
+          <div className="px-2 py-2">
+            <div className="relative">
+              <Search size={14} className="absolute left-2.5 top-2.5 md:top-2 text-gray-400" />
+              <input 
+                type="text" 
+                placeholder="Search Elements" 
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full pl-8 pr-3 py-2 md:py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] bg-gray-50 md:bg-white"
+              />
             </div>
-          );
-        })}
+          </div>
+
+          <div className="px-2 py-2">
+            <div className="flex items-center gap-2 mb-2">
+              <input 
+                value={aiPrompt}
+                onChange={e => setAiPrompt(e.target.value)}
+                placeholder="Describe a node to generate..."
+                className="flex-1 text-sm md:text-xs border border-gray-200 rounded-md px-3 py-2 md:py-1.5 outline-none focus:border-purple-400 bg-gray-50 md:bg-white"
+              />
+              <button 
+                onClick={handleAISuggest}
+                disabled={isSuggesting || !aiPrompt}
+                className="bg-purple-100 text-purple-700 p-2 md:p-1.5 rounded-md hover:bg-purple-200 disabled:opacity-50"
+              >
+                {isSuggesting ? <Loader2 size={isMobile ? 16 : 14} className="animate-spin" /> : <Sparkles size={isMobile ? 16 : 14} />}
+              </button>
+            </div>
+          </div>
+
+          {elements.map((group) => {
+            const filteredItems = group.items.filter(item => item.label.toLowerCase().includes(searchQuery.toLowerCase()));
+            if (filteredItems.length === 0) return null;
+            return (
+              <div key={group.category} className="px-2 mb-2 mt-2 md:mb-1">
+                <p className="text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 md:mb-1">{group.category}</p>
+                {filteredItems.map(item => (
+                  <button 
+                    key={item.type}
+                    onClick={() => handleAdd(item.label, item.type, item.color)} 
+                    className="w-full flex items-center gap-3 md:gap-2 text-[15px] md:text-sm text-gray-700 hover:bg-gray-50 px-3 md:px-2 py-3 md:py-2 rounded-lg transition-colors border border-transparent hover:border-gray-100 active:bg-gray-100"
+                  >
+                    <item.icon size={isMobile ? 18 : 14} className={
+                      item.color === 'green' ? 'text-[#10B981]' :
+                      item.color === 'blue' ? 'text-[#3B82F6]' :
+                      item.color === 'orange' ? 'text-[#F59E0B]' :
+                      item.color === 'amber' ? 'text-[#F59E0B]' :
+                      item.color === 'purple' ? 'text-[#8B5CF6]' :
+                      item.color === 'teal' ? 'text-[#0D9488]' :
+                      item.color === 'pink' ? 'text-[#EC4899]' :
+                      'text-gray-500'
+                    } /> {item.label}
+                  </button>
+                ))}
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </>
   );
 };

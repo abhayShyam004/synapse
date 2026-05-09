@@ -324,8 +324,8 @@ Return ONLY this JSON, nothing else, no markdown, no explanation:
         </div>
       )}
 
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#000000]/40 backdrop-blur-[2px] p-4" onClick={() => setAIBuilderOpen(false)}>
-        <div className="bg-white rounded-2xl shadow-2xl w-[600px] max-h-[80vh] flex flex-col overflow-hidden border border-gray-200 animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#000000]/40 backdrop-blur-[2px] md:p-4" onClick={() => setAIBuilderOpen(false)}>
+        <div className="bg-white md:rounded-2xl shadow-2xl w-full h-full md:w-[600px] md:h-auto md:max-h-[80vh] flex flex-col overflow-hidden md:border border-gray-200 animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
           <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
             <h2 className="font-bold text-gray-900 flex items-center gap-2"><Sparkles size={18} className="text-[var(--accent)]" /> Build with AI</h2>
             <button onClick={() => setAIBuilderOpen(false)} className="text-gray-400 hover:text-gray-700 p-1 hover:bg-gray-100 rounded-md"><X size={20} /></button>

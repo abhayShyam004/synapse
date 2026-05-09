@@ -39,7 +39,7 @@ export const LeftSidebar = () => {
   ];
 
   return (
-    <div className="h-full w-16 bg-white flex flex-col justify-between py-4 items-center relative">
+    <div className="h-full w-16 bg-white flex-col justify-between py-4 items-center relative hidden md:flex">
       <div className="flex flex-col gap-4 w-full px-2">
         {icons.map(({ Icon, id, active }) => (
           <div key={id} className="relative w-full flex justify-center">
@@ -87,6 +87,49 @@ export const LeftSidebar = () => {
           </button>
         </div>
       </div>
+    </div>
+  );
+};
+
+export const MobileBottomNav = () => {
+  const { toggleSettingsModal, setSearchOpen, setAddElementPopover } = useSynapseStore();
+
+  const handleAction = (id: string) => {
+    switch (id) {
+      case 'home': return window.location.href = '/dashboard/';
+      case 'orchestration': return toast.success('Currently viewing Workflow');
+      case 'add-node': return setAddElementPopover({ isOpen: true, x: window.innerWidth / 2, y: window.innerHeight / 2 });
+      case 'search': return setSearchOpen(true);
+      case 'settings': return toggleSettingsModal(true);
+    }
+  };
+
+  return (
+    <div className="h-[56px] bg-white border-t border-gray-200 fixed bottom-0 left-0 w-full z-40 flex items-center justify-around px-2 pb-safe md:hidden">
+      <button onClick={() => handleAction('home')} className="text-gray-400 hover:text-[var(--accent)] p-2 transition-colors">
+        <Home size={22} strokeWidth={2} />
+      </button>
+      <button onClick={() => handleAction('orchestration')} className="text-[var(--accent)] p-2 transition-colors">
+        <GitMerge size={22} strokeWidth={2} />
+      </button>
+
+      {/* Floating Center Button */}
+      <div className="relative -top-6 flex items-center justify-center">
+        <button 
+          onClick={() => handleAction('add-node')}
+          className="w-12 h-12 rounded-full flex items-center justify-center text-white shadow-[0_8px_16px_rgba(0,0,0,0.15)] hover:scale-105 active:scale-95 transition-all"
+          style={{ backgroundColor: 'var(--accent)' }}
+        >
+          <Plus size={28} strokeWidth={2.5} />
+        </button>
+      </div>
+
+      <button onClick={() => handleAction('search')} className="text-gray-400 hover:text-[var(--accent)] p-2 transition-colors">
+        <Search size={22} strokeWidth={2} />
+      </button>
+      <button onClick={() => handleAction('settings')} className="text-gray-400 hover:text-[var(--accent)] p-2 transition-colors">
+        <Settings size={22} strokeWidth={2} />
+      </button>
     </div>
   );
 };

@@ -25,11 +25,18 @@ export const NodeSettingsPopover = () => {
   const popoverRef = useRef<HTMLDivElement>(null);
   
   const [coords, setCoords] = useState({ top: 0, left: 0 });
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const node = nodes.find(n => n.id === nodeSettingsPopover.nodeId);
 
   useEffect(() => {
-    if (nodeSettingsPopover.isOpen && nodeSettingsPopover.nodeId) {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (nodeSettingsPopover.isOpen && nodeSettingsPopover.nodeId && !isMobile) {
       const el = document.querySelector(`[data-id="${nodeSettingsPopover.nodeId}"]`);
       if (el) {
         const rect = el.getBoundingClientRect();
@@ -48,7 +55,7 @@ export const NodeSettingsPopover = () => {
         });
       }
     }
-  }, [nodeSettingsPopover.isOpen, nodeSettingsPopover.nodeId]);
+  }, [nodeSettingsPopover.isOpen, nodeSettingsPopover.nodeId, isMobile]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -95,111 +102,124 @@ export const NodeSettingsPopover = () => {
     handleClose();
   };
 
+  const desktopStyle = { top: coords.top, left: coords.left };
+  const mobileStyle = {};
+
   return (
-    <div 
-      ref={popoverRef}
-      className="fixed z-[100] bg-white rounded-xl shadow-2xl border border-gray-200 w-[260px] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
-      style={{ top: coords.top, left: coords.left }}
-    >
-      <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
-        <h3 className="font-bold text-gray-900 text-xs uppercase tracking-widest">Node Settings</h3>
-        <button onClick={handleClose} className="text-gray-400 hover:text-gray-700 transition-colors p-1 hover:bg-gray-100 rounded-md">
-          <X size={16} />
-        </button>
-      </div>
-
-      <div className="p-4 flex flex-col gap-5 overflow-y-auto max-h-[80vh]">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Name</label>
-          <input 
-            value={(node.data.label as string) || ''} 
-            onChange={e => updateNode(node.id, { label: e.target.value })}
-            placeholder="Node label..."
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/10 transition-all font-medium"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Description</label>
-          <textarea 
-            value={(node.data.description as string) || ''} 
-            onChange={e => updateNode(node.id, { description: e.target.value })}
-            placeholder="Optional details..."
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/10 transition-all min-h-[60px] resize-none leading-relaxed text-gray-600"
-          />
-        </div>
-
-        <div className="flex flex-col gap-2.5">
-          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Shape</label>
-          <div className="grid grid-cols-2 gap-2">
-            {SHAPES.map(s => (
-              <button
-                key={s.id}
-                onClick={() => updateNode(node.id, { shape: s.id })}
-                className={clsx(
-                  "flex flex-col items-center justify-center gap-1.5 py-2.5 px-2 rounded-lg border transition-all",
-                  node.data.shape === s.id || (!node.data.shape && s.id === 'rounded') 
-                    ? "border-[var(--accent)] bg-accent/5 text-[var(--accent)] shadow-sm" 
-                    : "border-gray-100 hover:border-gray-300 text-gray-400"
-                )}
-              >
-                <s.icon size={20} strokeWidth={node.data.shape === s.id ? 2.5 : 2} />
-                <span className="text-[10px] font-bold uppercase tracking-tighter">{s.label}</span>
-              </button>
-            ))}
+    <>
+      {isMobile && (
+        <div className="fixed inset-0 z-[60] bg-black/20 backdrop-blur-sm animate-in fade-in" onClick={handleClose} />
+      )}
+      <div 
+        ref={popoverRef}
+        className="fixed inset-x-0 bottom-0 z-[70] h-[70vh] w-full bg-white rounded-t-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-full duration-300 md:absolute md:inset-auto md:w-[260px] md:h-auto md:rounded-xl md:border md:border-gray-200 md:z-[100] md:shadow-2xl md:animate-in md:fade-in md:zoom-in-95"
+        style={isMobile ? mobileStyle : desktopStyle}
+      >
+        {isMobile && (
+          <div className="w-full flex justify-center pt-3 pb-1">
+            <div className="w-12 h-1.5 bg-gray-200 rounded-full" />
           </div>
+        )}
+        <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
+          <h3 className="font-bold text-gray-900 text-xs uppercase tracking-widest">Node Settings</h3>
+          <button onClick={handleClose} className="text-gray-400 hover:text-gray-700 transition-colors p-1 hover:bg-gray-100 rounded-md">
+            <X size={16} />
+          </button>
         </div>
 
-        <div className="flex flex-col gap-2.5">
-          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Color</label>
-          <div className="grid grid-cols-5 gap-2.5">
-            {ACCENT_COLORS.map(c => (
-              <button
-                key={c.id}
-                onClick={() => updateNode(node.id, { color: c.id })}
-                className={clsx(
-                  "w-7 h-7 rounded-full transition-all flex items-center justify-center relative",
-                  node.data.color === c.id ? "ring-2 ring-offset-2 ring-gray-200" : "hover:scale-110"
-                )}
-                style={{ backgroundColor: c.hex }}
-              >
-                {node.data.color === c.id && (
-                  <div className="w-4 h-4 rounded-full border-2 border-white shadow-sm" />
-                )}
-              </button>
-            ))}
-            {/* Custom Color Picker */}
-            <div className="relative">
-              <button
-                className={clsx(
-                  "w-7 h-7 rounded-full transition-all flex items-center justify-center relative bg-gray-100 text-gray-500 hover:bg-gray-200",
-                  node.data.color?.toString().startsWith('#') ? "ring-2 ring-offset-2 ring-gray-200" : ""
-                )}
-                onClick={() => document.getElementById('customNodeColor')?.click()}
-                style={{ backgroundColor: node.data.color?.toString().startsWith('#') ? (node.data.color as string) : undefined }}
-              >
-                <Pipette size={14} className={node.data.color?.toString().startsWith('#') ? "text-white shadow-sm" : ""} />
-              </button>
-              <input 
-                id="customNodeColor"
-                type="color"
-                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-                value={node.data.color?.toString().startsWith('#') ? (node.data.color as string) : '#000000'}
-                onChange={e => updateNode(node.id, { color: e.target.value })}
-              />
+        <div className="p-4 flex flex-col gap-5 overflow-y-auto max-h-[80vh]">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Name</label>
+            <input 
+              value={(node.data.label as string) || ''} 
+              onChange={e => updateNode(node.id, { label: e.target.value })}
+              placeholder="Node label..."
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/10 transition-all font-medium"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Description</label>
+            <textarea 
+              value={(node.data.description as string) || ''} 
+              onChange={e => updateNode(node.id, { description: e.target.value })}
+              placeholder="Optional details..."
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs md:text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/10 transition-all min-h-[60px] md:min-h-[80px] resize-none leading-relaxed text-gray-600"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2.5">
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Shape</label>
+            <div className="grid grid-cols-2 gap-2">
+              {SHAPES.map(s => (
+                <button
+                  key={s.id}
+                  onClick={() => updateNode(node.id, { shape: s.id })}
+                  className={clsx(
+                    "flex flex-col items-center justify-center gap-1.5 py-2.5 px-2 rounded-lg border transition-all",
+                    node.data.shape === s.id || (!node.data.shape && s.id === 'rounded') 
+                      ? "border-[var(--accent)] bg-accent/5 text-[var(--accent)] shadow-sm" 
+                      : "border-gray-100 hover:border-gray-300 text-gray-400"
+                  )}
+                >
+                  <s.icon size={20} strokeWidth={node.data.shape === s.id ? 2.5 : 2} />
+                  <span className="text-[10px] font-bold uppercase tracking-tighter">{s.label}</span>
+                </button>
+              ))}
             </div>
           </div>
-        </div>
 
-        <div className="pt-4 border-t border-gray-100 flex items-center justify-between mt-1">
-          <button onClick={handleClone} className="text-[10px] font-bold text-[var(--accent)] flex items-center gap-1.5 hover:bg-accent/5 px-2 py-1 rounded-md transition-colors uppercase tracking-tight">
-            <Copy size={14} /> Clone
-          </button>
-          <button onClick={handleDelete} className="text-[10px] font-bold text-red-500 flex items-center gap-1.5 hover:bg-red-50 px-2 py-1 rounded-md transition-colors uppercase tracking-tight">
-            <Trash2 size={14} /> Delete
-          </button>
+          <div className="flex flex-col gap-2.5">
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Color</label>
+            <div className="grid grid-cols-5 gap-2.5">
+              {ACCENT_COLORS.map(c => (
+                <button
+                  key={c.id}
+                  onClick={() => updateNode(node.id, { color: c.id })}
+                  className={clsx(
+                    "w-8 h-8 md:w-7 md:h-7 rounded-full transition-all flex items-center justify-center relative",
+                    node.data.color === c.id ? "ring-2 ring-offset-2 ring-gray-200" : "hover:scale-110"
+                  )}
+                  style={{ backgroundColor: c.hex }}
+                >
+                  {node.data.color === c.id && (
+                    <div className="w-5 h-5 md:w-4 md:h-4 rounded-full border-2 border-white shadow-sm" />
+                  )}
+                </button>
+              ))}
+              {/* Custom Color Picker */}
+              <div className="relative">
+                <button
+                  className={clsx(
+                    "w-8 h-8 md:w-7 md:h-7 rounded-full transition-all flex items-center justify-center relative bg-gray-100 text-gray-500 hover:bg-gray-200",
+                    node.data.color?.toString().startsWith('#') ? "ring-2 ring-offset-2 ring-gray-200" : ""
+                  )}
+                  onClick={() => document.getElementById('customNodeColor')?.click()}
+                  style={{ backgroundColor: node.data.color?.toString().startsWith('#') ? (node.data.color as string) : undefined }}
+                >
+                  <Pipette size={14} className={node.data.color?.toString().startsWith('#') ? "text-white shadow-sm" : ""} />
+                </button>
+                <input 
+                  id="customNodeColor"
+                  type="color"
+                  className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                  value={node.data.color?.toString().startsWith('#') ? (node.data.color as string) : '#000000'}
+                  onChange={e => updateNode(node.id, { color: e.target.value })}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-gray-100 flex items-center justify-between mt-1">
+            <button onClick={handleClone} className="text-[12px] md:text-[10px] font-bold text-[var(--accent)] flex items-center gap-1.5 hover:bg-accent/5 px-2 py-1.5 rounded-md transition-colors uppercase tracking-tight">
+              <Copy size={isMobile ? 16 : 14} /> Clone
+            </button>
+            <button onClick={handleDelete} className="text-[12px] md:text-[10px] font-bold text-red-500 flex items-center gap-1.5 hover:bg-red-50 px-2 py-1.5 rounded-md transition-colors uppercase tracking-tight">
+              <Trash2 size={isMobile ? 16 : 14} /> Delete
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };

@@ -1,6 +1,6 @@
 import { Toaster } from 'react-hot-toast';
 import { WorkflowCanvas } from './components/canvas/WorkflowCanvas';
-import { LeftSidebar } from './components/sidebar/LeftSidebar';
+import { LeftSidebar, MobileBottomNav } from './components/sidebar/LeftSidebar';
 import { TopToolbar } from './components/toolbar/TopToolbar';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { GlobalDialog } from './components/modals/GlobalDialog';
@@ -47,7 +47,7 @@ function App() {
   }, [accentColor]);
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden font-sans bg-white text-gray-900">
+    <div className="flex flex-col h-screen w-screen overflow-hidden font-sans bg-white text-gray-900 relative">
       <Toaster 
         position="bottom-right" 
         toastOptions={{
@@ -67,8 +67,8 @@ function App() {
       <GlobalDialog />
       <AIBuilderModal />
       <TopToolbar />
-      <main className="flex flex-1 overflow-hidden relative">
-        <aside className="w-16 border-r border-gray-200 bg-white shrink-0 overflow-y-auto z-10 flex flex-col">
+      <main className="flex flex-1 overflow-hidden relative pb-[56px] md:pb-0">
+        <aside className="hidden md:flex w-16 border-r border-gray-200 bg-white shrink-0 overflow-y-auto z-10 flex-col">
           <LeftSidebar />
         </aside>
         <section className="flex-1 relative bg-[#F3F4F6]">
@@ -76,6 +76,7 @@ function App() {
           <WorkflowCanvas />
         </section>
       </main>
+      <MobileBottomNav />
     </div>
   );
 }

@@ -94,7 +94,7 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
       }
       transition={{ duration: isDismissing ? 0.2 : 0.4 }}
       className={clsx(
-        "group relative min-w-[220px] flex flex-col bg-white border text-sm transition-all shadow-sm",
+        "group relative min-w-[160px] md:min-w-[220px] flex flex-col bg-white border text-sm transition-all shadow-sm",
         selected ? "border-[var(--accent)] ring-2 ring-[var(--accent)]/50 shadow-lg" : "border-gray-200",
         isGhost && "border-dashed border-[var(--accent)] !opacity-60",
         borderRadius
@@ -102,22 +102,22 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
     >
       {/* Header Bar */}
       <div 
-        className={clsx(`text-white px-4 py-2.5 h-[60px] flex flex-col justify-center relative cursor-pointer group/header overflow-hidden`,
+        className={clsx(`text-white px-3 md:px-4 py-2 md:py-2.5 h-[52px] md:h-[60px] flex flex-col justify-center relative cursor-pointer group/header overflow-hidden`,
           isExpanded ? "rounded-t-[inherit]" : borderRadius
         )}
         style={{ backgroundColor: headerBgColor }}
         onClick={toggleExpand}
       >        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-bold uppercase tracking-widest opacity-80 leading-none mb-1">
+          <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest opacity-80 leading-none mb-1">
             {data.type || 'Stage'}
           </span>
           {!isGhost && (
             <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-              <ChevronDown size={18} className="opacity-80" />
+              <ChevronDown size={16} className="opacity-80 md:w-[18px] md:h-[18px]" />
             </motion.div>
           )}
         </div>
-        <span className="font-bold text-sm leading-none truncate pr-6">
+        <span className="font-bold text-[13px] md:text-sm leading-none truncate pr-6">
           {data.label || 'New Node'}
         </span>
         
