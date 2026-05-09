@@ -14,32 +14,49 @@ interface Message {
 }
 
 /**
- * Robust JSON extraction that handles markdown blocks and conversational text.
+ * Robust JSON extraction that handles markdown blocks, conversational text, and truncated JSON.
  */
 const extractJSON = (str: string) => {
+  // First, clean out markdown wrappers
+  let cleaned = str.replace(/```json\n?|\n?```/g, '').trim();
+  
   try {
-    // 1. Try direct parse
-    return JSON.parse(str);
+    return JSON.parse(cleaned);
   } catch (e) {
     try {
-      // 2. Try extraction between first { and last }
-      const start = str.indexOf('{');
-      const end = str.lastIndexOf('}');
-      if (start !== -1 && end !== -1 && end > start) {
-        const jsonStr = str.substring(start, end + 1);
-        return JSON.parse(jsonStr);
+      // Try to find the first {
+      const start = cleaned.indexOf('{');
+      if (start !== -1) {
+        cleaned = cleaned.substring(start);
+        
+        // Find the last }
+        const end = cleaned.lastIndexOf('}');
+        if (end !== -1 && end > 0) {
+           return JSON.parse(cleaned.substring(0, end + 1));
+        }
+        
+        // If no closing bracket is found, it's heavily truncated.
+        // Attempt a very basic, dirty fix to close the JSON arrays and objects.
+        // This is a last resort to salvage the workflow generation.
+        let fixed = cleaned;
+        if (fixed.lastIndexOf('"') > fixed.lastIndexOf('}')) {
+          fixed += '"'; // Close unclosed string
+        }
+        if (fixed.lastIndexOf('}') < fixed.lastIndexOf('{')) {
+          fixed += '}'; // Close unclosed object
+        }
+        if (fixed.lastIndexOf(']') < fixed.lastIndexOf('[')) {
+          fixed += ']'; // Close unclosed array
+        }
+        if (!fixed.trim().endsWith('}')) {
+          fixed += '}'; // Close root object
+        }
+        return JSON.parse(fixed);
       }
     } catch (e2) {
-      // 3. Last resort: remove markdown code blocks
-      const cleaned = str.replace(/```json\n?|\n?```/g, '').trim();
-      try {
-        return JSON.parse(cleaned);
-      } catch (e3) {
-        console.error('Failed to parse AI response:', str);
-        throw new Error('Invalid JSON format from AI');
-      }
+      console.error('Failed to parse and repair AI response:', str);
+      throw new Error('Invalid JSON format from AI');
     }
-    console.error('Failed to parse AI response:', str);
     throw new Error('Invalid JSON format from AI');
   }
 };
