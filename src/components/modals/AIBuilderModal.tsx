@@ -12,20 +12,32 @@ interface Message {
   options?: string[];
   isFinal?: boolean;
 }
-
 /**
  * Robust JSON extraction that handles markdown blocks and conversational text.
  */
 const extractJSON = (str: string) => {
   try {
-    const start = str.indexOf('{');
-    const end = str.lastIndexOf('}');
-    if (start !== -1 && end !== -1 && end > start) {
-      const jsonStr = str.substring(start, end + 1);
-      return JSON.parse(jsonStr);
-    }
+    // 1. Try direct parse
     return JSON.parse(str);
   } catch (e) {
+    try {
+      // 2. Try extraction between first { and last }
+      const start = str.indexOf('{');
+      const end = str.lastIndexOf('}');
+      if (start !== -1 && end !== -1 && end > start) {
+        const jsonStr = str.substring(start, end + 1);
+        return JSON.parse(jsonStr);
+      }
+    } catch (e2) {
+      // 3. Last resort: remove markdown code blocks
+      const cleaned = str.replace(/```json\n?|\n?```/g, '').trim();
+      try {
+        return JSON.parse(cleaned);
+      } catch (e3) {
+        console.error('Failed to parse AI response:', str);
+        throw new Error('Invalid JSON format from AI');
+      }
+    }
     console.error('Failed to parse AI response:', str);
     throw new Error('Invalid JSON format from AI');
   }
@@ -120,34 +132,19 @@ INSTRUCTIONS:
   const handleGenerate = async () => {
     setIsGenerating(true);
     try {
-      const systemPrompt = `You are an expert workflow architect. Generate a DETAILED, COMPREHENSIVE workflow with real branching logic based on the user's goal.
-
-Conversation context:
-${messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n')}
+      const systemPrompt = `Expert workflow architect. Generate a COMPREHENSIVE branching workflow JSON based on the user's goal.
 
 Rules:
-1. Generate 20-35 nodes minimum for complex goals.
-2. Use branching (Decision nodes with multiple paths) wherever logical.
-3. Nodes must be SPECIFIC and DETAILED. For a CS interview prep goal, include specific topics like "Arrays & Strings — Two Pointer, Sliding Window", "Trees — BFS, DFS, BST", "Dynamic Programming — Memoization, Tabulation", "System Design — Load Balancers, Caching", etc.
-4. Every node must have a clear, specific name.
-5. Connect ALL nodes with edges — no floating disconnected nodes.
-6. Decision nodes MUST have 2 outgoing edges to different paths, which merge back later.
-7. Position nodes in a proper layout:
-   - Start nodes at y:50
-   - Each level adds y:160
-   - Branching paths: left branch x:200, right branch x:600, center x:400
-   - After merge: back to center x:400
-8. Return ONLY valid JSON, no explanation.
+1. 20-35 nodes.
+2. Use real branching logic (Decision nodes with multiple paths).
+3. Nodes must be TECHNICAL and SPECIFIC (e.g., "FastAPI Middleware", "React Query Cache").
+4. Every node must have edges. 
+5. Position nodes: Start at y:50, each level +y:160. Branching: left x:200, right x:600, center x:400.
+6. Return format: { "nodes": [{ "id": "n1", "type": "trigger|task|decision|condition|aiPrompt|timer|variable|loop|note", "name": "Name", "description": "Details", "position": { "x": 400, "y": 50 } }], "edges": [{ "id": "e1", "source": "n1", "target": "n2", "label": "Yes" }] }
+7. No explanation. Just JSON.
 
-Return format:
-{
-  "nodes": [
-    { "id": "n1", "type": "trigger|task|decision|condition|aiPrompt|timer|variable|loop|note", "name": "specific name", "description": "specific description", "position": { "x": 400, "y": 50 } }
-  ],
-  "edges": [
-    { "id": "e1", "source": "n1", "target": "n2", "label": "optional label (e.g. Yes/No)" }
-  ]
-}`;
+Conversation context:
+${messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n')}`;
 
       const result = await fetchAISuggestion(systemPrompt);
       const parsed = extractJSON(result);

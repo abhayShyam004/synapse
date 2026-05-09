@@ -21,7 +21,7 @@ export const fetchAISuggestion = async (prompt: string) => {
       model: 'meta/llama-3.1-8b-instruct',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
-      max_tokens: 1024,
+      max_tokens: 4096,
     }),
   });
 

@@ -46,8 +46,15 @@ export const AddElementPopover = () => {
     try {
       const prompt = `You are a workflow node generator. The user wants to create a node described as: '${aiPrompt}'. Return JSON only: { "name": "string", "type": "task"|"trigger"|"decision"|"condition"|"aiPrompt"|"timer"|"variable"|"loop"|"note", "description": "string", "color": "string (hex)" }`;
       const result = await fetchAISuggestion(prompt);
-      const cleaned = result.replace(/```json\n?|\n?```/g, '').trim();
-      const parsed = JSON.parse(cleaned);
+      
+      let parsed;
+      try {
+        const start = result.indexOf('{');
+        const end = result.lastIndexOf('}');
+        parsed = JSON.parse(result.substring(start, end + 1));
+      } catch (e) {
+        parsed = JSON.parse(result);
+      }
       
       let position;
       const { x, y, zoom } = getViewport();
