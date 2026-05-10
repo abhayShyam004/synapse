@@ -12,6 +12,7 @@ export const AuthModal = () => {
   const [name, setName] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<{ field: string; message: string } | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   if (!isAuthModalOpen) return null;
 
@@ -19,6 +20,7 @@ export const AuthModal = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccessMessage(null);
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -51,6 +53,7 @@ export const AuthModal = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccessMessage(null);
 
     if (password !== confirmPassword) {
       setError({ field: 'confirmPassword', message: 'Passwords do not match' });
@@ -58,7 +61,7 @@ export const AuthModal = () => {
       return;
     }
 
-    const { data, error } = await supabase.auth.signUp({
+    const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -68,22 +71,18 @@ export const AuthModal = () => {
       },
     });
 
-    if (error) {
-      setError({ field: 'auth', message: error.message });
+    if (signUpError) {
+      setError({ field: 'auth', message: signUpError.message });
       setLoading(false);
       return;
     }
 
-    if (data.user && !data.session) {
-      setError({ field: 'auth', message: 'Account created! Please check your email to verify your account.' });
-      toast.success('Check your email for verification!');
-      setLoading(false);
-      return;
-    }
-
-    setUser(data.user);
-    toast.success('Account created! Check your email for verification.');
-    setAuthModalOpen(false);
+    // Success - Redirect to sign in and show warning
+    setSuccessMessage('Account created! Please check your email and click the confirmation link before signing in.');
+    toast.success('Verification email sent!');
+    setPassword('');
+    setConfirmPassword('');
+    setAuthModalOpen(true, 'signin');
     setLoading(false);
   };
 
@@ -138,6 +137,14 @@ export const AuthModal = () => {
         </div>
 
         <div className="p-8">
+          {successMessage && (
+            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
+              <Mail className="text-amber-500 shrink-0 mt-0.5" size={18} />
+              <p className="text-xs font-medium text-amber-800 leading-relaxed">
+                {successMessage}
+              </p>
+            </div>
+          )}
           <form onSubmit={authModalView === 'signin' ? handleSignIn : handleSignUp} className="space-y-4">
             {authModalView === 'signup' && (
               <div className="space-y-1">
