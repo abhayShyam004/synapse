@@ -2,22 +2,22 @@ import { StrictMode, useState, useEffect, useRef } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import { Toaster, toast } from 'react-hot-toast'
-import { ArrowLeft, Plus, Folder, Clock, MoreVertical, Search, LogOut, Layout, Copy } from 'lucide-react'
+import { ArrowLeft, Folder, Clock, MoreVertical, Search, LogOut, Layout, Copy } from 'lucide-react'
 import { useSynapseStore } from './store/useSynapseStore'
 import { GlobalDialog } from './components/modals/GlobalDialog'
 import { AuthModal } from './components/modals/AuthModal'
 import { supabase } from './lib/supabase'
 
-interface WorkflowMetadata {
+interface SynapseMetadata {
   id: string;
   name: string;
   updated_at: string;
   nodes_count?: number;
 }
 
-const Dashboard = () => {
+const SynapsesPage = () => {
   const { openDialog, accentColor, updateSetting, user, setUser, setSession, setAuthModalOpen } = useSynapseStore();
-  const [workflows, setWorkflows] = useState<WorkflowMetadata[]>([]);
+  const [synapses, setSynapses] = useState<SynapseMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
@@ -86,9 +86,9 @@ const Dashboard = () => {
     root.style.setProperty('--accent-dot', `${baseHex}66`);
   }, [accentColor]);
 
-  // Load workflows from Supabase or localStorage
+  // Load synapses from Supabase or localStorage
   useEffect(() => {
-    const loadWorkflows = async () => {
+    const loadSynapses = async () => {
       setLoading(true);
       if (user) {
         const { data, error } = await supabase
@@ -97,9 +97,9 @@ const Dashboard = () => {
           .order('updated_at', { ascending: false });
 
         if (error) {
-          toast.error('Failed to load workflows');
+          toast.error('Failed to load synapses');
         } else {
-          setWorkflows(data.map(w => ({
+          setSynapses(data.map(w => ({
             id: w.id,
             name: w.name,
             updated_at: w.updated_at,
@@ -110,7 +110,7 @@ const Dashboard = () => {
         const saved = localStorage.getItem('synapse-workflows-list');
         if (saved) {
           const list = JSON.parse(saved);
-          setWorkflows(list.map((w: any) => ({
+          setSynapses(list.map((w: any) => ({
             id: w.id,
             name: w.name,
             updated_at: w.lastModified === 'Just now' ? new Date().toISOString() : w.lastModified,
@@ -121,7 +121,7 @@ const Dashboard = () => {
       setLoading(false);
     };
 
-    loadWorkflows();
+    loadSynapses();
   }, [user]);
 
   const handleSignOut = async () => {
@@ -131,52 +131,12 @@ const Dashboard = () => {
     window.location.href = '/';
   };
 
-  const createNewSynapse = async () => {
-    const id = crypto.randomUUID();
-    const newName = `New Synapse ${workflows.length + 1}`;
-    
-    if (user) {
-      const { error } = await supabase.from('workflows').insert({
-        id,
-        user_id: user.id,
-        name: newName,
-        nodes: [],
-        edges: [],
-        variables: []
-      });
-
-      if (error) {
-        toast.error('Failed to create workflow');
-        return;
-      }
-    } else {
-      const newList = [{
-        id,
-        name: newName,
-        updated_at: new Date().toISOString(),
-        nodes_count: 0
-      }, ...workflows];
-      setWorkflows(newList);
-      localStorage.setItem('synapse-workflows-list', JSON.stringify(newList.map(w => ({
-        id: w.id,
-        name: w.name,
-        lastModified: 'Just now',
-        nodes: 0
-      }))));
-    }
-
-    toast.success('Synapse created!');
-    setTimeout(() => {
-      window.location.href = `/work/?id=${id}`;
-    }, 800);
-  };
-
   const renameWorkflow = (e: React.MouseEvent, id: string, currentName: string) => {
     e.stopPropagation();
     setIsMenuOpen(null);
     openDialog({
       title: 'Rename Synapse',
-      message: 'Enter a new name for this workflow:',
+      message: 'Enter a new name for this synapse:',
       type: 'prompt',
       defaultValue: currentName,
       onConfirm: async (newName) => {
@@ -193,7 +153,7 @@ const Dashboard = () => {
             }
           }
 
-          setWorkflows(prev => prev.map(w => w.id === id ? { ...w, name: newName, updated_at: new Date().toISOString() } : w));
+          setSynapses(prev => prev.map(w => w.id === id ? { ...w, name: newName, updated_at: new Date().toISOString() } : w));
           
           if (!user) {
             const savedList = JSON.parse(localStorage.getItem('synapse-workflows-list') || '[]');
@@ -214,17 +174,17 @@ const Dashboard = () => {
     });
   };
 
-  const duplicateWorkflow = async (e: React.MouseEvent, workflow: WorkflowMetadata) => {
+  const duplicateWorkflow = async (e: React.MouseEvent, synapse: SynapseMetadata) => {
     e.stopPropagation();
     setIsMenuOpen(null);
     const newId = crypto.randomUUID();
-    const newName = `${workflow.name} (Copy)`;
+    const newName = `${synapse.name} (Copy)`;
 
     if (user) {
       const { data, error: fetchError } = await supabase
         .from('workflows')
         .select('*')
-        .eq('id', workflow.id)
+        .eq('id', synapse.id)
         .single();
       
       if (fetchError || !data) {
@@ -245,7 +205,7 @@ const Dashboard = () => {
         return;
       }
     } else {
-      const savedWorkflow = localStorage.getItem(`synapse-workflow-${workflow.id}`);
+      const savedWorkflow = localStorage.getItem(`synapse-workflow-${synapse.id}`);
       if (savedWorkflow) {
         const data = JSON.parse(savedWorkflow);
         data.name = newName;
@@ -255,9 +215,9 @@ const Dashboard = () => {
         id: newId,
         name: newName,
         updated_at: new Date().toISOString(),
-        nodes_count: workflow.nodes_count
-      }, ...workflows];
-      setWorkflows(newList);
+        nodes_count: synapse.nodes_count
+      }, ...synapses];
+      setSynapses(newList);
       localStorage.setItem('synapse-workflows-list', JSON.stringify(newList.map(w => ({
         id: w.id,
         name: w.name,
@@ -267,11 +227,11 @@ const Dashboard = () => {
     }
 
     toast.success('Synapse duplicated');
-    setWorkflows(prev => [{
+    setSynapses(prev => [{
       id: newId,
       name: newName,
       updated_at: new Date().toISOString(),
-      nodes_count: workflow.nodes_count
+      nodes_count: synapse.nodes_count
     }, ...prev]);
   };
 
@@ -291,7 +251,7 @@ const Dashboard = () => {
           }
         } else {
           localStorage.removeItem(`synapse-workflow-${id}`);
-          const newList = workflows.filter(w => w.id !== id);
+          const newList = synapses.filter(w => w.id !== id);
           localStorage.setItem('synapse-workflows-list', JSON.stringify(newList.map(w => ({
             id: w.id,
             name: w.name,
@@ -299,13 +259,13 @@ const Dashboard = () => {
             nodes: w.nodes_count
           }))));
         }
-        setWorkflows(prev => prev.filter(w => w.id !== id));
+        setSynapses(prev => prev.filter(w => w.id !== id));
         toast.success('Synapse deleted');
       }
     });
   };
 
-  const filteredWorkflows = workflows.filter(w => 
+  const filteredSynapses = synapses.filter(w => 
     w.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -361,12 +321,6 @@ const Dashboard = () => {
               className="pl-10 pr-4 py-2 bg-gray-100 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-[var(--accent)] outline-none"
             />
           </div>
-          <button 
-            onClick={createNewSynapse}
-            className="bg-[var(--accent)] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:brightness-90 transition-all flex items-center gap-2 shadow-sm"
-          >
-            <Plus size={18} /> New Synapse
-          </button>
 
           <div className="w-px h-6 bg-gray-200 mx-1" />
 
@@ -389,7 +343,7 @@ const Dashboard = () => {
                     onClick={() => setIsUserDropdownOpen(false)}
                     className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[var(--accent)] bg-accent/5 font-semibold"
                   >
-                    <Layout size={16} /> My Workflows
+                    <Layout size={16} /> My Synapses
                   </button>
                   <div className="h-px bg-gray-100 my-1" />
                   <button 
@@ -417,7 +371,7 @@ const Dashboard = () => {
         {!user && (
           <div className="mb-8 p-4 bg-[var(--accent)]/10 border border-[var(--accent)]/20 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-gray-700 font-medium text-center md:text-left">
-              👋 You're in <span className="font-bold text-[var(--accent)]">Guest Mode</span>. Your workflows are saved locally to this browser only. 
+              👋 You're in <span className="font-bold text-[var(--accent)]">Guest Mode</span>. Your synapses are saved locally to this browser only. 
               <button onClick={() => setAuthModalOpen(true, 'signin')} className="ml-1 text-[var(--accent)] font-bold hover:underline underline-offset-4">Sign in</button> to sync across devices.
             </p>
           </div>
@@ -426,7 +380,7 @@ const Dashboard = () => {
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold text-gray-900">My Synapses</h1>
           <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Folder size={16} /> {filteredWorkflows.length} Workflows
+            <Folder size={16} /> {filteredSynapses.length} Synapses
           </div>
         </div>
 
@@ -438,7 +392,7 @@ const Dashboard = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredWorkflows.map(s => (
+            {filteredSynapses.map(s => (
               <div 
                 key={s.id}
                 onClick={() => window.location.href = `/work/?id=${s.id}`}
@@ -487,37 +441,18 @@ const Dashboard = () => {
                 </div>
               </div>
             ))}
-
-            {/* Create New Placeholder */}
-            <div 
-              onClick={createNewSynapse}
-              className="border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center p-8 text-gray-400 hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all cursor-pointer bg-white/50 group"
-            >
-              <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3 group-hover:bg-accent/5 transition-colors" style={{ backgroundColor: 'var(--accent-light)' }}>
-                <Plus size={24} className="group-hover:text-[var(--accent)]" />
-              </div>
-              <span className="font-semibold">Create new synapse</span>
-            </div>
           </div>
         )}
 
-        {!loading && filteredWorkflows.length === 0 && (
+        {!loading && filteredSynapses.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 bg-white/30 rounded-2xl border border-dashed border-gray-300 mt-8">
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-300">
               <Folder size={40} />
             </div>
             <h3 className="text-lg font-bold text-gray-900 mb-1">{searchQuery ? 'No results found' : 'No synapses yet'}</h3>
             <p className="text-sm text-gray-500 mb-6 text-center max-w-xs">
-              {searchQuery ? `We couldn't find anything matching "${searchQuery}"` : 'Start your journey by creating your first intelligent workflow.'}
+              {searchQuery ? `We couldn't find anything matching "${searchQuery}"` : 'Start your journey by creating a synapse in the workspace.'}
             </p>
-            {!searchQuery && (
-              <button 
-                onClick={createNewSynapse}
-                className="bg-[var(--accent)] text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:brightness-90 transition-all shadow-lg shadow-[var(--accent)]/20"
-              >
-                Create your first synapse
-              </button>
-            )}
           </div>
         )}
       </main>
@@ -527,6 +462,6 @@ const Dashboard = () => {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Dashboard />
+    <SynapsesPage />
   </StrictMode>,
 )

@@ -103,7 +103,7 @@ export const WorkflowCanvas = () => {
           redo();
         } else if (e.key === 's') {
           e.preventDefault();
-          toast.success('Workflow saved manually');
+          toast.success('Synapse saved manually');
         } else if (e.key === 'd') {
           e.preventDefault();
           const selectedNode = nodes.find(n => n.selected);
@@ -131,7 +131,7 @@ export const WorkflowCanvas = () => {
         try {
           // Prepare context: Send existing structure to AI
           const workflowContext = nodes.map(n => ({ name: n.data.label, type: n.data.type }));
-          const prompt = `You are a workflow planning AI. Given this workflow so far: ${JSON.stringify(workflowContext)}. 
+          const prompt = `You are an intelligent planner. Given this synapse structure so far: ${JSON.stringify(workflowContext)}. 
 Suggest the single most logical next step. 
 Return JSON ONLY, no explanation: { "name": "string", "type": "task"|"trigger"|"decision"|"condition"|"aiPrompt"|"timer"|"variable"|"loop"|"note", "description": "string" }`;
 

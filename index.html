@@ -469,10 +469,10 @@
         </div>
         <div class="nav-center">
             <a href="/dashboard/" class="nav-link">Synapses</a>
-            <a href="/dashboard/?auth=signin" class="nav-link">Settings</a>
+            <a href="#" class="nav-link" onclick="toggleLandingSettings(true)">Settings</a>
             <a href="/work/" class="nav-link">Work</a>
         </div>
-        <div class="nav-right" id="auth-nav">
+        <div class="nav-right" id="auth-nav" style="position: relative;">
             <a href="/dashboard/?auth=signin" class="nav-link" style="font-weight: 700; color: var(--accent);">Sign In</a>
         </div>
     </nav>
@@ -625,15 +625,45 @@
             const authNav = document.getElementById('auth-nav');
             // Supabase auth key format: sb-[project-id]-auth-token
             const supabaseKey = 'sb-gdwsvslcmsdlplzcsbyz-auth-token';
-            const session = localStorage.getItem(supabaseKey);
+            const sessionStr = localStorage.getItem(supabaseKey);
             
-            if (session) {
-                authNav.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 24px;">
-                        <a href="/dashboard/" class="nav-link" style="font-weight: 700; color: var(--accent);">Dashboard</a>
-                        <button onclick="handleSignOut()" class="nav-link" style="background: none; border: none; font-weight: 500; color: #6B7280; cursor: pointer; padding: 0;">Sign Out</button>
-                    </div>
-                `;
+            if (sessionStr) {
+                try {
+                    const session = JSON.parse(sessionStr);
+                    const email = session.user.email;
+                    const initial = email[0].toUpperCase();
+                    
+                    authNav.innerHTML = `
+                        <button onclick="toggleUserDropdown(event)" style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: white; border: none; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: all 0.2s;">
+                            ${initial}
+                        </button>
+                        <div id="user-dropdown" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 8px; width: 180px; background: white; border: 1px solid #E5E7EB; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); py: 8px; z-index: 1000; padding: 8px 0;">
+                            <div style="padding: 8px 16px; border-bottom: 1px solid #F3F4F6; margin-bottom: 4px;">
+                                <p style="font-size: 10px; color: #9CA3AF; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">Signed in as</p>
+                                <p style="font-size: 11px; color: #111827; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${email}</p>
+                            </div>
+                            <a href="/dashboard/" style="display: block; padding: 8px 16px; font-size: 13px; color: #4B5563; text-decoration: none; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#F9FAFB'; this.style.color='var(--accent)'" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#4B5563'">My Synapses</a>
+                            <div style="height: 1px; background: #F3F4F6; margin: 4px 0;"></div>
+                            <button onclick="handleSignOut()" style="width: 100%; text-align: left; background: none; border: none; padding: 8px 16px; font-size: 13px; color: #EF4444; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#FEF2F2'" onmouseout="this.style.backgroundColor='transparent'">Sign Out</button>
+                        </div>
+                    `;
+                } catch (e) {
+                    console.error("Failed to parse auth token", e);
+                }
+            }
+        }
+
+        function toggleUserDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('user-dropdown');
+            const isVisible = dropdown.style.display === 'block';
+            dropdown.style.display = isVisible ? 'none' : 'block';
+        }
+
+        window.onclick = function(event) {
+            const dropdown = document.getElementById('user-dropdown');
+            if (dropdown && dropdown.style.display === 'block') {
+                dropdown.style.display = 'none';
             }
         }
 

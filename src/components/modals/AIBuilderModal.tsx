@@ -98,7 +98,7 @@ export const AIBuilderModal = () => {
   const [messages, setMessages] = useState<Message[]>([
     { 
       role: 'ai', 
-      content: "Hi! Let's build your workflow together. What are you trying to automate or plan? Describe your goal in a sentence or two.",
+      content: "Hi! Let's build your synapse together. What are you trying to automate or plan? Describe your goal in a sentence or two.",
       options: ["Get a software dev job", "Build a side project", "Learn for interviews", "Career switch to tech"]
     }
   ]);
@@ -131,7 +131,7 @@ export const AIBuilderModal = () => {
     if (questionCount >= 3) {
       const finalAIMessage: Message = {
         role: 'ai',
-        content: "Perfect, I have everything I need! Ready to build your detailed workflow?",
+        content: "Perfect, I have everything I need! Ready to build your detailed synapse?",
         isFinal: true
       };
       setMessages([...newMessages, finalAIMessage]);
@@ -294,11 +294,11 @@ Return ONLY this JSON, nothing else, no markdown, no explanation:
         }, 300);
       }, 600);
 
-      toast.success(`✦ Workflow generated — ${validNodes.length} nodes added`);
+      toast.success(`✦ Synapse generated — ${validNodes.length} nodes added`);
       setAIBuilderOpen(false);
       setMessages([{ 
         role: 'ai', 
-        content: "Hi! Let's build your workflow together. What are you trying to automate or plan? Describe your goal in a sentence or two.",
+        content: "Hi! Let's build your synapse together. What are you trying to automate or plan? Describe your goal in a sentence or two.",
         options: ["Get a software dev job", "Build a side project", "Learn for interviews", "Career switch to tech"]
       }]);
       setQuestionCount(1);
@@ -318,7 +318,7 @@ Return ONLY this JSON, nothing else, no markdown, no explanation:
         <div className="fixed inset-0 z-[200] bg-white flex flex-col items-center justify-center animate-in fade-in duration-500">
            <div className="w-16 h-16 border-4 border-gray-100 rounded-full border-t-[var(--accent)] animate-spin mb-6" />
            <div className="flex flex-col items-center text-center px-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Architecting your workflow...</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">Architecting your synapse...</h2>
               <p className="text-gray-400 text-sm max-w-xs">Using Llama 70B to design your branching path</p>
            </div>
         </div>
@@ -346,7 +346,7 @@ Return ONLY this JSON, nothing else, no markdown, no explanation:
                 {!isThinking && !isGenerating && m === lastAIMessage && (
                   <div className="flex flex-wrap gap-2 ml-11 max-w-[85%]">
                     {m.isFinal ? (
-                      <button onClick={handleGenerate} className="px-6 py-2.5 rounded-full text-white font-bold text-sm shadow-lg hover:scale-105 transition-all flex items-center gap-2" style={{ backgroundColor: 'var(--accent)' }}><Sparkles size={16} /> Generate My Workflow</button>
+                      <button onClick={handleGenerate} className="px-6 py-2.5 rounded-full text-white font-bold text-sm shadow-lg hover:scale-105 transition-all flex items-center gap-2" style={{ backgroundColor: 'var(--accent)' }}><Sparkles size={16} /> Generate My Synapse</button>
                     ) : (
                       m.options?.map(opt => <button key={opt} onClick={() => handleSend(opt)} className="bg-white border border-[var(--accent)] text-[var(--accent)] px-4 py-2 rounded-lg text-xs font-semibold hover:bg-[var(--accent)] hover:text-white transition-all shadow-sm">{opt}</button>)
                     )}

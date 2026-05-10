@@ -183,7 +183,7 @@ export const TopToolbar = () => {
                       onClick={() => window.location.href = '/dashboard/'}
                       className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-[var(--accent)] transition-colors"
                     >
-                      <Layout size={16} /> My Workflows
+                      <Layout size={16} /> My Synapses
                     </button>
                     <div className="h-px bg-gray-100 my-1" />
                     <button 

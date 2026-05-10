@@ -42,7 +42,7 @@ export const AddElementPopover = () => {
     if (!aiPrompt) return;
     setIsSuggesting(true);
     try {
-      const prompt = `Suggest a short name and 1-sentence description for a workflow node about "${aiPrompt}". Return JSON: {"name": "...", "description": "..."}`;
+      const prompt = `Suggest a short name and 1-sentence description for a synapse node about "${aiPrompt}". Return JSON: {"name": "...", "description": "..."}`;
       const result = await fetchAISuggestion(prompt);
       const cleaned = result.replace(/```json\n?|\n?```/g, '').trim();
       const parsed = JSON.parse(cleaned);
