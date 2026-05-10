@@ -5,9 +5,11 @@ import { TopToolbar } from './components/toolbar/TopToolbar';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { GlobalDialog } from './components/modals/GlobalDialog';
 import { AIBuilderModal } from './components/modals/AIBuilderModal';
+import { AuthModal } from './components/modals/AuthModal';
 import { SearchOverlay } from './components/canvas/SearchOverlay';
 import { useSynapseStore } from './store/useSynapseStore';
 import { useEffect } from 'react';
+import { supabase } from './lib/supabase';
 
 const ACCENT_COLORS = {
   cyan: '#06B6D4',
@@ -21,8 +23,21 @@ const ACCENT_COLORS = {
 };
 
 function App() {
-  const accentColor = useSynapseStore(state => state.accentColor);
-  const updateSetting = useSynapseStore(state => state.updateSetting);
+  const { 
+    accentColor, 
+    updateSetting, 
+    user, 
+    setUser, 
+    setSession,
+    currentWorkflowId,
+    setCurrentWorkflowId,
+    loadFromCloud,
+    saveToCloud,
+    nodes,
+    edges,
+    workflowName,
+    setAuthModalOpen
+  } = useSynapseStore();
 
   useEffect(() => {
     // Initial load from localStorage if present
@@ -33,7 +48,58 @@ function App() {
       // Force default to cyan if nothing or invalid is saved
       updateSetting('accentColor', 'cyan');
     }
+
+    // Supabase auth listener
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+    });
+
+    // Load workflow if ID in URL
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    if (id) {
+      setCurrentWorkflowId(id);
+    }
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  // Fetch from cloud if ID and User are present
+  useEffect(() => {
+    if (currentWorkflowId && user) {
+      loadFromCloud(currentWorkflowId);
+    } else if (currentWorkflowId && !user) {
+      // Guest mode load from local storage
+      const saved = localStorage.getItem(`synapse-workflow-${currentWorkflowId}`);
+      if (saved) {
+        useSynapseStore.getState().loadWorkflow(currentWorkflowId);
+      }
+    }
+  }, [currentWorkflowId, user]);
+
+  // Auto-save logic
+  useEffect(() => {
+    if (!currentWorkflowId) return;
+
+    const timer = setTimeout(() => {
+      if (user) {
+        saveToCloud();
+      } else {
+        // Save to local storage for guest
+        const data = { nodes, edges, name: workflowName };
+        localStorage.setItem(`synapse-workflow-${currentWorkflowId}`, JSON.stringify(data));
+        useSynapseStore.getState().setSaveStatus('saved');
+      }
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [nodes, edges, workflowName, currentWorkflowId, user]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -66,6 +132,20 @@ function App() {
       <SettingsModal />
       <GlobalDialog />
       <AIBuilderModal />
+      <AuthModal />
+      
+      {!user && (
+        <div className="h-9 bg-[var(--accent)] text-white flex items-center justify-center px-4 gap-2 z-[60] shadow-md border-b border-white/10 shrink-0 overflow-hidden">
+          <span className="text-[11px] md:text-xs font-bold tracking-wide uppercase opacity-90 truncate">You're in Guest Mode — Sign in to save across devices</span>
+          <button 
+            onClick={() => setAuthModalOpen(true, 'signin')}
+            className="text-[10px] md:text-xs bg-white text-[var(--accent)] px-3 py-1 rounded-full font-bold hover:bg-gray-50 transition-all shrink-0 shadow-sm"
+          >
+            Sign In
+          </button>
+        </div>
+      )}
+
       <TopToolbar />
       <main className="flex flex-1 overflow-hidden relative pb-[56px] md:pb-0">
         <aside className="hidden md:flex w-16 border-r border-gray-200 bg-white shrink-0 overflow-y-auto z-10 flex-col">

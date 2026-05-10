@@ -1,12 +1,45 @@
 import { useSynapseStore } from '../../store/useSynapseStore';
 import toast from 'react-hot-toast';
-import { ArrowLeft, ChevronDown, Sparkles, Settings as SettingsIcon, Menu, X } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Sparkles, Settings as SettingsIcon, Menu, X, LogOut, Layout } from 'lucide-react';
 import { clsx } from 'clsx';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
 
 export const TopToolbar = () => {
-  const { ghostCardsEnabled, toggleGhostCards, expandAllNodes, setMetricsPopover, toggleSettingsModal, workflowName, setWorkflowName } = useSynapseStore();
+  const { 
+    ghostCardsEnabled, 
+    toggleGhostCards, 
+    expandAllNodes, 
+    setMetricsPopover, 
+    toggleSettingsModal, 
+    workflowName, 
+    setWorkflowName,
+    user,
+    setAuthModalOpen,
+    saveStatus
+  } = useSynapseStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isEditingName && nameInputRef.current) {
+      nameInputRef.current.focus();
+      nameInputRef.current.select();
+    }
+  }, [isEditingName]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsUserDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleTestRun = () => {
     toast.success('Test run started');
@@ -15,6 +48,22 @@ export const TopToolbar = () => {
 
   const handlePublish = () => {
     toast.success('Workflow activated!');
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast.success('Signed out');
+    setIsUserDropdownOpen(false);
+    window.location.href = '/';
+  };
+
+  const getSaveStatusDisplay = () => {
+    switch (saveStatus) {
+      case 'saving': return <span className="text-[10px] font-medium text-gray-400 animate-pulse">Saving...</span>;
+      case 'saved': return <span className="text-[10px] font-medium text-green-500">Saved ✓</span>;
+      case 'error': return <span className="text-[10px] font-medium text-red-500">⚠ Save failed</span>;
+      default: return null;
+    }
   };
 
   return (
@@ -38,13 +87,33 @@ export const TopToolbar = () => {
               <span className="font-bold text-base md:text-lg text-gray-900 tracking-tight hidden sm:block">Synapse</span>
             </div>
             <div className="w-px h-4 bg-gray-200 mx-1 shrink-0 hidden md:block"></div>
-            <input 
-              value={workflowName}
-              onChange={(e) => setWorkflowName(e.target.value)}
-              className="font-medium text-[13px] md:text-[15px] text-gray-600 outline-none hover:bg-gray-50 focus:bg-gray-50 px-1 py-0.5 rounded border border-transparent focus:border-gray-200 transition-all truncate w-24 sm:w-auto md:w-auto"
-              style={{ maxWidth: '180px' }}
-            />
-            <span className="text-[9px] md:text-[10px] font-bold bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded-sm uppercase tracking-widest border border-gray-200 shrink-0">
+            
+            <div className="flex flex-col">
+              {isEditingName ? (
+                <input 
+                  ref={nameInputRef}
+                  value={workflowName}
+                  onChange={(e) => setWorkflowName(e.target.value)}
+                  onBlur={() => setIsEditingName(false)}
+                  onKeyDown={(e) => e.key === 'Enter' && setIsEditingName(false)}
+                  className="font-medium text-[13px] md:text-[15px] text-gray-900 outline-none bg-gray-50 px-1 py-0.5 rounded border border-[var(--accent)] transition-all"
+                  style={{ maxWidth: '180px' }}
+                />
+              ) : (
+                <button 
+                  onClick={() => setIsEditingName(true)}
+                  className="font-medium text-[13px] md:text-[15px] text-gray-600 hover:text-gray-900 text-left truncate px-1 py-0.5 hover:bg-gray-50 rounded transition-all"
+                  style={{ maxWidth: '180px' }}
+                >
+                  {workflowName || 'Untitled Workflow'}
+                </button>
+              )}
+              <div className="px-1 -mt-0.5 h-3">
+                {getSaveStatusDisplay()}
+              </div>
+            </div>
+
+            <span className="text-[9px] md:text-[10px] font-bold bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded-sm uppercase tracking-widest border border-gray-200 shrink-0 self-center">
               Draft
             </span>
           </div>
@@ -92,6 +161,48 @@ export const TopToolbar = () => {
             <button onClick={() => toggleSettingsModal(true)} className="p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 rounded-md transition-colors" title="Settings">
               <SettingsIcon size={18} />
             </button>
+
+            <div className="w-px h-6 bg-gray-200 mx-1" />
+
+            {user ? (
+              <div className="relative" ref={dropdownRef}>
+                <button 
+                  onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                  className="w-8 h-8 rounded-full bg-[var(--accent)] text-white font-bold text-sm flex items-center justify-center hover:brightness-110 transition-all shadow-sm"
+                >
+                  {user.email?.[0].toUpperCase()}
+                </button>
+
+                {isUserDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-xl z-[100] py-2 animate-in fade-in slide-in-from-top-1">
+                    <div className="px-4 py-2 border-b border-gray-100 mb-1">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Signed in as</p>
+                      <p className="text-xs font-semibold text-gray-900 truncate">{user.email}</p>
+                    </div>
+                    <button 
+                      onClick={() => window.location.href = '/dashboard/'}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-[var(--accent)] transition-colors"
+                    >
+                      <Layout size={16} /> My Workflows
+                    </button>
+                    <div className="h-px bg-gray-100 my-1" />
+                    <button 
+                      onClick={handleSignOut}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                    >
+                      <LogOut size={16} /> Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button 
+                onClick={() => setAuthModalOpen(true, 'signin')}
+                className="text-sm font-bold text-[var(--accent)] hover:brightness-90 transition-all px-2"
+              >
+                Sign In
+              </button>
+            )}
           </div>
 
           {/* Mobile Hamburger */}
@@ -107,6 +218,16 @@ export const TopToolbar = () => {
       {/* Mobile Menu Dropdown */}
       {isMobileMenuOpen && (
         <div className="md:hidden absolute top-12 left-0 w-full bg-white border-b border-gray-200 shadow-lg z-40 flex flex-col p-2 animate-in slide-in-from-top-2">
+          {user && (
+            <div className="px-4 py-3 bg-gray-50 rounded-lg mb-2 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-[var(--accent)] text-white font-bold flex items-center justify-center">
+                {user.email?.[0].toUpperCase()}
+              </div>
+              <div className="overflow-hidden">
+                <p className="text-xs font-semibold text-gray-900 truncate">{user.email}</p>
+              </div>
+            </div>
+          )}
           <button 
             onClick={() => { expandAllNodes(true); setIsMobileMenuOpen(false); }} 
             className="text-left px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg"
@@ -125,6 +246,22 @@ export const TopToolbar = () => {
           >
             Test Run
           </button>
+          {!user && (
+            <button 
+              onClick={() => { setAuthModalOpen(true, 'signin'); setIsMobileMenuOpen(false); }} 
+              className="text-left px-4 py-3 text-sm font-bold text-[var(--accent)] hover:bg-gray-50 rounded-lg"
+            >
+              Sign In
+            </button>
+          )}
+          {user && (
+            <button 
+              onClick={handleSignOut} 
+              className="text-left px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 rounded-lg flex items-center gap-2"
+            >
+              <LogOut size={16} /> Sign Out
+            </button>
+          )}
           <div className="h-px bg-gray-100 my-1 mx-4" />
           <button 
             onClick={() => { toggleGhostCards(); setIsMobileMenuOpen(false); }} 

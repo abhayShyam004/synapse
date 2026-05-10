@@ -8,6 +8,7 @@ export interface VariableSlice {
   addVariable: (variable: Variable) => void;
   updateVariable: (key: string, value: string) => void;
   removeVariable: (key: string) => void;
+  setVariables: (variables: Variable[]) => void;
 }
 
 export const createVariableSlice = (
@@ -21,4 +22,5 @@ export const createVariableSlice = (
   removeVariable: (k) => set((state) => ({
     variables: state.variables.filter((varItem) => varItem.key !== k)
   })),
+  setVariables: (variables) => set(() => ({ variables })),
 });

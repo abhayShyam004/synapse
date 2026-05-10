@@ -8,6 +8,7 @@ import type {
   NodeChange, 
   EdgeChange 
 } from '@xyflow/react';
+import { supabase } from '../../lib/supabase';
 
 export interface CanvasSlice {
   nodes: Node[];
@@ -41,6 +42,8 @@ export interface CanvasSlice {
   exportWorkflow: () => string;
   resetWorkflow: () => void;
   loadWorkflow: (id: string) => void;
+  loadFromCloud: (id: string) => Promise<void>;
+  saveToCloud: () => Promise<void>;
   saveHistory: () => void;
   undo: () => void;
   redo: () => void;
@@ -50,6 +53,8 @@ export interface CanvasSlice {
   setWorkflowName: (name: string) => void;
   isAIBuilderOpen: boolean;
   setAIBuilderOpen: (isOpen: boolean) => void;
+  saveStatus: 'idle' | 'saving' | 'saved' | 'error';
+  setSaveStatus: (status: CanvasSlice['saveStatus']) => void;
   dialog: {
     isOpen: boolean;
     title: string;
@@ -66,21 +71,7 @@ export const createCanvasSlice = (
   set: (fn: (state: CanvasSlice) => Partial<CanvasSlice>) => void,
   get: () => CanvasSlice
 ): CanvasSlice => ({
-  nodes: [
-    {
-      id: 'test-1',
-      type: 'custom',
-      position: { x: 250, y: 100 },
-      data: { 
-        label: 'Audience Segment', 
-        type: 'Stage 1', 
-        description: '3 Triggers',
-        color: 'gray',
-        shape: 'rounded',
-        expanded: false
-      },
-    }
-  ],
+  nodes: [],
   edges: [],
   past: [],
   future: [],
@@ -91,8 +82,10 @@ export const createCanvasSlice = (
   isSearchOpen: false,
   searchQuery: '',
   currentWorkflowId: null,
-  workflowName: 'Synapse Workflow',
+  workflowName: 'Untitled Workflow',
   isAIBuilderOpen: false,
+  saveStatus: 'idle',
+  setSaveStatus: (status) => set(() => ({ saveStatus: status })),
   setAIBuilderOpen: (isOpen) => set(() => ({ isAIBuilderOpen: isOpen })),
   dialog: {
     isOpen: false,
@@ -118,7 +111,8 @@ export const createCanvasSlice = (
         past: newPast,
         future: [{ nodes: state.nodes, edges: state.edges }, ...state.future],
         nodes: previous.nodes,
-        edges: previous.edges
+        edges: previous.edges,
+        saveStatus: 'idle'
       };
     });
   },
@@ -131,14 +125,15 @@ export const createCanvasSlice = (
         past: [...state.past, { nodes: state.nodes, edges: state.edges }],
         future: newFuture,
         nodes: next.nodes,
-        edges: next.edges
+        edges: next.edges,
+        saveStatus: 'idle'
       };
     });
   },
   onNodesChange: (changes: NodeChange[]) => {
     set((state) => {
       const isSignificantChange = changes.some(c => c.type === 'remove' || c.type === 'add');
-      const newState = { nodes: applyNodeChanges(changes, state.nodes) };
+      const newState = { nodes: applyNodeChanges(changes, state.nodes), saveStatus: 'idle' as const };
       if (isSignificantChange) {
         return {
           ...newState,
@@ -152,7 +147,7 @@ export const createCanvasSlice = (
   onEdgesChange: (changes: EdgeChange[]) => {
     set((state) => {
       const isSignificantChange = changes.some(c => c.type === 'remove' || c.type === 'add');
-      const newState = { edges: applyEdgeChanges(changes, state.edges) };
+      const newState = { edges: applyEdgeChanges(changes, state.edges), saveStatus: 'idle' as const };
       if (isSignificantChange) {
         return {
           ...newState,
@@ -166,7 +161,7 @@ export const createCanvasSlice = (
   onConnect: (connection: Connection) => {
     set((state) => {
       state.saveHistory();
-      return { edges: addEdge(connection, state.edges) };
+      return { edges: addEdge(connection, state.edges), saveStatus: 'idle' };
     });
   },
   addNode: (node: Node) => {
@@ -186,14 +181,15 @@ export const createCanvasSlice = (
         }
       }
 
-      return { nodes: [...state.nodes, newNode], edges: newEdges };
+      return { nodes: [...state.nodes, newNode], edges: newEdges, saveStatus: 'idle' };
     });
   },
   addGhostNode: (node: Node) => {
     set((state) => {
       state.saveHistory();
       return { 
-        nodes: [...state.nodes, { ...node, data: { ...node.data, variant: 'ghost', expanded: false } }] 
+        nodes: [...state.nodes, { ...node, data: { ...node.data, variant: 'ghost', expanded: false } }],
+        saveStatus: 'idle'
       };
     });
   },
@@ -203,7 +199,8 @@ export const createCanvasSlice = (
       return {
         nodes: state.nodes.map(node => 
           node.id === id ? { ...node, data: { ...node.data, ...newData } } : node
-        )
+        ),
+        saveStatus: 'idle'
       };
     });
   },
@@ -212,7 +209,8 @@ export const createCanvasSlice = (
       state.saveHistory();
       return {
         nodes: state.nodes.filter(n => n.id !== id),
-        edges: state.edges.filter(e => e.source !== id && e.target !== id)
+        edges: state.edges.filter(e => e.source !== id && e.target !== id),
+        saveStatus: 'idle'
       };
     });
   },
@@ -227,7 +225,7 @@ export const createCanvasSlice = (
         position: { x: nodeToClone.position.x + 50, y: nodeToClone.position.y + 50 },
         selected: false,
       };
-      return { nodes: [...state.nodes, newNode] };
+      return { nodes: [...state.nodes, newNode], saveStatus: 'idle' };
     });
   },
   expandAllNodes: (expand: boolean) => {
@@ -262,14 +260,16 @@ export const createCanvasSlice = (
 
       return {
         nodes: state.nodes.map(n => n.id === id ? { ...n, data: { ...n.data, variant: 'default' } } : n),
-        edges: newEdges
+        edges: newEdges,
+        saveStatus: 'idle'
       };
     });
   },
   dismissGhostNode: (id: string) => {
     set((state) => ({
       nodes: state.nodes.filter(n => n.id !== id),
-      edges: state.edges.filter(e => e.target !== id && e.source !== id)
+      edges: state.edges.filter(e => e.target !== id && e.source !== id),
+      saveStatus: 'idle'
     }));
   },
   setAddElementPopover: (data) => {
@@ -284,7 +284,7 @@ export const createCanvasSlice = (
     try {
       const data = JSON.parse(json);
       if (data.nodes && data.edges) {
-        set(() => ({ nodes: data.nodes, edges: data.edges, workflowName: data.name || 'Imported Workflow' }));
+        set(() => ({ nodes: data.nodes, edges: data.edges, workflowName: data.name || 'Imported Workflow', saveStatus: 'idle' }));
       }
     } catch (e) {
       console.error("Failed to parse workflow JSON", e);
@@ -295,15 +295,17 @@ export const createCanvasSlice = (
     return JSON.stringify({ nodes, edges, name: workflowName }, null, 2);
   },
   setCurrentWorkflowId: (id) => set(() => ({ currentWorkflowId: id })),
-  setWorkflowName: (name) => set(() => ({ workflowName: name })),
+  setWorkflowName: (name) => set(() => ({ workflowName: name, saveStatus: 'idle' })),
   resetWorkflow: () => {
     set(() => ({ 
       nodes: [], 
       edges: [], 
       past: [], 
       future: [],
-      workflowName: 'New Synapse',
+      workflowName: 'Untitled Workflow',
       addElementPopover: { isOpen: false, x: 0, y: 0 },
+      currentWorkflowId: null,
+      saveStatus: 'idle'
     }));
   },
   loadWorkflow: (id: string) => {
@@ -314,9 +316,11 @@ export const createCanvasSlice = (
         set(() => ({ 
           nodes: data.nodes || [], 
           edges: data.edges || [], 
-          workflowName: data.name || 'Untitled Synapse',
+          workflowName: data.name || 'Untitled Workflow',
           past: [], 
-          future: [] 
+          future: [],
+          currentWorkflowId: id,
+          saveStatus: 'saved'
         }));
       } catch (e) {
         console.error("Failed to load workflow", e);
@@ -324,5 +328,63 @@ export const createCanvasSlice = (
     } else {
       get().resetWorkflow();
     }
-  }
+  },
+  loadFromCloud: async (id: string) => {
+    set(() => ({ saveStatus: 'saving' }));
+    const { data, error } = await supabase
+      .from('workflows')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error || !data) {
+      console.error("Failed to load from cloud", error);
+      set(() => ({ saveStatus: 'error' }));
+      return;
+    }
+
+    set(() => ({
+      nodes: data.nodes || [],
+      edges: data.edges || [],
+      workflowName: data.name || 'Untitled Workflow',
+      currentWorkflowId: id,
+      saveStatus: 'saved',
+      past: [],
+      future: []
+    }));
+
+    if ((set as any).setVariables && data.variables) {
+      (set as any).setVariables(data.variables);
+    }
+  },
+  saveToCloud: async () => {
+    const { currentWorkflowId, nodes, edges, workflowName } = get();
+    if (!currentWorkflowId) return;
+
+    // Use the variable slice from the root store if possible, 
+    // but createCanvasSlice only has access to CanvasSlice.
+    // However, in useSynapseStore, set/get are for the full StoreState.
+    // Let's check how createCanvasSlice is called.
+    const variables = (get() as any).variables || [];
+
+    set(() => ({ saveStatus: 'saving' }));
+
+    const { error } = await supabase
+      .from('workflows')
+      .upsert({
+        id: currentWorkflowId,
+        name: workflowName,
+        nodes,
+        edges,
+        variables,
+        updated_at: new Date().toISOString()
+      });
+
+    if (error) {
+      console.error("Failed to save to cloud", error);
+      set(() => ({ saveStatus: 'error' }));
+    } else {
+      set(() => ({ saveStatus: 'saved' }));
+    }
+  },
 });

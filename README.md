@@ -21,6 +21,7 @@ Synapse is a modern, visual workflow planner and automation engine designed for 
 
 - **Frontend:** [React 19](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Vite](https://vitejs.dev/)
 - **State Management:** [Zustand](https://github.com/pmndrs/zustand)
+- **Database & Auth:** [Supabase](https://supabase.com/)
 - **Styling:** Vanilla CSS + [Framer Motion](https://www.framer.com/motion/)
 - **Graph Engine:** [@xyflow/react](https://reactflow.dev/) (React Flow)
 - **AI Integration:** NVIDIA NIM API (Llama 3.1 8B)
@@ -32,6 +33,7 @@ Synapse is a modern, visual workflow planner and automation engine designed for 
 
 - [Node.js](https://nodejs.org/) (v20 or higher)
 - npm or pnpm
+- A Supabase Project
 
 ### Installation
 
@@ -50,9 +52,31 @@ Synapse is a modern, visual workflow planner and automation engine designed for 
    Create a `.env` file in the root directory:
    ```env
    VITE_NVIDIA_NIM_API_KEY=your_api_key_here
+   VITE_SUPABASE_URL=your_supabase_project_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
    ```
 
-4. **Run the development server:**
+4. **Database Setup:**
+   Run the following SQL in your Supabase SQL Editor:
+   ```sql
+   create table workflows (
+     id uuid default gen_random_uuid() primary key,
+     user_id uuid references auth.users(id) on delete cascade,
+     name text not null default 'Untitled Workflow',
+     nodes jsonb default '[]',
+     edges jsonb default '[]',
+     variables jsonb default '[]',
+     created_at timestamptz default now(),
+     updated_at timestamptz default now()
+   );
+
+   alter table workflows enable row level security;
+
+   create policy "Users own their workflows" on workflows
+     for all using (auth.uid() = user_id);
+   ```
+
+5. **Run the development server:**
    ```bash
    npm run dev
    ```
