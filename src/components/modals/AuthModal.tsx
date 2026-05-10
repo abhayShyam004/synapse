@@ -149,7 +149,7 @@ export const AuthModal = () => {
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Abhay Sharma"
+                    placeholder="Abhay Shyam"
                     className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)] outline-none transition-all text-sm"
                   />
                 </div>
