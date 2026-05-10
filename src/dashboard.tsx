@@ -2,7 +2,7 @@ import { StrictMode, useState, useEffect, useRef } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import { Toaster, toast } from 'react-hot-toast'
-import { ArrowLeft, Folder, Clock, MoreVertical, Search, LogOut, Layout, Copy } from 'lucide-react'
+import { ArrowLeft, Folder, Clock, MoreVertical, Search, LogOut, Layout, Copy, Plus } from 'lucide-react'
 import { useSynapseStore } from './store/useSynapseStore'
 import { GlobalDialog } from './components/modals/GlobalDialog'
 import { AuthModal } from './components/modals/AuthModal'
@@ -129,6 +129,46 @@ const SynapsesPage = () => {
     toast.success('Signed out');
     setIsUserDropdownOpen(false);
     window.location.href = '/';
+  };
+
+  const createNewSynapse = async () => {
+    const id = crypto.randomUUID();
+    const newName = `New Synapse ${synapses.length + 1}`;
+    
+    if (user) {
+      const { error } = await supabase.from('workflows').insert({
+        id,
+        user_id: user.id,
+        name: newName,
+        nodes: [],
+        edges: [],
+        variables: []
+      });
+
+      if (error) {
+        toast.error('Failed to create synapse');
+        return;
+      }
+    } else {
+      const newList = [{
+        id,
+        name: newName,
+        updated_at: new Date().toISOString(),
+        nodes_count: 0
+      }, ...synapses];
+      setSynapses(newList);
+      localStorage.setItem('synapse-workflows-list', JSON.stringify(newList.map(w => ({
+        id: w.id,
+        name: w.name,
+        lastModified: 'Just now',
+        nodes: 0
+      }))));
+    }
+
+    toast.success('Synapse created!');
+    setTimeout(() => {
+      window.location.href = `/work/?id=${id}`;
+    }, 800);
   };
 
   const renameWorkflow = (e: React.MouseEvent, id: string, currentName: string) => {
@@ -456,6 +496,16 @@ const SynapsesPage = () => {
           </div>
         )}
       </main>
+
+      {/* Floating Action Button */}
+      <button 
+        onClick={createNewSynapse}
+        className="fixed bottom-8 right-8 w-14 h-14 rounded-full bg-[var(--accent)] text-white shadow-2xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center group z-50 overflow-hidden"
+        title="Create New Synapse"
+      >
+        <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <Plus size={28} strokeWidth={2.5} />
+      </button>
     </div>
   );
 };
