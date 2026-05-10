@@ -26,7 +26,17 @@ export const AuthModal = () => {
     });
 
     if (error) {
-      setError({ field: 'auth', message: error.message });
+      if (error.message.includes('Email not confirmed')) {
+        setError({ field: 'auth', message: 'Please confirm your email address before signing in. Check your inbox!' });
+      } else {
+        setError({ field: 'auth', message: error.message });
+      }
+      setLoading(false);
+      return;
+    }
+
+    if (data.user && !data.session) {
+      setError({ field: 'auth', message: 'Verification pending. Please check your email.' });
       setLoading(false);
       return;
     }
@@ -60,6 +70,13 @@ export const AuthModal = () => {
 
     if (error) {
       setError({ field: 'auth', message: error.message });
+      setLoading(false);
+      return;
+    }
+
+    if (data.user && !data.session) {
+      setError({ field: 'auth', message: 'Account created! Please check your email to verify your account.' });
+      toast.success('Check your email for verification!');
       setLoading(false);
       return;
     }
