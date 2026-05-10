@@ -1,4 +1,4 @@
-import { Toaster } from 'react-hot-toast';
+import { Toaster, toast } from 'react-hot-toast';
 import { WorkflowCanvas } from './components/canvas/WorkflowCanvas';
 import { LeftSidebar, MobileBottomNav } from './components/sidebar/LeftSidebar';
 import { TopToolbar } from './components/toolbar/TopToolbar';
@@ -65,6 +65,20 @@ function App() {
     const id = params.get('id');
     if (id) {
       setCurrentWorkflowId(id);
+    }
+
+    // Welcome toast for new users
+    if (params.get('welcome') === 'true') {
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        const fullName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'there';
+        const firstName = fullName.split(' ')[0];
+        toast.success(`Welcome to Synapse, ${firstName}! 🎉`, {
+          duration: 5000,
+          icon: '👋'
+        });
+        // Remove the param from URL without refreshing
+        window.history.replaceState({}, document.title, window.location.pathname);
+      });
     }
 
     return () => subscription.unsubscribe();

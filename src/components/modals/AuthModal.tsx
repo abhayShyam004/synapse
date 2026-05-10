@@ -28,11 +28,7 @@ export const AuthModal = () => {
     });
 
     if (error) {
-      if (error.message.includes('Email not confirmed')) {
-        setError({ field: 'auth', message: 'Please confirm your email address before signing in. Check your inbox!' });
-      } else {
-        setError({ field: 'auth', message: error.message });
-      }
+      setError({ field: 'auth', message: error.message });
       setLoading(false);
       return;
     }
@@ -61,7 +57,7 @@ export const AuthModal = () => {
       return;
     }
 
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -77,13 +73,15 @@ export const AuthModal = () => {
       return;
     }
 
-    // Success - Redirect to sign in and show warning
-    setSuccessMessage('Account created! Please check your email and click the confirmation link before signing in.');
-    toast.success('Verification email sent!');
-    setPassword('');
-    setConfirmPassword('');
-    setAuthModalOpen(true, 'signin');
+    // Success - Show green message and auto-redirect
+    setSuccessMessage('🎉 Account created! Welcome to Synapse.');
+    setUser(data.user);
     setLoading(false);
+
+    setTimeout(() => {
+      setAuthModalOpen(false);
+      window.location.href = '/work/?welcome=true';
+    }, 2000);
   };
 
   const handleForgotPassword = async () => {
@@ -138,9 +136,9 @@ export const AuthModal = () => {
 
         <div className="p-8">
           {successMessage && (
-            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
-              <Mail className="text-amber-500 shrink-0 mt-0.5" size={18} />
-              <p className="text-xs font-medium text-amber-800 leading-relaxed">
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
+              <Mail className="text-green-500 shrink-0 mt-0.5" size={18} />
+              <p className="text-xs font-bold text-green-700 leading-relaxed">
                 {successMessage}
               </p>
             </div>
