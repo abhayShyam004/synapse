@@ -361,11 +361,14 @@ export const createCanvasSlice = (
     const { currentWorkflowId, nodes, edges, workflowName } = get();
     if (!currentWorkflowId) return;
 
-    // Use the variable slice from the root store if possible, 
-    // but createCanvasSlice only has access to CanvasSlice.
-    // However, in useSynapseStore, set/get are for the full StoreState.
-    // Let's check how createCanvasSlice is called.
-    const variables = (get() as any).variables || [];
+    const state = get() as any;
+    const variables = state.variables || [];
+    const userId = state.user?.id;
+
+    if (!userId) {
+      console.warn("Cannot save to cloud: No user ID found");
+      return;
+    }
 
     set(() => ({ saveStatus: 'saving' }));
 
@@ -373,6 +376,7 @@ export const createCanvasSlice = (
       .from('workflows')
       .upsert({
         id: currentWorkflowId,
+        user_id: userId,
         name: workflowName,
         nodes,
         edges,
@@ -386,5 +390,4 @@ export const createCanvasSlice = (
     } else {
       set(() => ({ saveStatus: 'saved' }));
     }
-  },
-});
+  },});
