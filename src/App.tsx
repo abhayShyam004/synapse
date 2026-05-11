@@ -33,7 +33,6 @@ function App() {
     setCurrentWorkflowId,
     loadFromCloud,
     saveToCloud,
-    resetWorkflow,
     nodes,
     edges,
     workflowName,
@@ -66,10 +65,6 @@ function App() {
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
     if (id) {
-      // Clear existing state immediately if switching workflows
-      if (id !== useSynapseStore.getState().currentWorkflowId) {
-        resetWorkflow();
-      }
       setCurrentWorkflowId(id);
     }
 

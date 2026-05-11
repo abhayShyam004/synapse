@@ -28,11 +28,13 @@ export const useSynapseStore = create<StoreState>()(
     storeCreator,
     { 
       name: 'synapse-storage',
-      partialize: (state) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { user, session, isAuthModalOpen, authModalView, ...rest } = state;
-        return rest;
-      }
+      partialize: (state) => ({
+        accentColor: state.accentColor,
+        canvasBackground: state.canvasBackground,
+        ghostCardsEnabled: state.ghostCardsEnabled,
+        snapToGrid: state.snapToGrid,
+        showMinimap: state.showMinimap,
+      })
     }
   )
 );
