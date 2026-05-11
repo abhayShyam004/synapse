@@ -19,6 +19,7 @@ const SynapsesPage = () => {
   const { openDialog, accentColor, updateSetting, user, setUser, setSession, setAuthModalOpen } = useSynapseStore();
   const [synapses, setSynapses] = useState<SynapseMetadata[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState<string | null>(null);
@@ -49,6 +50,7 @@ const SynapsesPage = () => {
       setSession(session);
       const u = session?.user ?? null;
       setUser(u);
+      setIsAuthLoading(false);
       if (!u) {
         const params = new URLSearchParams(window.location.search);
         if (params.get('auth') === 'signin') {
@@ -60,6 +62,7 @@ const SynapsesPage = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      setIsAuthLoading(false);
     });
 
     const handleClickOutside = (event: MouseEvent) => {
@@ -88,6 +91,8 @@ const SynapsesPage = () => {
 
   // Load synapses from Supabase or localStorage
   useEffect(() => {
+    if (isAuthLoading) return;
+
     const loadSynapses = async () => {
       setLoading(true);
       if (user) {
@@ -122,7 +127,7 @@ const SynapsesPage = () => {
     };
 
     loadSynapses();
-  }, [user]);
+  }, [user, isAuthLoading]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();

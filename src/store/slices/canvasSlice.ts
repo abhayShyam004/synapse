@@ -370,7 +370,12 @@ export const createCanvasSlice = (
 
     const state = get() as any;
     const variables = state.variables || [];
-    const userId = state.user?.id;
+    let userId = state.user?.id;
+
+    if (!userId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      userId = user?.id;
+    }
 
     if (!userId) {
       console.warn("Cannot save to cloud: No user ID found");

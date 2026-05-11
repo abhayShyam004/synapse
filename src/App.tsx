@@ -8,7 +8,7 @@ import { AIBuilderModal } from './components/modals/AIBuilderModal';
 import { AuthModal } from './components/modals/AuthModal';
 import { SearchOverlay } from './components/canvas/SearchOverlay';
 import { useSynapseStore } from './store/useSynapseStore';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from './lib/supabase';
 
 const ACCENT_COLORS = {
@@ -37,8 +37,11 @@ function App() {
     edges,
     workflowName,
     setAuthModalOpen,
-    setSaveStatus
+    setSaveStatus,
+    resetWorkflow
   } = useSynapseStore();
+
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   useEffect(() => {
     // Initial load from localStorage if present
@@ -54,17 +57,22 @@ function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      setIsAuthLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      setIsAuthLoading(false);
     });
 
     // Load workflow if ID in URL
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
     if (id) {
+      if (id !== useSynapseStore.getState().currentWorkflowId) {
+        resetWorkflow();
+      }
       setCurrentWorkflowId(id);
     }
 
@@ -87,22 +95,22 @@ function App() {
 
   // Fetch from cloud if ID and User are present
   useEffect(() => {
-    if (currentWorkflowId) {
-      if (user) {
-        loadFromCloud(currentWorkflowId);
-      } else {
-        // Guest mode load from local storage
-        const saved = localStorage.getItem(`synapse-workflow-${currentWorkflowId}`);
-        if (saved) {
-          useSynapseStore.getState().loadWorkflow(currentWorkflowId);
-        }
+    if (isAuthLoading || !currentWorkflowId) return;
+
+    if (user) {
+      loadFromCloud(currentWorkflowId);
+    } else {
+      // Guest mode load from local storage
+      const saved = localStorage.getItem(`synapse-workflow-${currentWorkflowId}`);
+      if (saved) {
+        useSynapseStore.getState().loadWorkflow(currentWorkflowId);
       }
     }
-  }, [currentWorkflowId, user]);
+  }, [currentWorkflowId, user, isAuthLoading]);
 
   // Auto-save logic
   useEffect(() => {
-    if (!currentWorkflowId || useSynapseStore.getState().isInitialLoading) return;
+    if (isAuthLoading || !currentWorkflowId || useSynapseStore.getState().isInitialLoading) return;
 
     const timer = setTimeout(() => {
       if (user) {
@@ -116,7 +124,7 @@ function App() {
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [nodes, edges, workflowName, currentWorkflowId, user]);
+  }, [nodes, edges, workflowName, currentWorkflowId, user, isAuthLoading]);
 
   useEffect(() => {
     const root = document.documentElement;

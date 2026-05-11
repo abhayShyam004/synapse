@@ -34,6 +34,14 @@ export const useSynapseStore = create<StoreState>()(
         ghostCardsEnabled: state.ghostCardsEnabled,
         snapToGrid: state.snapToGrid,
         showMinimap: state.showMinimap,
+      }),
+      merge: (persistedState: any, currentState) => ({
+        ...currentState,
+        accentColor: persistedState?.accentColor ?? currentState.accentColor,
+        canvasBackground: persistedState?.canvasBackground ?? currentState.canvasBackground,
+        ghostCardsEnabled: persistedState?.ghostCardsEnabled ?? currentState.ghostCardsEnabled,
+        snapToGrid: persistedState?.snapToGrid ?? currentState.snapToGrid,
+        showMinimap: persistedState?.showMinimap ?? currentState.showMinimap,
       })
     }
   )
