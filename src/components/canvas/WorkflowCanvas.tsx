@@ -25,49 +25,11 @@ export const WorkflowCanvas = () => {
     ghostCardsEnabled, addGhostNode, isCanvasLocked, 
     undo, redo, deleteNode,
     snapToGrid, showMinimap, canvasBackground,
-    searchQuery, setSearchOpen, setAddElementPopover,
-    loadWorkflow, currentWorkflowId, setCurrentWorkflowId,
-    workflowName
+    searchQuery, setSearchOpen, setAddElementPopover
   } = useSynapseStore();
 
   const { fitView } = useReactFlow();
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
-
-  // Load workflow based on URL ID
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get('id');
-    if (id && id !== currentWorkflowId) {
-      setCurrentWorkflowId(id);
-      loadWorkflow(id);
-    }
-  }, [currentWorkflowId, loadWorkflow, setCurrentWorkflowId]);
-
-  // Periodic saving for the current workflow
-  useEffect(() => {
-    if (!currentWorkflowId) return;
-    const save = () => {
-      // Save canvas data
-      localStorage.setItem(`synapse-workflow-${currentWorkflowId}`, JSON.stringify({ nodes, edges, name: workflowName }));
-      
-      // Sync metadata to dashboard list
-      const savedList = localStorage.getItem('synapse-workflows-list');
-      if (savedList) {
-        const list = JSON.parse(savedList);
-        const updatedList = list.map((w: any) => 
-          w.id === currentWorkflowId 
-            ? { ...w, name: workflowName, nodes: nodes.length, lastModified: 'Just now' } 
-            : w
-        );
-        localStorage.setItem('synapse-workflows-list', JSON.stringify(updatedList));
-      }
-    };
-    const interval = setInterval(save, 2000); // Save every 2 seconds
-    return () => {
-      clearInterval(interval);
-      save(); // Final save on unmount
-    };
-  }, [currentWorkflowId, nodes, edges, workflowName]);
 
   useEffect(() => {
     fitView();

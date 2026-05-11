@@ -55,6 +55,8 @@ export interface CanvasSlice {
   setAIBuilderOpen: (isOpen: boolean) => void;
   saveStatus: 'idle' | 'saving' | 'saved' | 'error';
   setSaveStatus: (status: CanvasSlice['saveStatus']) => void;
+  isInitialLoading: boolean;
+  setInitialLoading: (loading: boolean) => void;
   dialog: {
     isOpen: boolean;
     title: string;
@@ -85,6 +87,8 @@ export const createCanvasSlice = (
   workflowName: 'Untitled Workflow',
   isAIBuilderOpen: false,
   saveStatus: 'idle',
+  isInitialLoading: false,
+  setInitialLoading: (loading) => set(() => ({ isInitialLoading: loading })),
   setSaveStatus: (status) => set(() => ({ saveStatus: status })),
   setAIBuilderOpen: (isOpen) => set(() => ({ isAIBuilderOpen: isOpen })),
   dialog: {
@@ -305,7 +309,8 @@ export const createCanvasSlice = (
       workflowName: 'Untitled Workflow',
       addElementPopover: { isOpen: false, x: 0, y: 0 },
       currentWorkflowId: null,
-      saveStatus: 'idle'
+      saveStatus: 'idle',
+      isInitialLoading: false
     }));
   },
   loadWorkflow: (id: string) => {
@@ -320,7 +325,8 @@ export const createCanvasSlice = (
           past: [], 
           future: [],
           currentWorkflowId: id,
-          saveStatus: 'saved'
+          saveStatus: 'saved',
+          isInitialLoading: false
         }));
       } catch (e) {
         console.error("Failed to load workflow", e);
@@ -330,7 +336,7 @@ export const createCanvasSlice = (
     }
   },
   loadFromCloud: async (id: string) => {
-    set(() => ({ saveStatus: 'saving' }));
+    set(() => ({ isInitialLoading: true, saveStatus: 'saving' }));
     const { data, error } = await supabase
       .from('workflows')
       .select('*')
@@ -339,7 +345,7 @@ export const createCanvasSlice = (
     
     if (error || !data) {
       console.error("Failed to load from cloud", error);
-      set(() => ({ saveStatus: 'error' }));
+      set(() => ({ saveStatus: 'error', isInitialLoading: false }));
       return;
     }
 
@@ -350,7 +356,8 @@ export const createCanvasSlice = (
       currentWorkflowId: id,
       saveStatus: 'saved',
       past: [],
-      future: []
+      future: [],
+      isInitialLoading: false
     }));
 
     if ((set as any).setVariables && data.variables) {
@@ -358,8 +365,8 @@ export const createCanvasSlice = (
     }
   },
   saveToCloud: async () => {
-    const { currentWorkflowId, nodes, edges, workflowName } = get();
-    if (!currentWorkflowId) return;
+    const { currentWorkflowId, nodes, edges, workflowName, isInitialLoading } = get();
+    if (!currentWorkflowId || isInitialLoading) return;
 
     const state = get() as any;
     const variables = state.variables || [];

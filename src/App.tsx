@@ -33,10 +33,12 @@ function App() {
     setCurrentWorkflowId,
     loadFromCloud,
     saveToCloud,
+    resetWorkflow,
     nodes,
     edges,
     workflowName,
-    setAuthModalOpen
+    setAuthModalOpen,
+    setSaveStatus
   } = useSynapseStore();
 
   useEffect(() => {
@@ -64,6 +66,10 @@ function App() {
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
     if (id) {
+      // Clear existing state immediately if switching workflows
+      if (id !== useSynapseStore.getState().currentWorkflowId) {
+        resetWorkflow();
+      }
       setCurrentWorkflowId(id);
     }
 
@@ -86,20 +92,22 @@ function App() {
 
   // Fetch from cloud if ID and User are present
   useEffect(() => {
-    if (currentWorkflowId && user) {
-      loadFromCloud(currentWorkflowId);
-    } else if (currentWorkflowId && !user) {
-      // Guest mode load from local storage
-      const saved = localStorage.getItem(`synapse-workflow-${currentWorkflowId}`);
-      if (saved) {
-        useSynapseStore.getState().loadWorkflow(currentWorkflowId);
+    if (currentWorkflowId) {
+      if (user) {
+        loadFromCloud(currentWorkflowId);
+      } else {
+        // Guest mode load from local storage
+        const saved = localStorage.getItem(`synapse-workflow-${currentWorkflowId}`);
+        if (saved) {
+          useSynapseStore.getState().loadWorkflow(currentWorkflowId);
+        }
       }
     }
   }, [currentWorkflowId, user]);
 
   // Auto-save logic
   useEffect(() => {
-    if (!currentWorkflowId) return;
+    if (!currentWorkflowId || useSynapseStore.getState().isInitialLoading) return;
 
     const timer = setTimeout(() => {
       if (user) {
@@ -108,7 +116,7 @@ function App() {
         // Save to local storage for guest
         const data = { nodes, edges, name: workflowName };
         localStorage.setItem(`synapse-workflow-${currentWorkflowId}`, JSON.stringify(data));
-        useSynapseStore.getState().setSaveStatus('saved');
+        setSaveStatus('saved');
       }
     }, 2000);
 
