@@ -19,6 +19,7 @@ export const TopToolbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
+  const [isAllExpanded, setIsAllExpanded] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -44,6 +45,12 @@ export const TopToolbar = () => {
     toast.success('Signed out');
     setIsUserDropdownOpen(false);
     window.location.href = '/';
+  };
+
+  const handleToggleExpand = () => {
+    const nextState = !isAllExpanded;
+    setIsAllExpanded(nextState);
+    expandAllNodes(nextState);
   };
 
   const getSaveStatusDisplay = () => {
@@ -111,8 +118,8 @@ export const TopToolbar = () => {
         <div className="flex items-center gap-2 md:gap-3 shrink-0">
           {/* Desktop Only Actions */}
           <div className="hidden md:flex items-center gap-3">
-            <button onClick={() => expandAllNodes(true)} className="text-sm font-medium text-gray-500 hover:text-[var(--accent)] transition-colors">
-              Expand All
+            <button onClick={handleToggleExpand} className="text-sm font-medium text-gray-500 hover:text-[var(--accent)] transition-colors">
+              {isAllExpanded ? 'Collapse All' : 'Expand All'}
             </button>
             
             <div className="w-px h-6 bg-gray-200 mx-1" />
@@ -199,10 +206,10 @@ export const TopToolbar = () => {
             </div>
           )}
           <button 
-            onClick={() => { expandAllNodes(true); setIsMobileMenuOpen(false); }} 
+            onClick={() => { handleToggleExpand(); setIsMobileMenuOpen(false); }} 
             className="text-left px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg"
           >
-            Expand All Nodes
+            {isAllExpanded ? 'Collapse All Nodes' : 'Expand All Nodes'}
           </button>
           {!user && (
             <button 
