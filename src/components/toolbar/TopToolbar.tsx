@@ -1,16 +1,14 @@
 import { useSynapseStore } from '../../store/useSynapseStore';
 import toast from 'react-hot-toast';
-import { ArrowLeft, ChevronDown, Sparkles, Settings as SettingsIcon, Menu, X, LogOut, Layout } from 'lucide-react';
+import { ArrowLeft, Sparkles, Settings as SettingsIcon, Menu, X, LogOut, Layout } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-
 export const TopToolbar = () => {
   const { 
     ghostCardsEnabled, 
     toggleGhostCards, 
     expandAllNodes, 
-    setMetricsPopover, 
     toggleSettingsModal, 
     workflowName, 
     setWorkflowName,
@@ -40,15 +38,6 @@ export const TopToolbar = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const handleTestRun = () => {
-    toast.success('Test run started');
-    setIsMobileMenuOpen(false);
-  };
-
-  const handlePublish = () => {
-    toast.success('Workflow activated!');
-  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -120,31 +109,12 @@ export const TopToolbar = () => {
         </div>
 
         <div className="flex items-center gap-2 md:gap-3 shrink-0">
-          <button 
-            onClick={handlePublish} 
-            style={{ backgroundColor: 'var(--accent)' }}
-            className="flex items-center gap-1 text-xs md:text-sm font-semibold text-white hover:brightness-90 px-3 py-1.5 md:px-4 rounded-md transition-all shadow-sm shadow-cyan-100"
-          >
-            Publish <ChevronDown size={14} className="text-white/80 hidden sm:block" />
-          </button>
-
           {/* Desktop Only Actions */}
           <div className="hidden md:flex items-center gap-3">
             <button onClick={() => expandAllNodes(true)} className="text-sm font-medium text-gray-500 hover:text-[var(--accent)] transition-colors">
               Expand All
             </button>
             
-            <button onClick={() => setMetricsPopover(true)} className="flex items-center gap-1 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-[#0078D4] px-2 py-1.5 rounded-md border border-transparent hover:border-gray-200 transition-all">
-              Metrics <ChevronDown size={14} className="text-gray-400" />
-            </button>
-
-            <button 
-              onClick={handleTestRun}
-              className="text-sm font-medium text-[#0078D4] border border-[#0078D4] px-4 py-1.5 rounded-md hover:bg-blue-50 transition-colors"
-            >
-              Test Run
-            </button>
-
             <div className="w-px h-6 bg-gray-200 mx-1" />
 
             <button 
@@ -233,18 +203,6 @@ export const TopToolbar = () => {
             className="text-left px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg"
           >
             Expand All Nodes
-          </button>
-          <button 
-            onClick={() => { setMetricsPopover(true); setIsMobileMenuOpen(false); }} 
-            className="text-left px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg"
-          >
-            Metrics
-          </button>
-          <button 
-            onClick={handleTestRun} 
-            className="text-left px-4 py-3 text-sm font-medium text-[#0078D4] hover:bg-blue-50 rounded-lg"
-          >
-            Test Run
           </button>
           {!user && (
             <button 
