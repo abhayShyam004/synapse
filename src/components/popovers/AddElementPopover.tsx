@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useSynapseStore } from '../../store/useSynapseStore';
-import { Search, Zap, Diamond, Settings2, Repeat, CheckSquare, Clock, Sparkles, Variable, StickyNote, X, Plus, Trash2, Loader2 } from 'lucide-react';
+import { Search, Zap, Diamond, Settings2, CheckSquare, Sparkles, X, Plus, Trash2, Loader2 } from 'lucide-react';
 import { fetchAISuggestion } from '../../lib/ai/nvidiaNim';
 import toast from 'react-hot-toast';
+import { useReactFlow } from '@xyflow/react';
 
 export const AddElementPopover = () => {
   const { addElementPopover, setAddElementPopover, addNode, variables, addVariable, removeVariable } = useSynapseStore();
+  const { screenToFlowPosition, getViewport } = useReactFlow();
   const [activeTab, setActiveTab] = useState<'elements' | 'variables'>('elements');
   const [varKey, setVarKey] = useState('');
   const [varValue, setVarValue] = useState('');
@@ -20,10 +22,22 @@ export const AddElementPopover = () => {
   };
 
   const handleAdd = (label: string, type: string, color: string) => {
+    let position;
+    if (addElementPopover.edgeId) {
+      position = screenToFlowPosition({ x: addElementPopover.x, y: addElementPopover.y });
+    } else {
+      const { x, y, zoom } = getViewport();
+      // Calculate center of current viewport in flow space
+      position = {
+        x: -x / zoom + (window.innerWidth / 2) / zoom - 110, // -110 is half of node width
+        y: -y / zoom + (window.innerHeight / 2) / zoom - 20,
+      };
+    }
+
     addNode({
       id: crypto.randomUUID(),
       type: 'custom',
-      position: { x: 250, y: 250 }, // Ideally centered on canvas, but let's just use defaults unless edgeId is set
+      position,
       data: { label, type, description: 'New ' + type, color, shape: 'rounded', expanded: true },
     });
     handleClose();
@@ -46,10 +60,22 @@ export const AddElementPopover = () => {
       const result = await fetchAISuggestion(prompt);
       const cleaned = result.replace(/```json\n?|\n?```/g, '').trim();
       const parsed = JSON.parse(cleaned);
+
+      let position;
+      if (addElementPopover.edgeId) {
+        position = screenToFlowPosition({ x: addElementPopover.x, y: addElementPopover.y });
+      } else {
+        const { x, y, zoom } = getViewport();
+        position = {
+          x: -x / zoom + (window.innerWidth / 2) / zoom - 110,
+          y: -y / zoom + (window.innerHeight / 2) / zoom - 20,
+        };
+      }
+
       addNode({
         id: crypto.randomUUID(),
         type: 'custom',
-        position: { x: 250, y: 250 },
+        position,
         data: { label: parsed.name, type: 'AI Prompt', description: parsed.description, color: 'purple', shape: 'rounded', expanded: true },
       });
       setAiPrompt('');
@@ -63,20 +89,16 @@ export const AddElementPopover = () => {
   };
 
   const elements = [
-    { category: 'Triggers', items: [{ label: 'Trigger Node', type: 'Trigger', color: 'green', icon: Zap }] },
-    { category: 'Logic', items: [
-      { label: 'Decision', type: 'Decision', color: 'gray', icon: Diamond },
-      { label: 'Condition', type: 'Condition', color: 'orange', icon: Settings2 },
-      { label: 'Loop', type: 'Loop', color: 'pink', icon: Repeat }
+    { category: 'Planning', items: [
+      { label: 'Goal', type: 'Goal', color: 'purple', icon: Sparkles },
+      { label: 'Milestone', type: 'Milestone', color: 'orange', icon: Diamond }
     ]},
-    { category: 'Actions', items: [
+    { category: 'Execution', items: [
       { label: 'Task', type: 'Task', color: 'blue', icon: CheckSquare },
-      { label: 'Timer', type: 'Timer', color: 'amber', icon: Clock }
+      { label: 'Practice', type: 'Practice', color: 'green', icon: Zap }
     ]},
-    { category: 'AI', items: [{ label: 'AI Prompt', type: 'AI Prompt', color: 'purple', icon: Sparkles }] },
-    { category: 'Data', items: [
-      { label: 'Variable', type: 'Variable', color: 'teal', icon: Variable },
-      { label: 'Note', type: 'Note', color: 'gray', icon: StickyNote }
+    { category: 'Other', items: [
+      { label: 'Custom', type: 'Custom', color: 'gray', icon: Settings2 }
     ]}
   ];
 
