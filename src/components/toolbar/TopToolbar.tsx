@@ -55,9 +55,9 @@ export const TopToolbar = () => {
 
   const getSaveStatusDisplay = () => {
     switch (saveStatus) {
-      case 'saving': return <span className="text-[10px] font-medium text-gray-400 animate-pulse">Saving...</span>;
-      case 'saved': return <span className="text-[10px] font-medium text-green-500">Saved ✓</span>;
-      case 'error': return <span className="text-[10px] font-medium text-red-500">⚠ Save failed</span>;
+      case 'saving': return <span className="text-[9px] md:text-[10px] font-bold bg-gray-50 text-gray-400 px-1.5 py-0.5 rounded-sm uppercase tracking-widest border border-gray-200 shrink-0 self-center animate-pulse">Saving...</span>;
+      case 'saved': return <span className="text-[9px] md:text-[10px] font-bold bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded-sm uppercase tracking-widest border border-emerald-200 shrink-0 self-center">Saved ✓</span>;
+      case 'error': return <span className="text-[9px] md:text-[10px] font-bold bg-red-50 text-red-500 px-1.5 py-0.5 rounded-sm uppercase tracking-widest border border-red-200 shrink-0 self-center">⚠ Save Failed</span>;
       default: return null;
     }
   };
@@ -104,14 +104,9 @@ export const TopToolbar = () => {
                   {workflowName || 'Untitled Workflow'}
                 </button>
               )}
-              <div className="px-1 -mt-0.5 h-3">
-                {getSaveStatusDisplay()}
-              </div>
             </div>
 
-            <span className="text-[9px] md:text-[10px] font-bold bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded-sm uppercase tracking-widest border border-gray-200 shrink-0 self-center">
-              Draft
-            </span>
+            {getSaveStatusDisplay()}
           </div>
         </div>
 
