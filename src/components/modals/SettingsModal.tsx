@@ -16,7 +16,7 @@ export const SettingsModal = () => {
   const [activeTab, setActiveTab] = useState<'general' | 'canvas' | 'appearance' | 'shortcuts'>('general');
 
   if (!isSettingsOpen) return null;
-
+  const tabs = [
     { id: 'general', label: 'General', icon: Settings },
     { id: 'canvas', label: 'Canvas', icon: Monitor },
     { id: 'appearance', label: 'Appearance', icon: Palette },
