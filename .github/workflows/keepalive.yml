@@ -1,0 +1,29 @@
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs once a day at midnight UTC
+  workflow_dispatch: # Allows you to run it manually from the Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase Database
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          echo "Pinging Supabase to keep it awake..."
+          RESPONSE_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "apikey: $SUPABASE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_KEY" \
+            "$SUPABASE_URL/rest/v1/workflows?select=id&limit=1")
+          
+          echo "Response code: $RESPONSE_CODE"
+          if [ "$RESPONSE_CODE" -eq 200 ]; then
+            echo "Successfully pinged Supabase!"
+          else
+            echo "Failed to ping Supabase. Ensure your secrets are correct."
+            exit 1
+          fi

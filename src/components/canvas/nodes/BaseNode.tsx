@@ -3,7 +3,7 @@ import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
 import { clsx } from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSynapseStore } from '../../../store/useSynapseStore';
-import { ChevronDown, Plus, Pencil, Sparkles, Check, X } from 'lucide-react';
+import { ChevronDown, Plus, Pencil, Sparkles, Check, X, Calendar, ExternalLink } from 'lucide-react';
 
 export interface BaseNodeData {
   label: string;
@@ -14,19 +14,57 @@ export interface BaseNodeData {
   variant?: 'default' | 'ghost';
   expanded?: boolean;
   sourceNodeId?: string;
+  checklist?: { id: string; text: string; completed: boolean }[];
+  customFields?: { id: string; key: string; value: string }[];
+  customTypeLabel?: string;
+  url?: string;
+  markdown?: string;
+  completed?: boolean;
   [key: string]: unknown;
 }
 
 export type BaseNodeProps = Node<BaseNodeData, 'custom'>;
 
 export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
-  const { acceptGhostNode, dismissGhostNode, updateNode, setAddElementPopover, setNodeSettingsPopover, edges } = useSynapseStore();
+  const { acceptGhostNode, dismissGhostNode, updateNode, setAddElementPopover, setNodeSettingsPopover, edges, nodes } = useSynapseStore();
   const [isDismissing, setIsDismissing] = useState(false);
   
   const isGhost = data.variant === 'ghost';
   const isExpanded = data.expanded === true; // Default to collapsed
 
   const connectedEdgesCount = edges.filter(e => e.source === id || e.target === id).length;
+
+  // Calculate Progress for Goals/Milestones based on their children's checklists
+  let progress = 0;
+  let hasChecklistItems = false;
+  if (data.type === 'Goal' || data.type === 'Milestone') {
+    const childNodeIds = edges.filter(e => e.source === id).map(e => e.target);
+    const childNodes = nodes.filter(n => childNodeIds.includes(n.id));
+    
+    let totalItems = 0;
+    let completedItems = 0;
+    
+    childNodes.forEach(child => {
+      if (child.data.checklist && child.data.checklist.length > 0) {
+        totalItems += child.data.checklist.length;
+        completedItems += child.data.checklist.filter((item: any) => item.completed).length;
+      }
+    });
+    
+    hasChecklistItems = totalItems > 0;
+    if (hasChecklistItems) {
+      progress = Math.round((completedItems / totalItems) * 100);
+    }
+  }
+
+  const toggleChecklistItem = (e: React.MouseEvent, itemId: string) => {
+    e.stopPropagation();
+    if (!data.checklist) return;
+    const newChecklist = data.checklist.map((item: any) => 
+      item.id === itemId ? { ...item, completed: !item.completed } : item
+    );
+    updateNode(id, { checklist: newChecklist });
+  };
 
   const toggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -56,6 +94,7 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
     data.type === 'Milestone' ? '#F59E0B' :
     data.type === 'Task' ? '#3B82F6' :
     data.type === 'Practice' ? '#10B981' :
+    data.type === 'Checklist' ? '#0D9488' :
     data.type === 'Custom' ? '#4B5563' :
     '#4B5563';
 
@@ -84,6 +123,21 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
     shape === 'rounded' ? 'rounded-[16px]' :
     'rounded-[8px]';
 
+  const isDueSoon = () => {
+    if (!data.dueDate) return false;
+    const due = new Date(data.dueDate as string);
+    const now = new Date();
+    const diff = due.getTime() - now.getTime();
+    return diff > 0 && diff < 3 * 24 * 60 * 60 * 1000; // Less than 3 days
+  };
+
+  const isOverdue = () => {
+    if (!data.dueDate) return false;
+    const due = new Date(data.dueDate as string);
+    const now = new Date();
+    return due.getTime() < now.getTime();
+  };
+
   return (
     <motion.div 
       initial={isGhost ? { opacity: 0.2 } : { scale: 0.9, opacity: 0 }}
@@ -100,6 +154,18 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
         borderRadius
       )}
     >
+      {data.dueDate && (
+        <div className={clsx(
+          "absolute -top-2 -right-2 z-30 px-2 py-0.5 rounded-full text-[9px] font-bold flex items-center gap-1 shadow-sm border",
+          isOverdue() ? "bg-red-100 text-red-600 border-red-200" :
+          isDueSoon() ? "bg-amber-100 text-amber-600 border-amber-200" :
+          "bg-white text-gray-500 border-gray-200"
+        )}>
+          <Calendar size={10} />
+          {new Date(data.dueDate as string).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+        </div>
+      )}
+
       {/* Header Bar */}
       <div 
         className={clsx(`text-white px-3 md:px-4 py-2 md:py-2.5 h-[52px] md:h-[60px] flex flex-col justify-center relative cursor-pointer group/header overflow-hidden`,
@@ -108,9 +174,16 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
         style={{ backgroundColor: headerBgColor }}
         onClick={toggleExpand}
       >        <div className="flex items-center justify-between">
-          <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest opacity-80 leading-none mb-1">
-            {data.type || 'Stage'}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest opacity-80 leading-none mb-1">
+              {data.customTypeLabel ? (data.customTypeLabel as string) : (data.type || 'Stage')}
+            </span>
+            {(data.type === 'Goal' || data.type === 'Milestone') && hasChecklistItems && (
+              <span className="text-[8px] font-bold bg-black/10 px-1.5 py-0.5 rounded-full mb-1">
+                {progress}%
+              </span>
+            )}
+          </div>
           {!isGhost && (
             <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
               <ChevronDown size={16} className="opacity-80 md:w-[18px] md:h-[18px]" />
@@ -120,6 +193,15 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
         <span className="font-bold text-[13px] md:text-sm leading-none truncate pr-6">
           {data.label || 'New Node'}
         </span>
+        
+        {(data.type === 'Goal' || data.type === 'Milestone') && hasChecklistItems && (
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/10">
+            <div 
+              className="h-full bg-white transition-all duration-500 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        )}
         
         {isGhost && (
           <div className="absolute top-1 left-1/2 -translate-x-1/2 bg-white/20 text-white px-2 py-0.5 rounded-full text-[8px] font-bold flex items-center gap-1 border border-white/20 whitespace-nowrap z-10">
@@ -142,6 +224,65 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
               {data.description ? (
                 <p className="text-xs text-gray-500 leading-relaxed mb-4">{data.description}</p>
               ) : null}
+
+
+
+              {data.type === 'Link' && data.url && (
+                <a 
+                  href={data.url as string}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between bg-pink-50 border border-pink-100 p-2 rounded-lg text-xs font-bold text-pink-600 hover:bg-pink-100 transition-colors mb-4 group/link"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <span className="truncate pr-2">{(data.url as string).replace(/^https?:\/\//, '')}</span>
+                  <ExternalLink size={14} className="group-hover/link:scale-110 transition-transform shrink-0" />
+                </a>
+              )}
+
+              {data.type === 'Note' && data.markdown && (
+                <div className="bg-amber-50/50 border border-amber-100 rounded-lg p-3 mb-4 max-h-[200px] overflow-y-auto">
+                  <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono leading-relaxed" style={{ fontFamily: 'inherit' }}>
+                    {data.markdown as string}
+                  </pre>
+                </div>
+              )}
+              
+              {data.customFields && data.customFields.length > 0 && (
+                <div className="flex flex-col gap-1.5 mb-4">
+                  {data.customFields.map(field => (
+                    <div key={field.id} className="flex flex-col border-l-2 border-[var(--accent)] pl-2">
+                      <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{field.key}</span>
+                      <span className="text-xs text-gray-700">{field.value}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {data.checklist && data.checklist.length > 0 && (
+                <div className="flex flex-col gap-2 mb-4">
+                  {data.checklist.map(item => (
+                    <div 
+                      key={item.id} 
+                      className="flex items-start gap-2 cursor-pointer group/item"
+                      onClick={(e) => toggleChecklistItem(e, item.id)}
+                    >
+                      <div className={clsx(
+                        "mt-0.5 w-3.5 h-3.5 rounded-sm border flex items-center justify-center transition-colors flex-shrink-0",
+                        item.completed ? "bg-[var(--accent)] border-[var(--accent)]" : "border-gray-300 group-hover/item:border-[var(--accent)]"
+                      )}>
+                        {item.completed && <Check size={10} className="text-white" strokeWidth={3} />}
+                      </div>
+                      <span className={clsx(
+                        "text-xs transition-colors leading-tight pt-[1px]",
+                        item.completed ? "text-gray-400 line-through" : "text-gray-700"
+                      )}>
+                        {item.text}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
               
               <div className="flex items-center justify-between mt-2">
                 <span className="text-[10px] font-medium text-gray-400 uppercase tracking-tight">

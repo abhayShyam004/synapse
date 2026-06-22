@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSynapseStore } from '../../store/useSynapseStore';
-import { Search, Zap, Diamond, Settings2, CheckSquare, Sparkles, X, Loader2 } from 'lucide-react';
+import { Search, Zap, Diamond, Settings2, CheckSquare, Sparkles, X, Loader2, ListTodo, Link, FileText, Folder } from 'lucide-react';
 import { fetchAISuggestion } from '../../lib/ai/nvidiaNim';
 import toast from 'react-hot-toast';
 import { useReactFlow } from '@xyflow/react';
@@ -83,7 +83,12 @@ export const AddElementPopover = () => {
     ]},
     { category: 'Execution', items: [
       { label: 'Task', type: 'Task', color: 'blue', icon: CheckSquare },
-      { label: 'Practice', type: 'Practice', color: 'green', icon: Zap }
+      { label: 'Practice', type: 'Practice', color: 'green', icon: Zap },
+      { label: 'Checklist', type: 'Checklist', color: 'teal', icon: ListTodo }
+    ]},
+    { category: 'Resources', items: [
+      { label: 'Link', type: 'Link', color: 'pink', icon: Link },
+      { label: 'Note', type: 'Note', color: 'amber', icon: FileText }
     ]},
     { category: 'Other', items: [
       { label: 'Custom', type: 'Custom', color: 'gray', icon: Settings2 }

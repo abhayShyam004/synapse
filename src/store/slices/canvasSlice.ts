@@ -25,6 +25,7 @@ export interface CanvasSlice {
   addNode: (node: Node) => void;
   addGhostNode: (node: Node) => void;
   updateNode: (id: string, data: Record<string, unknown>) => void;
+  updateNodeState: (id: string, updates: Partial<Node>) => void;
   deleteNode: (id: string) => void;
   cloneNode: (id: string) => void;
   expandAllNodes: (expand: boolean) => void;
@@ -67,6 +68,10 @@ export interface CanvasSlice {
   };
   openDialog: (data: Omit<CanvasSlice['dialog'], 'isOpen'>) => void;
   closeDialog: () => void;
+  isShareModalOpen: boolean;
+  setShareModalOpen: (isOpen: boolean) => void;
+  isSharedPlayMode: boolean;
+  setSharedPlayMode: (isPlayMode: boolean) => void;
 }
 
 export const createCanvasSlice = (
@@ -89,6 +94,10 @@ export const createCanvasSlice = (
   saveStatus: 'idle',
   isInitialLoading: false,
   setInitialLoading: (loading) => set(() => ({ isInitialLoading: loading })),
+  isShareModalOpen: false,
+  setShareModalOpen: (isOpen) => set(() => ({ isShareModalOpen: isOpen })),
+  isSharedPlayMode: false,
+  setSharedPlayMode: (isPlayMode) => set(() => ({ isSharedPlayMode: isPlayMode })),
   setSaveStatus: (status) => set(() => ({ saveStatus: status })),
   setAIBuilderOpen: (isOpen) => set(() => ({ isAIBuilderOpen: isOpen })),
   dialog: {
@@ -203,6 +212,17 @@ export const createCanvasSlice = (
       return {
         nodes: state.nodes.map(node => 
           node.id === id ? { ...node, data: { ...node.data, ...newData } } : node
+        ),
+        saveStatus: 'idle'
+      };
+    });
+  },
+  updateNodeState: (id: string, updates: Partial<Node>) => {
+    set((state) => {
+      state.saveHistory();
+      return {
+        nodes: state.nodes.map(node => 
+          node.id === id ? { ...node, ...updates } : node
         ),
         saveStatus: 'idle'
       };
@@ -365,8 +385,8 @@ export const createCanvasSlice = (
     }
   },
   saveToCloud: async () => {
-    const { currentWorkflowId, nodes, edges, workflowName, isInitialLoading } = get();
-    if (!currentWorkflowId || isInitialLoading) return;
+    const { currentWorkflowId, nodes, edges, workflowName, isInitialLoading, isSharedPlayMode } = get();
+    if (!currentWorkflowId || isInitialLoading || isSharedPlayMode) return;
 
     const state = get() as any;
     const variables = state.variables || [];
@@ -377,24 +397,34 @@ export const createCanvasSlice = (
       userId = user?.id;
     }
 
-    if (!userId) {
-      console.warn("Cannot save to cloud: No user ID found");
-      return;
-    }
-
     set(() => ({ saveStatus: 'saving' }));
 
-    const { error } = await supabase
-      .from('workflows')
-      .upsert({
-        id: currentWorkflowId,
-        user_id: userId,
-        name: workflowName,
-        nodes,
-        edges,
-        variables,
-        updated_at: new Date().toISOString()
-      });
+    const updatePayload: any = {
+      name: workflowName,
+      nodes,
+      edges,
+      variables,
+      updated_at: new Date().toISOString()
+    };
+
+    let error;
+
+    if (userId) {
+      updatePayload.id = currentWorkflowId;
+      updatePayload.user_id = userId;
+      
+      const { error: upsertError } = await supabase
+        .from('workflows')
+        .upsert(updatePayload);
+      error = upsertError;
+    } else {
+      // Anonymous collab user: only update the existing row to avoid wiping the owner ID
+      const { error: updateError } = await supabase
+        .from('workflows')
+        .update(updatePayload)
+        .eq('id', currentWorkflowId);
+      error = updateError;
+    }
 
     if (error) {
       console.error("Failed to save to cloud", error);

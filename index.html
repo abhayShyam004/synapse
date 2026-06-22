@@ -182,15 +182,16 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
             text-align: center;
-            padding: 100px 0 0 0;
+            padding: 220px 0 0 0;
             position: relative;
         }
 
         @media (min-width: 768px) {
             .hero {
+                justify-content: center;
                 padding-top: 80px;
                 padding-left: 1.5rem;
                 padding-right: 1.5rem;
@@ -272,9 +273,13 @@
         }
         .center-icon .dot.accent { background-color: var(--accent); }
 
-        /* Absolute Floating Cards (Desktop Only >768px) */
+        /* Floating Cards Container */
+        .floating-cards-container {
+            display: contents;
+        }
+
+        /* Floating Cards */
         .floating-card {
-            display: none;
             position: absolute;
             background: white;
             border-radius: 16px;
@@ -284,57 +289,88 @@
             animation: float 4s ease-in-out infinite;
         }
 
+        @keyframes float {
+            0% { transform: scale(var(--scale, 0.75)) translateY(0px) rotate(var(--rot, 0deg)); }
+            50% { transform: scale(var(--scale, 0.75)) translateY(-15px) rotate(var(--rot, 0deg)); }
+            100% { transform: scale(var(--scale, 0.75)) translateY(0px) rotate(var(--rot, 0deg)); }
+        }
+
         @media (min-width: 768px) {
-            .floating-card {
-                display: block;
+            @keyframes float {
+                0% { transform: scale(1) translateY(0px) rotate(var(--rot, 0deg)); }
+                50% { transform: scale(1) translateY(-15px) rotate(var(--rot, 0deg)); }
+                100% { transform: scale(1) translateY(0px) rotate(var(--rot, 0deg)); }
             }
         }
 
-        @keyframes float {
-            0% { transform: translateY(0px) rotate(var(--rot, 0deg)); }
-            50% { transform: translateY(-15px) rotate(var(--rot, 0deg)); }
-            100% { transform: translateY(0px) rotate(var(--rot, 0deg)); }
-        }
-
+        /* Mobile Positions (Scaled to 45%) */
         .card-sticky {
-            top: 22%;
-            left: 10%;
             background: #FEF9C3;
             padding: 24px;
-            width: 240px;
             border-radius: 4px;
-            --rot: -4deg;
-            transform: rotate(var(--rot));
+            width: 240px;
+            top: 10%;
+            left: 2%;
+            --rot: -6deg;
+            transform-origin: top left;
         }
         
         .card-node {
-            top: 18%;
-            right: 12%;
-            width: 220px;
             padding: 0;
             border-radius: 12px;
             overflow: hidden;
-            --rot: 3deg;
-            transform: rotate(var(--rot));
+            width: 220px;
+            top: 10%;
+            right: 2%;
+            --rot: 8deg;
+            transform-origin: top right;
             animation-delay: 1s;
         }
 
         .card-workflows {
-            bottom: 12%;
-            left: 15%;
             width: 280px;
-            --rot: -2deg;
-            transform: rotate(var(--rot));
+            bottom: 5%;
+            left: 2%;
+            --rot: -4deg;
+            transform-origin: bottom left;
             animation-delay: 0.5s;
         }
 
         .card-integrations {
-            bottom: 18%;
-            right: 15%;
             width: 260px;
-            --rot: 2deg;
-            transform: rotate(var(--rot));
+            bottom: 5%;
+            right: 2%;
+            --rot: 6deg;
+            transform-origin: bottom right;
             animation-delay: 1.5s;
+        }
+
+        /* Desktop Positions */
+        @media (min-width: 768px) {
+            .card-sticky {
+                top: 22%;
+                left: 10%;
+                --rot: -4deg;
+                transform-origin: center;
+            }
+            .card-node {
+                top: 18%;
+                right: 12%;
+                --rot: 3deg;
+                transform-origin: center;
+            }
+            .card-workflows {
+                bottom: 12%;
+                left: 15%;
+                --rot: -2deg;
+                transform-origin: center;
+            }
+            .card-integrations {
+                bottom: 18%;
+                right: 15%;
+                --rot: 2deg;
+                transform-origin: center;
+            }
         }
 
         /* Shared Card Internals */
@@ -494,49 +530,51 @@
             </div>
         </div>
 
-        <!-- Absolute Floating Cards (Desktop Only >768px) -->
-        <div class="floating-card card-sticky">
-            <div class="pin"></div>
-            <p class="sticky-p">Map your goals, connect the dots, ship faster</p>
-            <div class="sub-card-checkbox">
-                <div class="box"></div>
-            </div>
-        </div>
-
-        <div class="floating-card card-node">
-            <div class="node-header">TRIGGER</div>
-            <div class="node-body">
-                <div class="node-title">New task added</div>
-                <div class="node-desc">Fires when canvas updates</div>
-            </div>
-            <div class="node-handle"></div>
-        </div>
-
-        <div class="floating-card card-workflows">
-            <div class="card-title">My Workflows</div>
-            <div class="wf-row">
-                <div class="wf-header">
-                    <div class="wf-name"><div class="wf-dot orange"></div> Job Hunt Roadmap</div>
-                    <div class="wf-pct">72%</div>
+        <!-- Floating Cards -->
+        <div class="floating-cards-container">
+            <div class="floating-card card-sticky">
+                <div class="pin"></div>
+                <p class="sticky-p">Map your goals, connect the dots, ship faster</p>
+                <div class="sub-card-checkbox">
+                    <div class="box"></div>
                 </div>
-                <div class="progress-bar"><div class="progress-fill orange" style="width: 72%;"></div></div>
             </div>
-            <div class="wf-row">
-                <div class="wf-header">
-                    <div class="wf-name"><div class="wf-dot cyan"></div> Study Plan — DSA</div>
-                    <div class="wf-pct">45%</div>
-                </div>
-                <div class="progress-bar"><div class="progress-fill" style="width: 45%;"></div></div>
-            </div>
-            <div style="font-size: 11px; color: #6B7280; margin-top: 12px; text-align: center;">2 active workflows</div>
-        </div>
 
-        <div class="floating-card card-integrations">
-            <div class="card-title">Workflow Stats</div>
-            <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13px; color: #4B5563; text-align: left;">
-                <div style="display: flex; align-items: center; gap: 8px;"><span style="color: var(--accent); font-size: 16px;">◆</span> 12 Nodes created</div>
-                <div style="display: flex; align-items: center; gap: 8px;"><span style="color: #10B981; font-size: 16px; font-weight: bold;">↗</span> 8 Connections made</div>
-                <div style="display: flex; align-items: center; gap: 8px;"><span style="color: #8B5CF6; font-size: 16px;">✦</span> 3 AI suggestions used</div>
+            <div class="floating-card card-node">
+                <div class="node-header">TRIGGER</div>
+                <div class="node-body">
+                    <div class="node-title">New task added</div>
+                    <div class="node-desc">Fires when canvas updates</div>
+                </div>
+                <div class="node-handle"></div>
+            </div>
+
+            <div class="floating-card card-workflows">
+                <div class="card-title">My Workflows</div>
+                <div class="wf-row">
+                    <div class="wf-header">
+                        <div class="wf-name"><div class="wf-dot orange"></div> Job Hunt Roadmap</div>
+                        <div class="wf-pct">72%</div>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill orange" style="width: 72%;"></div></div>
+                </div>
+                <div class="wf-row">
+                    <div class="wf-header">
+                        <div class="wf-name"><div class="wf-dot cyan"></div> Study Plan — DSA</div>
+                        <div class="wf-pct">45%</div>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 45%;"></div></div>
+                </div>
+                <div style="font-size: 11px; color: #6B7280; margin-top: 12px; text-align: center;">2 active workflows</div>
+            </div>
+
+            <div class="floating-card card-integrations">
+                <div class="card-title">Workflow Stats</div>
+                <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13px; color: #4B5563; text-align: left;">
+                    <div style="display: flex; align-items: center; gap: 8px;"><span style="color: var(--accent); font-size: 16px;">◆</span> 12 Nodes created</div>
+                    <div style="display: flex; align-items: center; gap: 8px;"><span style="color: #10B981; font-size: 16px; font-weight: bold;">↗</span> 8 Connections made</div>
+                    <div style="display: flex; align-items: center; gap: 8px;"><span style="color: #8B5CF6; font-size: 16px;">✦</span> 3 AI suggestions used</div>
+                </div>
             </div>
         </div>
     </section>

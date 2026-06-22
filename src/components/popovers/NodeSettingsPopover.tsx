@@ -1,8 +1,9 @@
 import { useSynapseStore } from '../../store/useSynapseStore';
-import { X, Trash2, Copy, Square, Circle, Pipette } from 'lucide-react';
+import { X, Trash2, Copy, Square, Circle, Pipette, Plus, GripVertical } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useEffect, useState, useRef } from 'react';
 import { clsx } from 'clsx';
+import { motion, useDragControls } from 'framer-motion';
 
 const ACCENT_COLORS = [
   { name: 'Cyan', hex: '#06B6D4', id: 'cyan' },
@@ -26,6 +27,7 @@ export const NodeSettingsPopover = () => {
   
   const [coords, setCoords] = useState({ top: 0, left: 0 });
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const dragControls = useDragControls();
 
   const node = nodes.find(n => n.id === nodeSettingsPopover.nodeId);
 
@@ -110,9 +112,16 @@ export const NodeSettingsPopover = () => {
       {isMobile && (
         <div className="fixed inset-0 z-[60] bg-black/20 backdrop-blur-sm animate-in fade-in" onClick={handleClose} />
       )}
-      <div 
+      <motion.div 
         ref={popoverRef}
-        className="fixed inset-x-0 bottom-0 z-[70] h-[70vh] w-full bg-white rounded-t-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-full duration-300 md:absolute md:inset-auto md:w-[260px] md:h-auto md:rounded-xl md:border md:border-gray-200 md:z-[100] md:shadow-2xl md:animate-in md:fade-in md:zoom-in-95"
+        drag={!isMobile}
+        dragControls={dragControls}
+        dragListener={false}
+        dragMomentum={false}
+        initial={!isMobile ? { opacity: 0, scale: 0.95 } : undefined}
+        animate={!isMobile ? { opacity: 1, scale: 1 } : undefined}
+        transition={{ duration: 0.15 }}
+        className="fixed inset-x-0 bottom-0 z-[70] h-[70vh] w-full bg-white rounded-t-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-full duration-300 md:absolute md:inset-auto md:w-[260px] md:h-auto md:rounded-xl md:border md:border-gray-200 md:z-[100] md:shadow-2xl"
         style={isMobile ? mobileStyle : desktopStyle}
       >
         {isMobile && (
@@ -120,14 +129,32 @@ export const NodeSettingsPopover = () => {
             <div className="w-12 h-1.5 bg-gray-200 rounded-full" />
           </div>
         )}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
-          <h3 className="font-bold text-gray-900 text-xs uppercase tracking-widest">Node Settings</h3>
-          <button onClick={handleClose} className="text-gray-400 hover:text-gray-700 transition-colors p-1 hover:bg-gray-100 rounded-md">
+        <div 
+          onPointerDown={(e) => !isMobile && dragControls.start(e)}
+          className={clsx(
+            "flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50",
+            !isMobile && "cursor-grab active:cursor-grabbing"
+          )}
+        >
+          <h3 className="font-bold text-gray-900 text-xs uppercase tracking-widest select-none pointer-events-none">Node Settings</h3>
+          <button onPointerDown={(e) => e.stopPropagation()} onClick={handleClose} className="text-gray-400 hover:text-gray-700 transition-colors p-1 hover:bg-gray-100 rounded-md cursor-pointer">
             <X size={16} />
           </button>
         </div>
 
         <div className="p-4 flex flex-col gap-5 overflow-y-auto max-h-[80vh]">
+          {node.data.type === 'Custom' && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Type Label</label>
+              <input 
+                value={(node.data.customTypeLabel as string) || 'CUSTOM'} 
+                onChange={e => updateNode(node.id, { customTypeLabel: e.target.value.toUpperCase() })}
+                placeholder="e.g. DATABASE"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/10 transition-all font-medium"
+              />
+            </div>
+          )}
+
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Name</label>
             <input 
@@ -147,6 +174,132 @@ export const NodeSettingsPopover = () => {
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs md:text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/10 transition-all min-h-[60px] md:min-h-[80px] resize-none leading-relaxed text-gray-600"
             />
           </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Due Date</label>
+            <input 
+              type="date"
+              value={(node.data.dueDate as string) || ''} 
+              onChange={e => updateNode(node.id, { dueDate: e.target.value })}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/10 transition-all font-medium text-gray-600"
+            />
+          </div>
+
+          {node.data.type === 'Link' && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold text-[#EC4899] uppercase tracking-widest">URL / Resource Link</label>
+              <input 
+                type="url"
+                value={(node.data.url as string) || ''} 
+                onChange={e => updateNode(node.id, { url: e.target.value })}
+                placeholder="https://..."
+                className="w-full border border-pink-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/10 transition-all font-medium"
+              />
+            </div>
+          )}
+
+          {node.data.type === 'Note' && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold text-[#F59E0B] uppercase tracking-widest">Markdown Content</label>
+              <textarea 
+                value={(node.data.markdown as string) || ''} 
+                onChange={e => updateNode(node.id, { markdown: e.target.value })}
+                placeholder="# Heading&#10;Write your markdown here..."
+                className="w-full border border-amber-200 rounded-lg px-3 py-2 text-xs md:text-sm outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10 transition-all min-h-[150px] resize-y leading-relaxed text-gray-700 font-mono"
+              />
+            </div>
+          )}
+
+          {/* Custom Fields */}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Custom Fields</label>
+              <button 
+                onClick={() => {
+                  const fields = (node.data.customFields as any[]) || [];
+                  updateNode(node.id, { customFields: [...fields, { id: crypto.randomUUID(), key: '', value: '' }] });
+                }}
+                className="text-[10px] font-bold text-[var(--accent)] flex items-center gap-1 hover:bg-accent/10 px-1.5 py-0.5 rounded transition-colors"
+              >
+                <Plus size={12} /> Add Field
+              </button>
+            </div>
+            {((node.data.customFields as any[]) || []).map((field, index) => (
+              <div key={field.id} className="flex items-center gap-2 mb-1">
+                <input 
+                  value={field.key}
+                  onChange={e => {
+                    const fields = [...((node.data.customFields as any[]) || [])];
+                    fields[index].key = e.target.value;
+                    updateNode(node.id, { customFields: fields });
+                  }}
+                  placeholder="Key"
+                  className="w-1/3 border border-gray-200 rounded-md px-2 py-1.5 text-xs outline-none focus:border-[var(--accent)]"
+                />
+                <input 
+                  value={field.value}
+                  onChange={e => {
+                    const fields = [...((node.data.customFields as any[]) || [])];
+                    fields[index].value = e.target.value;
+                    updateNode(node.id, { customFields: fields });
+                  }}
+                  placeholder="Value"
+                  className="flex-1 border border-gray-200 rounded-md px-2 py-1.5 text-xs outline-none focus:border-[var(--accent)]"
+                />
+                <button 
+                  onClick={() => {
+                    const fields = ((node.data.customFields as any[]) || []).filter(f => f.id !== field.id);
+                    updateNode(node.id, { customFields: fields });
+                  }}
+                  className="text-gray-400 hover:text-red-500"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Checklist */}
+          {node.data.type === 'Checklist' && (
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Checklist Items</label>
+                <button 
+                  onClick={() => {
+                    const list = (node.data.checklist as any[]) || [];
+                    updateNode(node.id, { checklist: [...list, { id: crypto.randomUUID(), text: '', completed: false }] });
+                  }}
+                  className="text-[10px] font-bold text-[var(--accent)] flex items-center gap-1 hover:bg-accent/10 px-1.5 py-0.5 rounded transition-colors"
+                >
+                  <Plus size={12} /> Add Item
+                </button>
+              </div>
+              {((node.data.checklist as any[]) || []).map((item, index) => (
+                <div key={item.id} className="flex items-center gap-2 mb-1">
+                  <div className="text-gray-300 cursor-grab"><GripVertical size={14} /></div>
+                  <input 
+                    value={item.text}
+                    onChange={e => {
+                      const list = [...((node.data.checklist as any[]) || [])];
+                      list[index].text = e.target.value;
+                      updateNode(node.id, { checklist: list });
+                    }}
+                    placeholder="Item text..."
+                    className="flex-1 border border-gray-200 rounded-md px-2 py-1.5 text-xs outline-none focus:border-[var(--accent)]"
+                  />
+                  <button 
+                    onClick={() => {
+                      const list = ((node.data.checklist as any[]) || []).filter(i => i.id !== item.id);
+                      updateNode(node.id, { checklist: list });
+                    }}
+                    className="text-gray-400 hover:text-red-500"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="flex flex-col gap-2.5">
             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Shape</label>
@@ -219,7 +372,7 @@ export const NodeSettingsPopover = () => {
             </button>
           </div>
         </div>
-      </div>
+      </motion.div>
     </>
   );
 };

@@ -134,6 +134,15 @@ export const TopToolbar = () => {
               <SettingsIcon size={18} />
             </button>
 
+            {useSynapseStore.getState().currentWorkflowId && (
+              <button 
+                onClick={() => useSynapseStore.getState().setShareModalOpen(true)}
+                className="text-[11px] md:text-xs font-bold bg-[var(--accent)] text-white px-3 py-1.5 rounded-full hover:brightness-110 transition-all shadow-sm ml-1"
+              >
+                Share
+              </button>
+            )}
+
             <div className="w-px h-6 bg-gray-200 mx-1" />
 
             {user ? (

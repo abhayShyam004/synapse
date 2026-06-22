@@ -6,6 +6,7 @@ import { SettingsModal } from './components/modals/SettingsModal';
 import { GlobalDialog } from './components/modals/GlobalDialog';
 import { AIBuilderModal } from './components/modals/AIBuilderModal';
 import { AuthModal } from './components/modals/AuthModal';
+import { ShareModal } from './components/modals/ShareModal';
 import { SearchOverlay } from './components/canvas/SearchOverlay';
 import { useSynapseStore } from './store/useSynapseStore';
 import { useEffect, useState } from 'react';
@@ -38,7 +39,8 @@ function App() {
     workflowName,
     setAuthModalOpen,
     setSaveStatus,
-    resetWorkflow
+    resetWorkflow,
+    isSharedPlayMode
   } = useSynapseStore();
 
   const [isAuthLoading, setIsAuthLoading] = useState(true);
@@ -66,14 +68,21 @@ function App() {
       setIsAuthLoading(false);
     });
 
-    // Load workflow if ID in URL
+    // Load workflow if ID, Collab, or Share in URL
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
-    if (id) {
-      if (id !== useSynapseStore.getState().currentWorkflowId) {
+    const collabId = params.get('collab');
+    const shareId = params.get('share');
+    
+    const targetId = id || collabId || shareId;
+    if (targetId) {
+      if (targetId !== useSynapseStore.getState().currentWorkflowId) {
         resetWorkflow();
       }
-      setCurrentWorkflowId(id);
+      setCurrentWorkflowId(targetId);
+      if (shareId) {
+        useSynapseStore.getState().setSharedPlayMode(true);
+      }
     }
 
     // Welcome toast for new users
@@ -93,12 +102,21 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Fetch from cloud if ID and User are present
+  // Fetch from cloud if ID is present
   useEffect(() => {
     if (isAuthLoading || !currentWorkflowId) return;
 
-    if (user) {
-      loadFromCloud(currentWorkflowId);
+    const isShared = useSynapseStore.getState().isSharedPlayMode || new URLSearchParams(window.location.search).has('collab') || new URLSearchParams(window.location.search).has('share');
+
+    if (user || isShared) {
+      loadFromCloud(currentWorkflowId).then(() => {
+         if (useSynapseStore.getState().saveStatus === 'error' && !isShared) {
+            const saved = localStorage.getItem(`synapse-workflow-${currentWorkflowId}`);
+            if (saved) {
+              useSynapseStore.getState().loadWorkflow(currentWorkflowId);
+            }
+         }
+      });
     } else {
       // Guest mode load from local storage
       const saved = localStorage.getItem(`synapse-workflow-${currentWorkflowId}`);
@@ -113,7 +131,8 @@ function App() {
     if (isAuthLoading || !currentWorkflowId || useSynapseStore.getState().isInitialLoading) return;
 
     const timer = setTimeout(() => {
-      if (user) {
+      const isCollab = new URLSearchParams(window.location.search).has('collab');
+      if (user || isCollab) {
         saveToCloud();
       } else {
         // Save to local storage for guest
@@ -158,8 +177,23 @@ function App() {
       <GlobalDialog />
       <AIBuilderModal />
       <AuthModal />
+      <ShareModal />
       
-      {!user && (
+      {isSharedPlayMode && (
+        <div className="h-9 bg-[#0D9488] text-white flex items-center justify-center px-4 gap-2 z-[60] shadow-md border-b border-white/10 shrink-0 overflow-hidden">
+          <span className="text-[11px] md:text-xs font-bold tracking-wide uppercase opacity-90 truncate">Play-Only Mode — Your changes won't be saved</span>
+          {!user && (
+            <button 
+              onClick={() => setAuthModalOpen(true, 'signin')}
+              className="text-[10px] md:text-xs bg-white text-[#0D9488] px-3 py-1 rounded-full font-bold hover:bg-gray-50 transition-all shrink-0 shadow-sm"
+            >
+              Sign In to save a copy
+            </button>
+          )}
+        </div>
+      )}
+
+      {!user && !isSharedPlayMode && (
         <div className="h-9 bg-[var(--accent)] text-white flex items-center justify-center px-4 gap-2 z-[60] shadow-md border-b border-white/10 shrink-0 overflow-hidden">
           <span className="text-[11px] md:text-xs font-bold tracking-wide uppercase opacity-90 truncate">You're in Guest Mode — Sign in to save across devices</span>
           <button 
