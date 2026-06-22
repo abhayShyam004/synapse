@@ -23,14 +23,11 @@ export interface CanvasSlice {
   onEdgesChange: OnEdgesChange;
   onConnect: (connection: Connection) => void;
   addNode: (node: Node) => void;
-  addGhostNode: (node: Node) => void;
   updateNode: (id: string, data: Record<string, unknown>) => void;
   updateNodeState: (id: string, updates: Partial<Node>) => void;
   deleteNode: (id: string) => void;
   cloneNode: (id: string) => void;
   expandAllNodes: (expand: boolean) => void;
-  acceptGhostNode: (id: string) => void;
-  dismissGhostNode: (id: string) => void;
   setAddElementPopover: (data: { isOpen: boolean; x: number; y: number; edgeId?: string }) => void;
   setMetricsPopover: (isOpen: boolean) => void;
   setNodeSettingsPopover: (data: { isOpen: boolean; nodeId?: string }) => void;
@@ -52,8 +49,6 @@ export interface CanvasSlice {
   setCurrentWorkflowId: (id: string | null) => void;
   workflowName: string;
   setWorkflowName: (name: string) => void;
-  isAIBuilderOpen: boolean;
-  setAIBuilderOpen: (isOpen: boolean) => void;
   saveStatus: 'idle' | 'saving' | 'saved' | 'error';
   setSaveStatus: (status: CanvasSlice['saveStatus']) => void;
   isInitialLoading: boolean;
@@ -90,7 +85,6 @@ export const createCanvasSlice = (
   searchQuery: '',
   currentWorkflowId: null,
   workflowName: 'Untitled Workflow',
-  isAIBuilderOpen: false,
   saveStatus: 'idle',
   isInitialLoading: false,
   setInitialLoading: (loading) => set(() => ({ isInitialLoading: loading })),
@@ -99,7 +93,6 @@ export const createCanvasSlice = (
   isSharedPlayMode: false,
   setSharedPlayMode: (isPlayMode) => set(() => ({ isSharedPlayMode: isPlayMode })),
   setSaveStatus: (status) => set(() => ({ saveStatus: status })),
-  setAIBuilderOpen: (isOpen) => set(() => ({ isAIBuilderOpen: isOpen })),
   dialog: {
     isOpen: false,
     title: '',
@@ -197,15 +190,7 @@ export const createCanvasSlice = (
       return { nodes: [...state.nodes, newNode], edges: newEdges, saveStatus: 'idle' };
     });
   },
-  addGhostNode: (node: Node) => {
-    set((state) => {
-      state.saveHistory();
-      return { 
-        nodes: [...state.nodes, { ...node, data: { ...node.data, variant: 'ghost', expanded: false } }],
-        saveStatus: 'idle'
-      };
-    });
-  },
+
   updateNode: (id: string, newData: Record<string, unknown>) => {
     set((state) => {
       state.saveHistory();
@@ -257,45 +242,7 @@ export const createCanvasSlice = (
       nodes: state.nodes.map(node => ({ ...node, data: { ...node.data, expanded: expand } }))
     }));
   },
-  acceptGhostNode: (id: string) => {
-    set((state) => {
-      const ghostNode = state.nodes.find(n => n.id === id);
-      if (!ghostNode) return state;
 
-      const sourceNodeId = ghostNode.data.sourceNodeId as string | undefined;
-      let newEdges = [...state.edges];
-
-      if (sourceNodeId) {
-        const sourceNode = state.nodes.find(n => n.id === sourceNodeId);
-        if (sourceNode) {
-          newEdges.push({
-            id: `e-${sourceNodeId}-${id}`,
-            source: sourceNodeId,
-            target: id,
-            type: 'custom'
-          });
-          
-          ghostNode.position = {
-            x: sourceNode.position.x,
-            y: sourceNode.position.y + 150
-          };
-        }
-      }
-
-      return {
-        nodes: state.nodes.map(n => n.id === id ? { ...n, data: { ...n.data, variant: 'default' } } : n),
-        edges: newEdges,
-        saveStatus: 'idle'
-      };
-    });
-  },
-  dismissGhostNode: (id: string) => {
-    set((state) => ({
-      nodes: state.nodes.filter(n => n.id !== id),
-      edges: state.edges.filter(e => e.target !== id && e.source !== id),
-      saveStatus: 'idle'
-    }));
-  },
   setAddElementPopover: (data) => {
     set(() => ({ addElementPopover: data }));
   },

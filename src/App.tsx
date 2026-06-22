@@ -4,7 +4,6 @@ import { LeftSidebar, MobileBottomNav } from './components/sidebar/LeftSidebar';
 import { TopToolbar } from './components/toolbar/TopToolbar';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { GlobalDialog } from './components/modals/GlobalDialog';
-import { AIBuilderModal } from './components/modals/AIBuilderModal';
 import { AuthModal } from './components/modals/AuthModal';
 import { ShareModal } from './components/modals/ShareModal';
 import { SearchOverlay } from './components/canvas/SearchOverlay';
@@ -175,7 +174,6 @@ function App() {
       />
       <SettingsModal />
       <GlobalDialog />
-      <AIBuilderModal />
       <AuthModal />
       <ShareModal />
       

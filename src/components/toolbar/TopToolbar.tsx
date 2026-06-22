@@ -6,8 +6,6 @@ import { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 export const TopToolbar = () => {
   const { 
-    ghostCardsEnabled, 
-    toggleGhostCards, 
     expandAllNodes, 
     toggleSettingsModal, 
     workflowName, 
@@ -119,17 +117,6 @@ export const TopToolbar = () => {
             
             <div className="w-px h-6 bg-gray-200 mx-1" />
 
-            <button 
-              onClick={toggleGhostCards}
-              className={clsx(
-                "p-1.5 rounded-md transition-colors",
-                ghostCardsEnabled ? "text-[#F59E0B] bg-yellow-50" : "text-gray-400 hover:bg-gray-100 hover:text-[#F59E0B]"
-              )}
-              title={`AI Ghost Cards: ${ghostCardsEnabled ? 'ON' : 'OFF'}`}
-            >
-              <Sparkles size={18} />
-            </button>
-
             <button onClick={() => toggleSettingsModal(true)} className="p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 rounded-md transition-colors" title="Settings">
               <SettingsIcon size={18} />
             </button>
@@ -232,15 +219,6 @@ export const TopToolbar = () => {
             </button>
           )}
           <div className="h-px bg-gray-100 my-1 mx-4" />
-          <button 
-            onClick={() => { toggleGhostCards(); setIsMobileMenuOpen(false); }} 
-            className="flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg"
-          >
-            <span className="flex items-center gap-2"><Sparkles size={16} className={ghostCardsEnabled ? "text-[#F59E0B]" : "text-gray-400"} /> AI Ghost Cards</span>
-            <span className={clsx("text-xs font-bold px-2 py-0.5 rounded-full", ghostCardsEnabled ? "bg-yellow-100 text-[#F59E0B]" : "bg-gray-100 text-gray-500")}>
-              {ghostCardsEnabled ? 'ON' : 'OFF'}
-            </span>
-          </button>
         </div>
       )}
     </>

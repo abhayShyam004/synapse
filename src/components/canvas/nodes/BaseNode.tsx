@@ -11,7 +11,7 @@ export interface BaseNodeData {
   description?: string;
   color?: string;
   shape?: string;
-  variant?: 'default' | 'ghost';
+  variant?: 'default';
   expanded?: boolean;
   sourceNodeId?: string;
   checklist?: { id: string; text: string; completed: boolean }[];
@@ -26,10 +26,7 @@ export interface BaseNodeData {
 export type BaseNodeProps = Node<BaseNodeData, 'custom'>;
 
 export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
-  const { acceptGhostNode, dismissGhostNode, updateNode, setAddElementPopover, setNodeSettingsPopover, edges, nodes } = useSynapseStore();
-  const [isDismissing, setIsDismissing] = useState(false);
-  
-  const isGhost = data.variant === 'ghost';
+  const { updateNode, setAddElementPopover, setNodeSettingsPopover, edges, nodes } = useSynapseStore();
   const isExpanded = data.expanded === true; // Default to collapsed
 
   const connectedEdgesCount = edges.filter(e => e.source === id || e.target === id).length;
@@ -81,13 +78,6 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
     setNodeSettingsPopover({ isOpen: true, nodeId: id });
   };
 
-  const handleDismiss = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsDismissing(true);
-    setTimeout(() => {
-      dismissGhostNode(id);
-    }, 200);
-  };
 
   const typeBgColor = 
     data.type === 'Goal' ? '#8B5CF6' :
@@ -140,17 +130,13 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
 
   return (
     <motion.div 
-      initial={isGhost ? { opacity: 0.2 } : { scale: 0.9, opacity: 0 }}
-      animate={
-        isDismissing ? { opacity: 0, scale: 0.95 } :
-        isGhost ? { opacity: [0.4, 0.7, 0.4], transition: { repeat: Infinity, duration: 2 } } : 
-        { scale: 1, opacity: 1 }
-      }
-      transition={{ duration: isDismissing ? 0.2 : 0.4 }}
+      initial={{ scale: 0.9, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.4 }}
       className={clsx(
         "group relative min-w-[160px] md:min-w-[220px] flex flex-col bg-white border text-sm transition-all shadow-sm",
         selected ? "border-[var(--accent)] ring-2 ring-[var(--accent)]/50 shadow-lg" : "border-gray-200",
-        isGhost && "border-dashed border-[var(--accent)] !opacity-60",
+
         borderRadius
       )}
     >
@@ -184,11 +170,9 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
               </span>
             )}
           </div>
-          {!isGhost && (
             <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
               <ChevronDown size={16} className="opacity-80 md:w-[18px] md:h-[18px]" />
             </motion.div>
-          )}
         </div>
         <span className="font-bold text-[13px] md:text-sm leading-none truncate pr-6">
           {data.label || 'New Node'}
@@ -203,11 +187,7 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
           </div>
         )}
         
-        {isGhost && (
-          <div className="absolute top-1 left-1/2 -translate-x-1/2 bg-white/20 text-white px-2 py-0.5 rounded-full text-[8px] font-bold flex items-center gap-1 border border-white/20 whitespace-nowrap z-10">
-            <Sparkles size={8} /> AI Suggestion
-          </div>
-        )}
+
       </div>
 
       {/* Body Section */}
@@ -322,22 +302,7 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
         className="w-2.5 h-2.5 bg-[var(--accent)] border-2 border-white rounded-full z-20 opacity-0 group-hover:opacity-100 transition-opacity cursor-crosshair !-bottom-1.25 !left-1/2 !-translate-x-1/2"
       />
 
-      {isGhost && (
-        <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex gap-2 justify-center z-20">
-          <button 
-            onClick={(e) => { e.stopPropagation(); acceptGhostNode(id); }}
-            className="flex items-center gap-1 bg-emerald-50 text-emerald-600 border border-emerald-200 px-3 py-1 rounded-lg text-[10px] font-bold hover:bg-emerald-100 transition-colors shadow-sm whitespace-nowrap"
-          >
-            <Check size={12} /> Accept
-          </button>
-          <button 
-            onClick={handleDismiss}
-            className="flex items-center gap-1 bg-red-50 text-red-600 border border-red-200 px-3 py-1 rounded-lg text-[10px] font-bold hover:bg-red-100 transition-colors shadow-sm whitespace-nowrap"
-          >
-            <X size={12} /> Dismiss
-          </button>
-        </div>
-      )}
+
     </motion.div>
   );
 };

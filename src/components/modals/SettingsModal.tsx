@@ -9,18 +9,16 @@ export const SettingsModal = () => {
     isSettingsOpen, toggleSettingsModal, 
     autoSave, snapToGrid, showMinimap, 
     canvasBackground, 
-    ghostCardsEnabled, idleSuggestionEnabled, idleTimeout, 
+    idleSuggestionEnabled, idleTimeout, 
     accentColor, updateSetting 
   } = useSynapseStore();
 
-  const [activeTab, setActiveTab] = useState<'general' | 'canvas' | 'ai' | 'appearance' | 'shortcuts'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'canvas' | 'appearance' | 'shortcuts'>('general');
 
   if (!isSettingsOpen) return null;
 
-  const tabs = [
     { id: 'general', label: 'General', icon: Settings },
     { id: 'canvas', label: 'Canvas', icon: Monitor },
-    { id: 'ai', label: 'AI', icon: Sparkles },
     { id: 'appearance', label: 'Appearance', icon: Palette },
     { id: 'shortcuts', label: 'Shortcuts', icon: Keyboard },
   ] as const;
@@ -148,35 +146,7 @@ export const SettingsModal = () => {
                 </div>
               )}
 
-              {activeTab === 'ai' && (
-                <div className="flex flex-col gap-8">
-                  <div>
-                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-6">AI Configuration</h3>
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center justify-between h-12">
-                        <span className="text-sm font-medium text-gray-700">Enable Ghost Cards</span>
-                        <Toggle checked={ghostCardsEnabled} onChange={v => updateSetting('ghostCardsEnabled', v)} />
-                      </div>
-                      <div className="flex items-center justify-between h-12">
-                        <span className="text-sm font-medium text-gray-700">Idle suggestions</span>
-                        <Toggle checked={idleSuggestionEnabled} onChange={v => updateSetting('idleSuggestionEnabled', v)} />
-                      </div>
-                      <div className="flex items-center justify-between h-12">
-                        <span className="text-sm font-medium text-gray-700">Idle timeout</span>
-                        <select 
-                          value={idleTimeout}
-                          onChange={e => updateSetting('idleTimeout', Number(e.target.value))}
-                          className="text-sm border border-gray-200 rounded-md px-2 py-1 outline-none"
-                        >
-                          <option value={4}>4 seconds</option>
-                          <option value={8}>8 seconds</option>
-                          <option value={12}>12 seconds</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+
 
               {activeTab === 'appearance' && (
                 <div className="flex flex-col gap-8">
