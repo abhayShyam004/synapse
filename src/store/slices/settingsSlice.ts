@@ -13,6 +13,7 @@ export interface SettingsSlice {
   fontSize: 'small' | 'medium' | 'large';
   
   toggleSettingsModal: (isOpen: boolean) => void;
+  updateSetting: (key: string, value: any) => void;
 }
 
 export const createSettingsSlice = (

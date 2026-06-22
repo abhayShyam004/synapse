@@ -8,7 +8,7 @@ import { MetricsPopover } from '../popovers/MetricsPopover';
 import { NodeSettingsPopover } from '../popovers/NodeSettingsPopover';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Layers } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 const nodeTypes = { custom: BaseNode };
 const edgeTypes = { custom: CustomEdge };

@@ -1,9 +1,9 @@
-import { useState } from 'react';
+
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
 import { clsx } from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSynapseStore } from '../../../store/useSynapseStore';
-import { ChevronDown, Plus, Pencil, Sparkles, Check, X, Calendar, ExternalLink } from 'lucide-react';
+import { ChevronDown, Plus, Pencil, Check, Calendar, ExternalLink } from 'lucide-react';
 
 export interface BaseNodeData {
   label: string;
@@ -20,6 +20,7 @@ export interface BaseNodeData {
   url?: string;
   markdown?: string;
   completed?: boolean;
+  dueDate?: string;
   [key: string]: unknown;
 }
 
@@ -41,7 +42,8 @@ export const BaseNode = ({ id, data, selected }: NodeProps<BaseNodeProps>) => {
     let totalItems = 0;
     let completedItems = 0;
     
-    childNodes.forEach(child => {
+    childNodes.forEach(childNode => {
+      const child = childNode as unknown as BaseNodeProps;
       if (child.data.checklist && child.data.checklist.length > 0) {
         totalItems += child.data.checklist.length;
         completedItems += child.data.checklist.filter((item: any) => item.completed).length;

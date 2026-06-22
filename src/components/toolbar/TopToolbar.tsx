@@ -1,7 +1,6 @@
 import { useSynapseStore } from '../../store/useSynapseStore';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Sparkles, Settings as SettingsIcon, Menu, X, LogOut, Layout } from 'lucide-react';
-import { clsx } from 'clsx';
+import { ArrowLeft, Settings as SettingsIcon, Menu, X, LogOut, Layout } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 export const TopToolbar = () => {

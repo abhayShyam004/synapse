@@ -1,17 +1,17 @@
-import { Home, Folder, GitMerge, Users, Bell, Search, Settings, Lock, Unlock, Plus, Sparkles } from 'lucide-react';
+import { Home, Folder, GitMerge, Users, Bell, Search, Settings, Lock, Unlock, Plus } from 'lucide-react';
 import { clsx } from 'clsx';
 import toast from 'react-hot-toast';
 import { useSynapseStore } from '../../store/useSynapseStore';
 
 export const LeftSidebar = () => {
-  const { isCanvasLocked, toggleCanvasLock, toggleSettingsModal, setSearchOpen, setAddElementPopover, setAIBuilderOpen } = useSynapseStore();
+  const { isCanvasLocked, toggleCanvasLock, toggleSettingsModal, setSearchOpen, setAddElementPopover } = useSynapseStore();
 
   const handleAction = (id: string) => {
     switch (id) {
       case 'home': return window.location.href = '/';
       case 'folder': return window.location.href = '/dashboard/';
       case 'orchestration': return toast.success('Currently viewing Workflow');
-      case 'ai-builder': return setAIBuilderOpen(true);
+
       case 'audiences': return toast.error('Collaboration is an upcoming feature', {
         icon: '🚧',
         style: { borderLeft: '4px solid #F59E0B' }
@@ -27,7 +27,7 @@ export const LeftSidebar = () => {
     { Icon: Home, id: 'home', active: false },
     { Icon: Folder, id: 'folder', active: false },
     { Icon: GitMerge, id: 'orchestration', active: true },
-    { Icon: Sparkles, id: 'ai-builder', active: false },
+
     { Icon: Users, id: 'audiences', active: false },
     { Icon: Plus, id: 'add-node', active: false },
   ];

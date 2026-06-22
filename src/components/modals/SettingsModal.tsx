@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSynapseStore } from '../../store/useSynapseStore';
-import { X, Settings, Monitor, Sparkles, Palette, Keyboard } from 'lucide-react';
+import { X, Settings, Monitor, Palette, Keyboard } from 'lucide-react';
 import { clsx } from 'clsx';
 import toast from 'react-hot-toast';
 
@@ -9,7 +9,7 @@ export const SettingsModal = () => {
     isSettingsOpen, toggleSettingsModal, 
     autoSave, snapToGrid, showMinimap, 
     canvasBackground, 
-    idleSuggestionEnabled, idleTimeout, 
+
     accentColor, updateSetting 
   } = useSynapseStore();
 

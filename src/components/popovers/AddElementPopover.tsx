@@ -1,15 +1,11 @@
 import { useState } from 'react';
 import { useSynapseStore } from '../../store/useSynapseStore';
-import { Search, Zap, Diamond, Settings2, CheckSquare, Sparkles, X, Loader2, ListTodo, Link, FileText, Folder } from 'lucide-react';
-import { fetchAISuggestion } from '../../lib/ai/nvidiaNim';
-import toast from 'react-hot-toast';
+import { Search, Zap, Diamond, Settings2, CheckSquare, X, ListTodo, Link, FileText, Goal } from 'lucide-react';
 import { useReactFlow } from '@xyflow/react';
 
 export const AddElementPopover = () => {
   const { addElementPopover, setAddElementPopover, addNode } = useSynapseStore();
   const { screenToFlowPosition, getViewport } = useReactFlow();
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [isSuggesting, setIsSuggesting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   if (!addElementPopover.isOpen) return null;
@@ -40,45 +36,11 @@ export const AddElementPopover = () => {
     handleClose();
   };
 
-  const handleAISuggest = async () => {
-    if (!aiPrompt) return;
-    setIsSuggesting(true);
-    try {
-      const prompt = `Suggest a short name and 1-sentence description for a synapse node about "${aiPrompt}". Return JSON: {"name": "...", "description": "..."}`;
-      const result = await fetchAISuggestion(prompt);
-      const cleaned = result.replace(/```json\n?|\n?```/g, '').trim();
-      const parsed = JSON.parse(cleaned);
 
-      let position;
-      if (addElementPopover.edgeId) {
-        position = screenToFlowPosition({ x: addElementPopover.x, y: addElementPopover.y });
-      } else {
-        const { x, y, zoom } = getViewport();
-        position = {
-          x: -x / zoom + (window.innerWidth / 2) / zoom - 110,
-          y: -y / zoom + (window.innerHeight / 2) / zoom - 20,
-        };
-      }
-
-      addNode({
-        id: crypto.randomUUID(),
-        type: 'custom',
-        position,
-        data: { label: parsed.name, type: 'AI Prompt', description: parsed.description, color: 'purple', shape: 'rounded', expanded: true },
-      });
-      setAiPrompt('');
-      toast.success('AI Node generated!');
-      handleClose();
-    } catch (error) {
-      toast.error('AI Suggestion failed');
-    } finally {
-      setIsSuggesting(false);
-    }
-  };
 
   const elements = [
     { category: 'Planning', items: [
-      { label: 'Goal', type: 'Goal', color: 'purple', icon: Sparkles },
+      { label: 'Goal', type: 'Goal', color: 'purple', icon: Goal },
       { label: 'Milestone', type: 'Milestone', color: 'orange', icon: Diamond }
     ]},
     { category: 'Execution', items: [
@@ -119,23 +81,7 @@ export const AddElementPopover = () => {
           </div>
         </div>
 
-        <div className="px-2 py-2">
-           <div className="flex items-center gap-2 mb-2">
-             <input 
-               value={aiPrompt}
-               onChange={e => setAiPrompt(e.target.value)}
-               placeholder="Describe a node to generate..."
-               className="flex-1 text-xs border border-gray-200 rounded-md px-2 py-1.5 outline-none focus:border-purple-400"
-             />
-             <button 
-               onClick={handleAISuggest}
-               disabled={isSuggesting || !aiPrompt}
-               className="bg-purple-100 text-purple-700 p-1.5 rounded-md hover:bg-purple-200 disabled:opacity-50"
-             >
-               {isSuggesting ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-             </button>
-           </div>
-        </div>
+
 
         {elements.map((group) => {
           const filteredItems = group.items.filter(item => item.label.toLowerCase().includes(searchQuery.toLowerCase()));
